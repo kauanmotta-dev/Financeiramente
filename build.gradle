@@ -1,0 +1,25 @@
+buildscript {
+    ext {
+        javaVersion       = JavaVersion.VERSION_17
+        androidMinSdk     = 26
+        androidTargetSdk  = 35
+        androidCompileSdk = 35
+        junitVersion      = '5.10.2'
+        javafxVersion     = '21.0.3'
+        sqliteJdbcVersion = '3.45.3.0'
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.3.2'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}

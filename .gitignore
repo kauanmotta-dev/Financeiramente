@@ -1,0 +1,21 @@
+# Binaries
+/build
+/core/build
+/android/build
+/desktop/build
+
+# Gradle wrapper (jar is checked in, but generated files are not)
+.gradle/
+
+# Local configuration
+local.properties
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+
+# Logs
+*.log

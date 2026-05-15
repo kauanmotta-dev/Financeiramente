@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.financeiramente.desktop.ui.MainController">
+
+    <center>
+        <StackPane>
+            <Label text="Dashboard — em construção" style="-fx-font-size: 24; -fx-text-fill: #555;" />
+        </StackPane>
+    </center>
+
+    <bottom>
+        <Label fx:id="statusLabel"
+               style="-fx-padding: 4 8; -fx-background-color: #f0f0f0; -fx-font-size: 12;" />
+    </bottom>
+
+</BorderPane>
