@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_dashboard">
+
+    <!-- ── Top-level destinations (bottom nav) ── -->
+
+    <fragment
+        android:id="@+id/nav_dashboard"
+        android:name="com.financeiramente.android.ui.dashboard.DashboardFragment"
+        android:label="@string/nav_dashboard" />
+
+    <fragment
+        android:id="@+id/nav_metas"
+        android:name="com.financeiramente.android.ui.metas.MetasFragment"
+        android:label="@string/nav_metas" />
+
+    <fragment
+        android:id="@+id/nav_relatorios"
+        android:name="com.financeiramente.android.ui.relatorios.RelatoriosFragment"
+        android:label="@string/nav_relatorios" />
+
+    <fragment
+        android:id="@+id/nav_configuracoes"
+        android:name="com.financeiramente.android.ui.configuracoes.ConfiguracoesFragment"
+        android:label="@string/nav_configuracoes">
+        <action
+            android:id="@+id/action_configuracoesFragment_to_categoriasFragment"
+            app:destination="@id/categoriasFragment" />
+    </fragment>
+
+    <!-- ── Categorias ── -->
+
+    <fragment
+        android:id="@+id/categoriasFragment"
+        android:name="com.financeiramente.android.ui.categorias.CategoriasFragment"
+        android:label="@string/nav_categorias">
+        <action
+            android:id="@+id/action_categoriasFragment_to_categoriaFormFragment"
+            app:destination="@id/categoriaFormFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/categoriaFormFragment"
+        android:name="com.financeiramente.android.ui.categorias.CategoriaFormFragment"
+        android:label="@string/form_categoria">
+        <argument
+            android:name="categoriaId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="paiId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+
+</navigation>
