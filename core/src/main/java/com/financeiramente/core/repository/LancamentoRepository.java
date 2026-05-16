@@ -17,4 +17,5 @@ public interface LancamentoRepository {
     double somarPorTipoEMes(TipoLancamento tipo, int ano, int mes);
     double somarPorCategoria(String categoriaId, int ano, int mes);
     boolean existePorRecorrenteEMes(String recorrenteId, int ano, int mes);
+    boolean existePorCategoria(String categoriaId);
 }

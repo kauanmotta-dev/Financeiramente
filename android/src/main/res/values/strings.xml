@@ -4,4 +4,19 @@
     <string name="nav_dashboard">Dashboard</string>
     <string name="nav_metas">Metas</string>
     <string name="nav_relatorios">Relatórios</string>
+    <string name="nav_configuracoes">Configurações</string>
+    <string name="nav_categorias">Categorias</string>
+    <string name="add_categoria">Adicionar categoria</string>
+    <string name="categoria_nome">Nome</string>
+    <string name="categoria_tipo">Tipo</string>
+    <string name="categoria_limite_mensal">Limite Mensal (R$) — opcional</string>
+    <string name="opcional">Opcional</string>
+    <string name="salvar">Salvar</string>
+    <string name="em_construcao">Em construção</string>
+    <string name="erro_nome_obrigatorio">Nome é obrigatório</string>
+    <string name="erro_limite_invalido">Valor de limite inválido</string>
+    <string name="excluir_categoria">Excluir categoria</string>
+    <string name="confirmar_exclusao_categoria">Deseja excluir "%s"?</string>
+    <string name="form_categoria">Categoria</string>
+    <string name="gerenciar_categorias">Gerenciar Categorias</string>
 </resources>
