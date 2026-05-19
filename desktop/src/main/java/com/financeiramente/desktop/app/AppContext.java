@@ -19,14 +19,23 @@ import com.financeiramente.core.repository.ProvisaoRepository;
 import com.financeiramente.core.repository.TagRepository;
 import com.financeiramente.core.usecase.CalcularSaldoMensalUseCase;
 import com.financeiramente.core.usecase.CriarCategoriaUseCase;
+import com.financeiramente.core.usecase.CriarLancamentoRecorrenteUseCase;
 import com.financeiramente.core.usecase.CriarPlanejamentoMensalUseCase;
+import com.financeiramente.core.usecase.CriarProvisaoUseCase;
 import com.financeiramente.core.usecase.ConfirmarPlanejamentoUseCase;
+import com.financeiramente.core.usecase.CreditarProvisoesMensaisUseCase;
+import com.financeiramente.core.usecase.DebitarProvisaoUseCase;
 import com.financeiramente.core.usecase.DefinirLimiteCategoriaUseCase;
 import com.financeiramente.core.usecase.DefinirComoPlanosPadraoUseCase;
 import com.financeiramente.core.usecase.DeletarCategoriaUseCase;
 import com.financeiramente.core.usecase.DeletarLancamentoUseCase;
+import com.financeiramente.core.usecase.DesativarLancamentoRecorrenteUseCase;
+import com.financeiramente.core.usecase.DesativarProvisaoUseCase;
 import com.financeiramente.core.usecase.EditarCategoriaUseCase;
+import com.financeiramente.core.usecase.EditarLancamentoRecorrenteUseCase;
 import com.financeiramente.core.usecase.EditarLancamentoUseCase;
+import com.financeiramente.core.usecase.EditarProvisaoUseCase;
+import com.financeiramente.core.usecase.GerarLancamentosRecorrentesUseCase;
 import com.financeiramente.core.usecase.ListarLancamentosUseCase;
 import com.financeiramente.core.usecase.RegistrarLancamentoUseCase;
 import com.financeiramente.core.usecase.ReordenarCategoriasUseCase;
@@ -60,6 +69,15 @@ public class AppContext {
     private final ConfirmarPlanejamentoUseCase confirmarPlanejamentoUseCase;
     private final DefinirLimiteCategoriaUseCase definirLimiteCategoriaUseCase;
     private final DefinirComoPlanosPadraoUseCase definirComoPlanosPadraoUseCase;
+    private final CriarLancamentoRecorrenteUseCase criarLancamentoRecorrenteUseCase;
+    private final EditarLancamentoRecorrenteUseCase editarLancamentoRecorrenteUseCase;
+    private final DesativarLancamentoRecorrenteUseCase desativarLancamentoRecorrenteUseCase;
+    private final GerarLancamentosRecorrentesUseCase gerarLancamentosRecorrentesUseCase;
+    private final CriarProvisaoUseCase criarProvisaoUseCase;
+    private final EditarProvisaoUseCase editarProvisaoUseCase;
+    private final DesativarProvisaoUseCase desativarProvisaoUseCase;
+    private final CreditarProvisoesMensaisUseCase creditarProvisoesMensaisUseCase;
+    private final DebitarProvisaoUseCase debitarProvisaoUseCase;
 
     private AppContext() {
         this.databaseDriver = new JdbcDatabaseDriver();
@@ -88,6 +106,15 @@ public class AppContext {
         this.confirmarPlanejamentoUseCase    = new ConfirmarPlanejamentoUseCase(planejamentoRepository);
         this.definirLimiteCategoriaUseCase   = new DefinirLimiteCategoriaUseCase(planejamentoRepository);
         this.definirComoPlanosPadraoUseCase  = new DefinirComoPlanosPadraoUseCase(planejamentoRepository);
+        this.criarLancamentoRecorrenteUseCase    = new CriarLancamentoRecorrenteUseCase(lancamentoRecorrenteRepository);
+        this.editarLancamentoRecorrenteUseCase   = new EditarLancamentoRecorrenteUseCase(lancamentoRecorrenteRepository);
+        this.desativarLancamentoRecorrenteUseCase = new DesativarLancamentoRecorrenteUseCase(lancamentoRecorrenteRepository);
+        this.gerarLancamentosRecorrentesUseCase  = new GerarLancamentosRecorrentesUseCase(lancamentoRecorrenteRepository, lancamentoRepository);
+        this.criarProvisaoUseCase        = new CriarProvisaoUseCase(provisaoRepository);
+        this.editarProvisaoUseCase       = new EditarProvisaoUseCase(provisaoRepository);
+        this.desativarProvisaoUseCase    = new DesativarProvisaoUseCase(provisaoRepository);
+        this.creditarProvisoesMensaisUseCase = new CreditarProvisoesMensaisUseCase(provisaoRepository);
+        this.debitarProvisaoUseCase      = new DebitarProvisaoUseCase(provisaoRepository);
     }
 
     public static synchronized AppContext get() {
@@ -120,4 +147,13 @@ public class AppContext {
     public ConfirmarPlanejamentoUseCase getConfirmarPlanejamentoUseCase()     { return confirmarPlanejamentoUseCase; }
     public DefinirLimiteCategoriaUseCase getDefinirLimiteCategoriaUseCase()   { return definirLimiteCategoriaUseCase; }
     public DefinirComoPlanosPadraoUseCase getDefinirComoPlanosPadraoUseCase() { return definirComoPlanosPadraoUseCase; }
+    public CriarLancamentoRecorrenteUseCase getCriarLancamentoRecorrenteUseCase()       { return criarLancamentoRecorrenteUseCase; }
+    public EditarLancamentoRecorrenteUseCase getEditarLancamentoRecorrenteUseCase()     { return editarLancamentoRecorrenteUseCase; }
+    public DesativarLancamentoRecorrenteUseCase getDesativarLancamentoRecorrenteUseCase() { return desativarLancamentoRecorrenteUseCase; }
+    public GerarLancamentosRecorrentesUseCase getGerarLancamentosRecorrentesUseCase()   { return gerarLancamentosRecorrentesUseCase; }
+    public CriarProvisaoUseCase getCriarProvisaoUseCase()                               { return criarProvisaoUseCase; }
+    public EditarProvisaoUseCase getEditarProvisaoUseCase()                             { return editarProvisaoUseCase; }
+    public DesativarProvisaoUseCase getDesativarProvisaoUseCase()                       { return desativarProvisaoUseCase; }
+    public CreditarProvisoesMensaisUseCase getCreditarProvisoesMensaisUseCase()         { return creditarProvisoesMensaisUseCase; }
+    public DebitarProvisaoUseCase getDebitarProvisaoUseCase()                           { return debitarProvisaoUseCase; }
 }

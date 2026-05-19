@@ -1,6 +1,8 @@
 package com.financeiramente.desktop.ui;
 
 import com.financeiramente.core.usecase.CalcularSaldoMensalUseCase;
+import com.financeiramente.core.usecase.CreditarProvisoesMensaisUseCase;
+import com.financeiramente.core.usecase.GerarLancamentosRecorrentesUseCase;
 import com.financeiramente.core.usecase.SaldoMensalResult;
 import com.financeiramente.desktop.app.AppContext;
 
@@ -22,7 +24,71 @@ public class MainController {
 
     @FXML
     public void initialize() {
+        gerarLancamentosRecorrentesDoMes();
+        creditarProvisoesMensais();
         abrirDashboard();
+    }
+
+    /**
+     * Credita o valor mensal de cada provisão ativa (EP-09).
+     * Idempotente: controlado via arquivo de propriedades em ~/.financeiramente/.
+     */
+    private void creditarProvisoesMensais() {
+        LocalDate hoje = LocalDate.now();
+        String chaveAtual = hoje.getYear() + "-" + hoje.getMonthValue();
+        java.nio.file.Path propsPath = java.nio.file.Paths.get(
+                System.getProperty("user.home"), ".financeiramente", "startup.properties");
+
+        try {
+            java.util.Properties props = new java.util.Properties();
+            if (java.nio.file.Files.exists(propsPath)) {
+                try (java.io.InputStream is = java.nio.file.Files.newInputStream(propsPath)) {
+                    props.load(is);
+                }
+            }
+            String ultimoCreditado = props.getProperty("last_creditado_mes", "");
+            if (chaveAtual.equals(ultimoCreditado)) {
+                return; // Já creditou neste mês
+            }
+            props.setProperty("last_creditado_mes", chaveAtual);
+            java.nio.file.Files.createDirectories(propsPath.getParent());
+            try (java.io.OutputStream os = java.nio.file.Files.newOutputStream(propsPath)) {
+                props.store(os, null);
+            }
+        } catch (Exception ignored) {
+            // Se não conseguir ler/escrever props, executa mesmo assim
+        }
+
+        CreditarProvisoesMensaisUseCase uc = AppContext.get().getCreditarProvisoesMensaisUseCase();
+        Task<Void> task = new Task<>() {
+            @Override
+            protected Void call() {
+                uc.executar();
+                return null;
+            }
+        };
+        Thread t = new Thread(task);
+        t.setDaemon(true);
+        t.start();
+    }
+
+    /**
+     * Gera automaticamente os lançamentos recorrentes do mês atual (EP-08).
+     * Idempotente: não duplica lançamentos já gerados no mesmo mês.
+     */
+    private void gerarLancamentosRecorrentesDoMes() {
+        GerarLancamentosRecorrentesUseCase uc = AppContext.get().getGerarLancamentosRecorrentesUseCase();
+        LocalDate hoje = LocalDate.now();
+        Task<Void> task = new Task<>() {
+            @Override
+            protected Void call() {
+                uc.executar(hoje.getYear(), hoje.getMonthValue());
+                return null;
+            }
+        };
+        Thread t = new Thread(task);
+        t.setDaemon(true);
+        t.start();
     }
 
     @FXML
@@ -71,6 +137,30 @@ public class MainController {
             statusLabel.setText("Planejamento Mensal");
         } catch (IOException e) {
             statusLabel.setText("Erro ao abrir Planejamento: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void abrirRecorrentes() {
+        try {
+            Parent view = FXMLLoader.load(
+                    getClass().getResource("/com/financeiramente/desktop/fxml/recorrentes.fxml"));
+            contentPane.getChildren().setAll(view);
+            statusLabel.setText("Lançamentos Recorrentes");
+        } catch (IOException e) {
+            statusLabel.setText("Erro ao abrir Recorrentes: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void abrirProvisoes() {
+        try {
+            Parent view = FXMLLoader.load(
+                    getClass().getResource("/com/financeiramente/desktop/fxml/provisoes.fxml"));
+            contentPane.getChildren().setAll(view);
+            statusLabel.setText("Provisões");
+        } catch (IOException e) {
+            statusLabel.setText("Erro ao abrir Provisões: " + e.getMessage());
         }
     }
 
