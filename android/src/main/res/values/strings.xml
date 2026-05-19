@@ -113,4 +113,20 @@
     <string name="aporte_descricao">Descrição (opcional)</string>
     <string name="deletar_aporte">Excluir aporte</string>
     <string name="confirmar_deletar_aporte">Deseja excluir este aporte?</string>
+    <!-- Relatórios EP-11 -->
+    <string name="relatorio_periodo">Período</string>
+    <string name="relatorio_semana">Semana</string>
+    <string name="relatorio_mes">Mês</string>
+    <string name="relatorio_personalizado">Personalizado</string>
+    <string name="relatorio_data_inicio">Data início</string>
+    <string name="relatorio_data_fim">Data fim</string>
+    <string name="relatorio_filtros">Filtros</string>
+    <string name="relatorio_todas_categorias">Todas as categorias</string>
+    <string name="relatorio_todas_tags">Todas as tags</string>
+    <string name="relatorio_todos">Todos</string>
+    <string name="relatorio_aplicar">Aplicar filtros</string>
+    <string name="relatorio_resumo">Resumo</string>
+    <string name="relatorio_saldo">Saldo</string>
+    <string name="relatorio_por_categoria">Total por categoria</string>
+    <string name="relatorio_datas_obrigatorias">Informe as datas de início e fim</string>
 </resources>

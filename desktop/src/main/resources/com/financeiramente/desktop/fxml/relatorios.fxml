@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.financeiramente.desktop.ui.RelatoriosController">
+
+    <top>
+        <VBox style="-fx-padding: 12; -fx-spacing: 8; -fx-background-color: #fafafa;">
+            <Label text="Relatórios"
+                   style="-fx-font-size: 18; -fx-font-weight: bold;" />
+        </VBox>
+    </top>
+
+    <center>
+        <HBox spacing="12" style="-fx-padding: 12;">
+
+            <!-- Painel de filtros -->
+            <VBox spacing="10" prefWidth="280">
+
+                <Label text="Período" style="-fx-font-weight: bold;" />
+
+                <HBox spacing="6">
+                    <Button text="Semana" onAction="#filtrarSemana"
+                            style="-fx-background-color: #E3F2FD;" />
+                    <Button text="Mês" onAction="#filtrarMes"
+                            style="-fx-background-color: #E8F5E9;" />
+                </HBox>
+
+                <Label text="Início" />
+                <DatePicker fx:id="dpInicio" maxWidth="260" />
+
+                <Label text="Fim" />
+                <DatePicker fx:id="dpFim" maxWidth="260" />
+
+                <Separator />
+
+                <Label text="Categoria" style="-fx-font-weight: bold;" />
+                <ComboBox fx:id="cbCategoria" maxWidth="260" />
+
+                <Label text="Tag" style="-fx-font-weight: bold;" />
+                <ComboBox fx:id="cbTag" maxWidth="260" />
+
+                <Label text="Tipo" style="-fx-font-weight: bold;" />
+                <HBox spacing="10">
+                    <fx:define>
+                        <ToggleGroup fx:id="tgTipo" />
+                    </fx:define>
+                    <RadioButton text="Todos"    toggleGroup="$tgTipo" fx:id="rbTodos"    selected="true" />
+                    <RadioButton text="Receitas" toggleGroup="$tgTipo" fx:id="rbReceitas" />
+                    <RadioButton text="Despesas" toggleGroup="$tgTipo" fx:id="rbDespesas" />
+                </HBox>
+
+                <Button text="Aplicar Filtros" onAction="#aplicarFiltros"
+                        maxWidth="260"
+                        style="-fx-background-color: #2196F3; -fx-text-fill: white;" />
+
+                <Label fx:id="lblErro" style="-fx-text-fill: red;" visible="false" />
+
+            </VBox>
+
+            <Separator orientation="VERTICAL" />
+
+            <!-- Resultado -->
+            <VBox spacing="10" HBox.hgrow="ALWAYS">
+
+                <!-- Resumo financeiro -->
+                <Label text="Resumo" style="-fx-font-weight: bold; -fx-font-size: 14;" />
+
+                <GridPane hgap="16" vgap="4">
+                    <Label text="Total Receitas:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                    <Label fx:id="lblTotalReceitas" text="R$ 0,00" GridPane.rowIndex="0" GridPane.columnIndex="1"
+                           style="-fx-text-fill: #2E7D32; -fx-font-weight: bold;" />
+
+                    <Label text="Total Despesas:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                    <Label fx:id="lblTotalDespesas" text="R$ 0,00" GridPane.rowIndex="1" GridPane.columnIndex="1"
+                           style="-fx-text-fill: #C62828; -fx-font-weight: bold;" />
+
+                    <Label text="Saldo:" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                    <Label fx:id="lblSaldo" text="R$ 0,00" GridPane.rowIndex="2" GridPane.columnIndex="1"
+                           style="-fx-font-weight: bold;" />
+                </GridPane>
+
+                <Separator />
+
+                <!-- Total por categoria -->
+                <Label text="Por Categoria" style="-fx-font-weight: bold;" />
+                <TableView fx:id="tvCategorias" prefHeight="160">
+                    <columns>
+                        <TableColumn fx:id="colCatNome"  text="Categoria" prefWidth="200" />
+                        <TableColumn fx:id="colCatTotal" text="Total (R$)" prefWidth="120" />
+                    </columns>
+                </TableView>
+
+                <Separator />
+
+                <!-- Lista de lançamentos -->
+                <Label text="Lançamentos" style="-fx-font-weight: bold;" />
+                <TableView fx:id="tvLancamentos" VBox.vgrow="ALWAYS" prefHeight="320">
+                    <columns>
+                        <TableColumn fx:id="colData"      text="Data"      prefWidth="100" />
+                        <TableColumn fx:id="colDescricao" text="Descrição" prefWidth="220" />
+                        <TableColumn fx:id="colCategoria" text="Categoria" prefWidth="140" />
+                        <TableColumn fx:id="colTipo"      text="Tipo"      prefWidth="80" />
+                        <TableColumn fx:id="colValor"     text="Valor (R$)" prefWidth="100" />
+                    </columns>
+                </TableView>
+
+            </VBox>
+
+        </HBox>
+    </center>
+
+</BorderPane>

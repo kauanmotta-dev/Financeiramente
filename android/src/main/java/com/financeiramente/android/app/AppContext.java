@@ -45,6 +45,7 @@ import com.financeiramente.core.usecase.EditarLancamentoRecorrenteUseCase;
 import com.financeiramente.core.usecase.EditarLancamentoUseCase;
 import com.financeiramente.core.usecase.EditarProvisaoUseCase;
 import com.financeiramente.core.usecase.GerarLancamentosRecorrentesUseCase;
+import com.financeiramente.core.usecase.GerarRelatorioUseCase;
 import com.financeiramente.core.usecase.ListarLancamentosUseCase;
 import com.financeiramente.core.usecase.RegistrarLancamentoUseCase;
 import com.financeiramente.core.usecase.ReordenarCategoriasUseCase;
@@ -92,6 +93,7 @@ public class AppContext {
     private final RegistrarAporteMetaUseCase registrarAporteMetaUseCase;
     private final DeletarAporteMetaUseCase deletarAporteMetaUseCase;
     private final CalcularProjecaoMetaUseCase calcularProjecaoMetaUseCase;
+    private final GerarRelatorioUseCase gerarRelatorioUseCase;
 
     private AppContext(Context context) {
         this.databaseDriver = new AndroidDatabaseDriver(context);
@@ -135,6 +137,7 @@ public class AppContext {
         this.registrarAporteMetaUseCase  = new RegistrarAporteMetaUseCase(metaRepository, aporteMetaRepository);
         this.deletarAporteMetaUseCase    = new DeletarAporteMetaUseCase(metaRepository, aporteMetaRepository);
         this.calcularProjecaoMetaUseCase = new CalcularProjecaoMetaUseCase(metaRepository);
+        this.gerarRelatorioUseCase       = new GerarRelatorioUseCase(lancamentoRepository, categoriaRepository, tagRepository);
     }
 
     public static synchronized AppContext get(Context context) {
@@ -181,4 +184,5 @@ public class AppContext {
     public RegistrarAporteMetaUseCase getRegistrarAporteMetaUseCase()                   { return registrarAporteMetaUseCase; }
     public DeletarAporteMetaUseCase getDeletarAporteMetaUseCase()                       { return deletarAporteMetaUseCase; }
     public CalcularProjecaoMetaUseCase getCalcularProjecaoMetaUseCase()                 { return calcularProjecaoMetaUseCase; }
+    public GerarRelatorioUseCase getGerarRelatorioUseCase()                             { return gerarRelatorioUseCase; }
 }
