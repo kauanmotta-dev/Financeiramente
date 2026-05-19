@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.financeiramente.desktop.ui.DashboardController">
+
+    <top>
+        <VBox spacing="12" style="-fx-padding: 16; -fx-background-color: #f8f9fa;">
+
+            <Label text="Dashboard"
+                   style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #333;" />
+
+            <Separator />
+
+            <!-- Saldo disponível -->
+            <HBox spacing="16" alignment="CENTER_LEFT">
+                <Label text="Saldo Disponível:" style="-fx-font-size: 14; -fx-text-fill: #555;" />
+                <Label fx:id="lblSaldoDisponivel"
+                       text="R$ --"
+                       style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: #2196F3;" />
+            </HBox>
+
+            <!-- Resumo receita / gasto / provisões -->
+            <GridPane hgap="24" vgap="4">
+                <Label text="Receita realizada:" GridPane.columnIndex="0" GridPane.rowIndex="0"
+                       style="-fx-text-fill: #555; -fx-font-size: 12;" />
+                <Label fx:id="lblReceita" text="R$ 0,00" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                       style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #4CAF50;" />
+
+                <Label text="Total gasto:" GridPane.columnIndex="0" GridPane.rowIndex="1"
+                       style="-fx-text-fill: #555; -fx-font-size: 12;" />
+                <Label fx:id="lblGasto" text="R$ 0,00" GridPane.columnIndex="1" GridPane.rowIndex="1"
+                       style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #F44336;" />
+
+                <Label text="Provisões mensais:" GridPane.columnIndex="0" GridPane.rowIndex="2"
+                       style="-fx-text-fill: #555; -fx-font-size: 12;" />
+                <Label fx:id="lblProvisoes" text="R$ 0,00" GridPane.columnIndex="1" GridPane.rowIndex="2"
+                       style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #FF9800;" />
+
+                <Label text="Reserva imprevistos:" GridPane.columnIndex="0" GridPane.rowIndex="3"
+                       style="-fx-text-fill: #555; -fx-font-size: 12;" />
+                <Label fx:id="lblReserva" text="R$ 0,00" GridPane.columnIndex="1" GridPane.rowIndex="3"
+                       style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #9C27B0;" />
+            </GridPane>
+
+            <!-- Barra de progresso global -->
+            <Label text="Progresso global (gasto / receita):"
+                   style="-fx-font-size: 12; -fx-text-fill: #555;" />
+            <ProgressBar fx:id="pbGlobal"
+                         progress="0"
+                         maxWidth="Infinity" />
+
+            <!-- Alerta -->
+            <Label fx:id="lblAlerta"
+                   text=""
+                   wrapText="true"
+                   style="-fx-font-size: 12; -fx-text-fill: #F44336; -fx-font-weight: bold;"
+                   managed="false"
+                   visible="false" />
+
+            <Separator />
+
+            <Label text="Saldo por Categoria"
+                   style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #333;" />
+
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="tblCategorias" style="-fx-padding: 0 16 16 16;">
+            <columns>
+                <TableColumn fx:id="colStatus" text="Status" prefWidth="80">
+                    <cellValueFactory><PropertyValueFactory property="statusStr" /></cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="colNome" text="Categoria" prefWidth="200">
+                    <cellValueFactory><PropertyValueFactory property="categoriaNome" /></cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="colLimite" text="Limite (R$)" prefWidth="120">
+                    <cellValueFactory><PropertyValueFactory property="limiteStr" /></cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="colGasto" text="Gasto (R$)" prefWidth="120">
+                    <cellValueFactory><PropertyValueFactory property="gastoStr" /></cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="colSaldo" text="Saldo (R$)" prefWidth="120">
+                    <cellValueFactory><PropertyValueFactory property="saldoStr" /></cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="colProgresso" text="Progresso" prefWidth="120">
+                    <cellValueFactory><PropertyValueFactory property="progressoStr" /></cellValueFactory>
+                </TableColumn>
+            </columns>
+            <placeholder>
+                <Label text="Nenhuma categoria com limite definida no planejamento deste mês." />
+            </placeholder>
+        </TableView>
+    </center>
+
+</BorderPane>

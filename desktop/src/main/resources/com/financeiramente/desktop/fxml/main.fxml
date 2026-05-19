@@ -13,17 +13,21 @@
 
     <top>
         <MenuBar>
+            <Menu text="Início">
+                <MenuItem text="Dashboard" onAction="#abrirDashboard" />
+            </Menu>
+            <Menu text="Lançamentos">
+                <MenuItem text="Ver Lançamentos" onAction="#abrirLancamentos" />
+            </Menu>
             <Menu text="Configurações">
                 <MenuItem text="Categorias" onAction="#abrirCategorias" />
+                <MenuItem text="Planejamento Mensal" onAction="#abrirPlanejamento" />
             </Menu>
         </MenuBar>
     </top>
 
     <center>
-        <StackPane fx:id="contentPane">
-            <Label text="Dashboard — em construção"
-                   style="-fx-font-size: 24; -fx-text-fill: #555;" />
-        </StackPane>
+        <StackPane fx:id="contentPane" />
     </center>
 
     <bottom>

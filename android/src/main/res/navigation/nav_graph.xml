@@ -9,7 +9,14 @@
     <fragment
         android:id="@+id/nav_dashboard"
         android:name="com.financeiramente.android.ui.dashboard.DashboardFragment"
-        android:label="@string/nav_dashboard" />
+        android:label="@string/nav_dashboard">
+        <action
+            android:id="@+id/action_dashboardFragment_to_lancamentoFormFragment"
+            app:destination="@id/lancamentoFormFragment" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_lancamentosListFragment"
+            app:destination="@id/lancamentosListFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_metas"
@@ -28,6 +35,31 @@
         <action
             android:id="@+id/action_configuracoesFragment_to_categoriasFragment"
             app:destination="@id/categoriasFragment" />
+        <action
+            android:id="@+id/action_configuracoesFragment_to_planejamentoFragment"
+            app:destination="@id/planejamentoFragment" />
+    </fragment>
+
+    <!-- ── Lançamentos ── -->
+
+    <fragment
+        android:id="@+id/lancamentosListFragment"
+        android:name="com.financeiramente.android.ui.lancamentos.LancamentosListFragment"
+        android:label="@string/nav_lancamentos">
+        <action
+            android:id="@+id/action_lancamentosListFragment_to_lancamentoFormFragment"
+            app:destination="@id/lancamentoFormFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/lancamentoFormFragment"
+        android:name="com.financeiramente.android.ui.lancamentos.LancamentoFormFragment"
+        android:label="@string/form_lancamento">
+        <argument
+            android:name="lancamentoId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
     </fragment>
 
     <!-- ── Categorias ── -->
@@ -40,6 +72,13 @@
             android:id="@+id/action_categoriasFragment_to_categoriaFormFragment"
             app:destination="@id/categoriaFormFragment" />
     </fragment>
+
+    <!-- ── Planejamento Mensal ── -->
+
+    <fragment
+        android:id="@+id/planejamentoFragment"
+        android:name="com.financeiramente.android.ui.planejamento.PlanejamentoFragment"
+        android:label="@string/nav_planejamento" />
 
     <fragment
         android:id="@+id/categoriaFormFragment"

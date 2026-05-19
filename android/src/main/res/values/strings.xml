@@ -6,7 +6,9 @@
     <string name="nav_relatorios">Relatórios</string>
     <string name="nav_configuracoes">Configurações</string>
     <string name="nav_categorias">Categorias</string>
+    <string name="nav_lancamentos">Lançamentos</string>
     <string name="add_categoria">Adicionar categoria</string>
+    <string name="add_lancamento">Novo lançamento</string>
     <string name="categoria_nome">Nome</string>
     <string name="categoria_tipo">Tipo</string>
     <string name="categoria_limite_mensal">Limite Mensal (R$) — opcional</string>
@@ -19,4 +21,48 @@
     <string name="confirmar_exclusao_categoria">Deseja excluir "%s"?</string>
     <string name="form_categoria">Categoria</string>
     <string name="gerenciar_categorias">Gerenciar Categorias</string>
+    <!-- Lançamentos -->
+    <string name="form_lancamento">Lançamento</string>
+    <string name="lancamento_valor">Valor (R$)</string>
+    <string name="lancamento_descricao">Descrição</string>
+    <string name="lancamento_categoria">Categoria</string>
+    <string name="lancamento_data">Data</string>
+    <string name="lancamento_tags">Tags (opcional)</string>
+    <string name="lancamento_receita">Receita</string>
+    <string name="lancamento_despesa">Despesa</string>
+    <string name="lancamentos_vazio">Nenhum lançamento no mês</string>
+    <string name="excluir_lancamento">Excluir lançamento</string>
+    <string name="confirmar_exclusao_lancamento">Deseja excluir "%s"?</string>
+    <string name="erro_valor_obrigatorio">Valor é obrigatório</string>
+    <string name="erro_valor_invalido">Valor deve ser maior que zero</string>
+    <string name="erro_descricao_obrigatoria">Descrição é obrigatória</string>
+    <string name="erro_categoria_obrigatoria">Selecione uma categoria</string>
+    <string name="dashboard_titulo">Dashboard</string>
+    <!-- Dashboard EP-06 -->
+    <string name="dashboard_saldo_disponivel">Saldo Disponível</string>
+    <string name="dashboard_progresso_global">Progresso global</string>
+    <string name="dashboard_gasto">Gasto</string>
+    <string name="dashboard_receita">Receita</string>
+    <string name="dashboard_categorias">Saldo por Categoria</string>
+    <string name="dashboard_sem_planejamento">Nenhuma categoria com limite definida para este mês.</string>
+    <string name="dashboard_alerta_limite">⚠ Categorias próximas do limite: %s</string>
+    <string name="dashboard_alerta_estourado">⚠ Categorias estouradas: %s</string>
+    <!-- Planejamento EP-07 -->
+    <string name="nav_planejamento">Planejamento Mensal</string>
+    <string name="gerenciar_planejamento">Planejamento Mensal</string>
+    <string name="planejamento_titulo_mes">Planejamento — %1$s %2$d</string>
+    <string name="planejamento_receita_esperada">Receita Esperada (R$)</string>
+    <string name="planejamento_reserva_imprevisto">Reserva para Imprevistos (R$)</string>
+    <string name="planejamento_limites_por_categoria">Limites por Categoria</string>
+    <string name="planejamento_limite">Limite (R$)</string>
+    <string name="planejamento_confirmar">Confirmar Plano</string>
+    <string name="planejamento_definir_padrao">Definir como Plano Padrão</string>
+    <string name="planejamento_salvar_valores">Salvar Receita e Reserva</string>
+    <string name="planejamento_confirmado">Confirmado ✓</string>
+    <string name="planejamento_salvo_com_sucesso">Planejamento salvo com sucesso!</string>
+    <!-- Alerta mês novo -->
+    <string name="alerta_planejamento_titulo">Novo mês!</string>
+    <string name="alerta_planejamento_mensagem">Você ainda não confirmou o planejamento deste mês. Deseja configurar agora?</string>
+    <string name="alerta_planejamento_ir">Configurar Agora</string>
+    <string name="alerta_planejamento_depois">Depois</string>
 </resources>
