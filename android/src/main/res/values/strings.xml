@@ -65,4 +65,32 @@
     <string name="alerta_planejamento_mensagem">Você ainda não confirmou o planejamento deste mês. Deseja configurar agora?</string>
     <string name="alerta_planejamento_ir">Configurar Agora</string>
     <string name="alerta_planejamento_depois">Depois</string>
+    <!-- Lançamentos Recorrentes EP-08 -->
+    <string name="nav_recorrentes">Recorrentes</string>
+    <string name="gerenciar_recorrentes">Lançamentos Recorrentes</string>
+    <string name="form_recorrente">Lançamento Recorrente</string>
+    <string name="recorrente_descricao">Descrição</string>
+    <string name="recorrente_valor">Valor (R$)</string>
+    <string name="recorrente_tipo">Tipo</string>
+    <string name="recorrente_recorrencia">Recorrência</string>
+    <string name="recorrente_dia">Dia do mês (opcional)</string>
+    <string name="recorrentes_vazio">Nenhum lançamento recorrente ativo</string>
+    <string name="add_recorrente">Novo recorrente</string>
+    <string name="desativar_recorrente">Desativar recorrente</string>
+    <string name="confirmar_desativar_recorrente">Desativar "%s"?</string>
+    <!-- Provisões EP-09 -->
+    <string name="nav_provisoes">Provisões</string>
+    <string name="gerenciar_provisoes">Provisões</string>
+    <string name="form_provisao">Provisão</string>
+    <string name="provisao_nome">Nome</string>
+    <string name="provisao_total_anual">Total Anual (R$)</string>
+    <string name="provisao_valor_mensal">Valor Mensal (R$)</string>
+    <string name="provisao_categoria">Categoria (opcional)</string>
+    <string name="provisao_categoria_opcional">Nenhuma</string>
+    <string name="provisoes_vazio">Nenhuma provisão ativa</string>
+    <string name="add_provisao">Nova provisão</string>
+    <string name="desativar_provisao">Desativar provisão</string>
+    <string name="confirmar_desativar_provisao">Desativar "%s"?</string>
+    <string name="lancamento_provisao">Provisão (opcional)</string>
+    <string name="lancamento_provisao_nenhuma">Nenhuma</string>
 </resources>

@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String PREFS_NAME = "financeiramente_prefs";
     private static final String KEY_LAST_CHECKED_MES = "last_checked_ano_mes";
+    private static final String KEY_LAST_CREDITADO_MES = "last_creditado_ano_mes";
 
     private NavController navController;
 
@@ -41,7 +42,60 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
         NavigationUI.setupWithNavController(bottomNav, navController);
 
+        gerarLancamentosRecorrentesDoMes();
+        creditarProvisoesMensais();
         verificarPlanejamentoMesNovo();
+    }
+
+    /**
+     * Credita o valor mensal de cada provisão ativa (EP-09).
+     * Idempotente: executa apenas uma vez por mês usando SharedPreferences.
+     */
+    private void creditarProvisoesMensais() {
+        LocalDate hoje = LocalDate.now();
+        String chaveAtual = hoje.getYear() + "-" + hoje.getMonthValue();
+
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String ultimoCreditado = prefs.getString(KEY_LAST_CREDITADO_MES, "");
+
+        if (chaveAtual.equals(ultimoCreditado)) {
+            return; // Já creditou neste mês
+        }
+
+        prefs.edit().putString(KEY_LAST_CREDITADO_MES, chaveAtual).apply();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            try {
+                AppContext.get(this)
+                        .getCreditarProvisoesMensaisUseCase()
+                        .executar();
+            } catch (Exception ignored) {
+                // Não bloqueia o usuário em caso de falha
+            } finally {
+                executor.shutdown();
+            }
+        });
+    }
+
+    /**
+     * Gera automaticamente os lançamentos recorrentes do mês atual (EP-08).
+     * A operação é idempotente — executar mais de uma vez no mesmo mês não duplica lançamentos.
+     */
+    private void gerarLancamentosRecorrentesDoMes() {
+        LocalDate hoje = LocalDate.now();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            try {
+                AppContext.get(this)
+                        .getGerarLancamentosRecorrentesUseCase()
+                        .executar(hoje.getYear(), hoje.getMonthValue());
+            } catch (Exception ignored) {
+                // Não bloqueia o usuário em caso de falha
+            } finally {
+                executor.shutdown();
+            }
+        });
     }
 
     /**
