@@ -164,6 +164,18 @@ public class MainController {
         }
     }
 
+    @FXML
+    private void abrirMetas() {
+        try {
+            Parent view = FXMLLoader.load(
+                    getClass().getResource("/com/financeiramente/desktop/fxml/metas.fxml"));
+            contentPane.getChildren().setAll(view);
+            statusLabel.setText("Metas");
+        } catch (IOException e) {
+            statusLabel.setText("Erro ao abrir Metas: " + e.getMessage());
+        }
+    }
+
     /** Atualiza a barra de status com o saldo disponível do mês atual. */
     private void atualizarStatusSaldo() {
         CalcularSaldoMensalUseCase uc = AppContext.get().getCalcularSaldoMensalUseCase();
