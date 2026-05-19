@@ -21,8 +21,14 @@ import com.financeiramente.core.usecase.CalcularSaldoMensalUseCase;
 import com.financeiramente.core.usecase.CriarCategoriaUseCase;
 import com.financeiramente.core.usecase.CriarLancamentoRecorrenteUseCase;
 import com.financeiramente.core.usecase.CriarPlanejamentoMensalUseCase;
+import com.financeiramente.core.usecase.CalcularProjecaoMetaUseCase;
+import com.financeiramente.core.usecase.CriarMetaUseCase;
 import com.financeiramente.core.usecase.CriarProvisaoUseCase;
 import com.financeiramente.core.usecase.ConfirmarPlanejamentoUseCase;
+import com.financeiramente.core.usecase.DeletarAporteMetaUseCase;
+import com.financeiramente.core.usecase.DesativarMetaUseCase;
+import com.financeiramente.core.usecase.EditarMetaUseCase;
+import com.financeiramente.core.usecase.RegistrarAporteMetaUseCase;
 import com.financeiramente.core.usecase.CreditarProvisoesMensaisUseCase;
 import com.financeiramente.core.usecase.DebitarProvisaoUseCase;
 import com.financeiramente.core.usecase.DefinirLimiteCategoriaUseCase;
@@ -78,6 +84,12 @@ public class AppContext {
     private final DesativarProvisaoUseCase desativarProvisaoUseCase;
     private final CreditarProvisoesMensaisUseCase creditarProvisoesMensaisUseCase;
     private final DebitarProvisaoUseCase debitarProvisaoUseCase;
+    private final CriarMetaUseCase criarMetaUseCase;
+    private final EditarMetaUseCase editarMetaUseCase;
+    private final DesativarMetaUseCase desativarMetaUseCase;
+    private final RegistrarAporteMetaUseCase registrarAporteMetaUseCase;
+    private final DeletarAporteMetaUseCase deletarAporteMetaUseCase;
+    private final CalcularProjecaoMetaUseCase calcularProjecaoMetaUseCase;
 
     private AppContext() {
         this.databaseDriver = new JdbcDatabaseDriver();
@@ -115,6 +127,12 @@ public class AppContext {
         this.desativarProvisaoUseCase    = new DesativarProvisaoUseCase(provisaoRepository);
         this.creditarProvisoesMensaisUseCase = new CreditarProvisoesMensaisUseCase(provisaoRepository);
         this.debitarProvisaoUseCase      = new DebitarProvisaoUseCase(provisaoRepository);
+        this.criarMetaUseCase            = new CriarMetaUseCase(metaRepository);
+        this.editarMetaUseCase           = new EditarMetaUseCase(metaRepository);
+        this.desativarMetaUseCase        = new DesativarMetaUseCase(metaRepository);
+        this.registrarAporteMetaUseCase  = new RegistrarAporteMetaUseCase(metaRepository, aporteMetaRepository);
+        this.deletarAporteMetaUseCase    = new DeletarAporteMetaUseCase(metaRepository, aporteMetaRepository);
+        this.calcularProjecaoMetaUseCase = new CalcularProjecaoMetaUseCase(metaRepository);
     }
 
     public static synchronized AppContext get() {
@@ -156,4 +174,10 @@ public class AppContext {
     public DesativarProvisaoUseCase getDesativarProvisaoUseCase()                       { return desativarProvisaoUseCase; }
     public CreditarProvisoesMensaisUseCase getCreditarProvisoesMensaisUseCase()         { return creditarProvisoesMensaisUseCase; }
     public DebitarProvisaoUseCase getDebitarProvisaoUseCase()                           { return debitarProvisaoUseCase; }
+    public CriarMetaUseCase getCriarMetaUseCase()                                       { return criarMetaUseCase; }
+    public EditarMetaUseCase getEditarMetaUseCase()                                     { return editarMetaUseCase; }
+    public DesativarMetaUseCase getDesativarMetaUseCase()                               { return desativarMetaUseCase; }
+    public RegistrarAporteMetaUseCase getRegistrarAporteMetaUseCase()                   { return registrarAporteMetaUseCase; }
+    public DeletarAporteMetaUseCase getDeletarAporteMetaUseCase()                       { return deletarAporteMetaUseCase; }
+    public CalcularProjecaoMetaUseCase getCalcularProjecaoMetaUseCase()                 { return calcularProjecaoMetaUseCase; }
 }

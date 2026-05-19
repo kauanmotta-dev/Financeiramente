@@ -93,4 +93,24 @@
     <string name="confirmar_desativar_provisao">Desativar "%s"?</string>
     <string name="lancamento_provisao">Provisão (opcional)</string>
     <string name="lancamento_provisao_nenhuma">Nenhuma</string>
+    <!-- Metas EP-10 -->
+    <string name="meta_detalhe">Detalhe da Meta</string>
+    <string name="add_meta">Nova meta</string>
+    <string name="metas_vazio">Nenhuma meta ativa</string>
+    <string name="desativar_meta">Desativar meta</string>
+    <string name="confirmar_desativar_meta">Desativar "%s"?</string>
+    <string name="meta_nome">Nome</string>
+    <string name="meta_valor_objetivo">Valor Objetivo (R$)</string>
+    <string name="meta_data_alvo">Data Alvo (opcional)</string>
+    <string name="meta_descricao">Descrição (opcional)</string>
+    <string name="meta_historico_aportes">Histórico de Aportes</string>
+    <string name="meta_projecao">Projeção de conclusão: %s</string>
+    <string name="meta_projecao_sem_dados">Projeção: sem dados suficientes</string>
+    <string name="add_aporte">Novo aporte</string>
+    <string name="aportes_vazio">Nenhum aporte registrado</string>
+    <string name="aporte_valor">Valor (R$)</string>
+    <string name="aporte_data">Data</string>
+    <string name="aporte_descricao">Descrição (opcional)</string>
+    <string name="deletar_aporte">Excluir aporte</string>
+    <string name="confirmar_deletar_aporte">Deseja excluir este aporte?</string>
 </resources>
