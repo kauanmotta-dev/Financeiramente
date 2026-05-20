@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.financeiramente.android.R;
-import com.financeiramente.core.domain.vo.StatusSaldo;
 import com.financeiramente.core.usecase.SaldoCategoria;
 
 import java.util.ArrayList;
@@ -77,19 +76,21 @@ public class SaldoCategoriaAdapter extends RecyclerView.Adapter<SaldoCategoriaAd
             }
             pbCategoria.setProgress(progressoPercent);
 
-            int statusColor = resolverCor(item.getStatus());
+            int statusColor = resolverCor(item.getLimite(), item.getGastoRealizado());
             viewStatusIndicator.setBackgroundTintList(
                     android.content.res.ColorStateList.valueOf(statusColor));
             tvSaldo.setTextColor(item.getSaldo() >= 0 ? statusColor : Color.RED);
         }
 
-        private int resolverCor(StatusSaldo status) {
-            switch (status) {
-                case VERDE:    return Color.parseColor("#4CAF50");
-                case AMARELO:  return Color.parseColor("#FF9800");
-                case VERMELHO: return Color.parseColor("#F44336");
-                default:       return Color.GRAY;
+        /** Cor baseada na proporção gasto/limite (sem enum explícito). */
+        private int resolverCor(double limite, double gasto) {
+            if (limite <= 0) {
+                return gasto > 0 ? Color.parseColor("#F44336") : Color.parseColor("#4CAF50");
             }
+            double percentual = gasto / limite;
+            if (percentual < 0.75)  return Color.parseColor("#4CAF50");  // verde
+            if (percentual <= 1.00) return Color.parseColor("#FF9800");  // amarelo
+            return Color.parseColor("#F44336");                           // vermelho
         }
     }
 }

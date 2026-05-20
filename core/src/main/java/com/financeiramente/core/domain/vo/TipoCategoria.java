@@ -1,11 +1,15 @@
 package com.financeiramente.core.domain.vo;
 
-/**
- * Bucket de domínio de uma categoria conforme PRD seção 5.
- */
 public enum TipoCategoria {
     ESSENCIAL,
     NAO_ESSENCIAL,
-    IMPREVISTO,
-    PROVISAO
+    RECEITA;
+
+    public boolean isCompativelCom(TipoLancamento tipoLancamento) {
+        switch (tipoLancamento) {
+            case RECEITA: return this == RECEITA;
+            case DESPESA: return this == ESSENCIAL || this == NAO_ESSENCIAL;
+            default:      return false;
+        }
+    }
 }

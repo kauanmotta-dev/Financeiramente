@@ -6,7 +6,6 @@ import com.financeiramente.core.dao.LancamentoDao;
 import com.financeiramente.core.dao.LancamentoRecorrenteDao;
 import com.financeiramente.core.dao.MetaDao;
 import com.financeiramente.core.dao.PlanejamentoDao;
-import com.financeiramente.core.dao.ProvisaoDao;
 import com.financeiramente.core.dao.TagDao;
 import com.financeiramente.core.db.DatabaseMigrator;
 import com.financeiramente.core.db.DatabaseDriver;
@@ -19,7 +18,6 @@ import com.financeiramente.core.domain.entity.LancamentoRecorrente;
 import com.financeiramente.core.domain.entity.Meta;
 import com.financeiramente.core.domain.entity.PlanejamentoCategoria;
 import com.financeiramente.core.domain.entity.PlanejamentoMensal;
-import com.financeiramente.core.domain.entity.Provisao;
 import com.financeiramente.core.domain.entity.Tag;
 import com.financeiramente.core.domain.vo.TipoCategoria;
 import com.financeiramente.core.domain.vo.TipoLancamento;
@@ -42,7 +40,6 @@ class PersistenceIntegrationTest {
     private TagDao tagDao;
     private PlanejamentoDao planejamentoDao;
     private LancamentoRecorrenteDao recorrenteDao;
-    private ProvisaoDao provisaoDao;
     private MetaDao metaDao;
     private AporteMetaDao aporteMetaDao;
 
@@ -56,7 +53,6 @@ class PersistenceIntegrationTest {
         tagDao            = new TagDao(driver);
         planejamentoDao   = new PlanejamentoDao(driver);
         recorrenteDao     = new LancamentoRecorrenteDao(driver);
-        provisaoDao       = new ProvisaoDao(driver);
         metaDao           = new MetaDao(driver);
         aporteMetaDao     = new AporteMetaDao(driver);
     }
@@ -66,7 +62,7 @@ class PersistenceIntegrationTest {
     @Test
     void migrate_insertsOnboardingCategories() {
         List<Categoria> raizes = categoriaDao.listarRaizes();
-        assertEquals(4, raizes.size(), "Deve ter 4 categorias raiz de onboarding");
+        assertEquals(3, raizes.size(), "Deve ter 3 categorias raiz de onboarding");
 
         long totalFilhas = raizes.stream()
                 .mapToLong(r -> categoriaDao.listarFilhas(r.getId()).size())
@@ -200,18 +196,13 @@ class PersistenceIntegrationTest {
                 System.currentTimeMillis());
         recorrenteDao.salvar(rec);
 
-        Provisao prov = new Provisao(UUID.randomUUID().toString(), "Prov", 1200.0, 100.0, 0.0,
-                cat.getId(), true, System.currentTimeMillis());
-        provisaoDao.salvar(prov);
-
-        // Deve lançar exceção de constraint ao tentar ter ambos recorrente_id e provisao_id preenchidos
-        assertThrows(RuntimeException.class, () -> lancamentoDao.salvar(
+        // Deve salvar corretamente lançamento vinculado a recorrente
+        assertDoesNotThrow(() -> lancamentoDao.salvar(
                 Lancamento.builder(UUID.randomUUID().toString())
                         .valor(50.0).tipo(TipoLancamento.DESPESA)
-                        .data("2026-05-01").descricao("Inválido")
+                        .data("2026-05-01").descricao("Recorrente gerado")
                         .categoriaId(cat.getId())
                         .recorrenteId(rec.getId())
-                        .provisaoId(prov.getId())
                         .build()
         ));
     }
@@ -290,31 +281,6 @@ class PersistenceIntegrationTest {
         List<PlanejamentoCategoria> items = planejamentoDao.listarItensPorPlano(plano.getId());
         assertEquals(1, items.size());
         assertEquals(1500.0, items.get(0).getLimite(), 0.001);
-    }
-
-    // ─── Provisão CRUD ────────────────────────────────────────────────────────
-
-    @Test
-    void provisao_saveAndRetrieve() {
-        Provisao p = new Provisao(UUID.randomUUID().toString(), "IPVA", 1200.0, 100.0, 0.0,
-                null, true, System.currentTimeMillis());
-        provisaoDao.salvar(p);
-
-        Optional<Provisao> found = provisaoDao.buscarPorId(p.getId());
-        assertTrue(found.isPresent());
-        assertEquals("IPVA", found.get().getNome());
-        assertEquals(100.0, found.get().getValorMensal(), 0.001);
-    }
-
-    @Test
-    void provisao_atualizarSaldo() {
-        Provisao p = new Provisao(UUID.randomUUID().toString(), "Férias", 2400.0, 200.0, 0.0,
-                null, true, System.currentTimeMillis());
-        provisaoDao.salvar(p);
-
-        provisaoDao.atualizarSaldo(p.getId(), 400.0);
-
-        assertEquals(400.0, provisaoDao.buscarPorId(p.getId()).get().getSaldoAcumulado(), 0.001);
     }
 
     // ─── Meta + Aporte CRUD ───────────────────────────────────────────────────

@@ -1,9 +1,9 @@
 package com.financeiramente.core.usecase;
 
+import com.financeiramente.core.domain.entity.Categoria;
 import com.financeiramente.core.domain.entity.Lancamento;
-import com.financeiramente.core.domain.entity.Provisao;
+import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
-import com.financeiramente.core.repository.ProvisaoRepository;
 import com.financeiramente.core.repository.TagRepository;
 import com.financeiramente.core.util.DomainException;
 
@@ -13,14 +13,14 @@ public class RegistrarLancamentoUseCase {
 
     private final LancamentoRepository lancamentoRepository;
     private final TagRepository tagRepository;
-    private final ProvisaoRepository provisaoRepository;
+    private final CategoriaRepository categoriaRepository;
 
     public RegistrarLancamentoUseCase(LancamentoRepository lancamentoRepository,
                                       TagRepository tagRepository,
-                                      ProvisaoRepository provisaoRepository) {
+                                      CategoriaRepository categoriaRepository) {
         this.lancamentoRepository = lancamentoRepository;
         this.tagRepository = tagRepository;
-        this.provisaoRepository = provisaoRepository;
+        this.categoriaRepository = categoriaRepository;
     }
 
     public Lancamento executar(RegistrarLancamentoInput input) {
@@ -30,18 +30,16 @@ public class RegistrarLancamentoUseCase {
         if (input.getValor() <= 0) {
             throw new DomainException("Valor deve ser maior que zero.");
         }
-        if (input.getRecorrenteId() != null && input.getProvisaoId() != null) {
-            throw new DomainException("Lançamento não pode ter recorrente_id e provisao_id simultaneamente.");
-        }
 
-        if (input.getProvisaoId() != null) {
-            Provisao provisao = provisaoRepository.buscarPorId(input.getProvisaoId())
-                    .orElseThrow(() -> new DomainException("Provisão não encontrada."));
-            double novoSaldo = provisao.getSaldoAcumulado() - input.getValor();
-            if (novoSaldo < 0) {
-                throw new DomainException("Saldo da provisão insuficiente.");
-            }
-            provisaoRepository.atualizarSaldo(provisao.getId(), novoSaldo);
+        Categoria categoria = categoriaRepository.buscarPorId(input.getCategoriaId())
+                .orElseThrow(() -> new DomainException("Categoria não encontrada."));
+        if (categoria.getPaiId() == null) {
+            throw new DomainException(
+                    "Lançamentos só podem ser registrados em subcategorias, não em categorias principais.");
+        }
+        if (!categoria.getTipo().isCompativelCom(input.getTipo())) {
+            throw new DomainException(
+                    "Categoria '" + categoria.getNome() + "' não é compatível com o tipo de lançamento informado.");
         }
 
         long now = System.currentTimeMillis();
@@ -52,7 +50,6 @@ public class RegistrarLancamentoUseCase {
                 .descricao(input.getDescricao().trim())
                 .categoriaId(input.getCategoriaId())
                 .recorrenteId(input.getRecorrenteId())
-                .provisaoId(input.getProvisaoId())
                 .criadoEm(now)
                 .atualizadoEm(now)
                 .build();

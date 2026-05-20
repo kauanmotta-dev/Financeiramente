@@ -4,9 +4,6 @@ import com.financeiramente.core.domain.vo.TipoLancamento;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * DTO de entrada para o caso de uso de registro (e edição) de lançamento.
- */
 public class RegistrarLancamentoInput {
     private final double valor;
     private final TipoLancamento tipo;
@@ -14,12 +11,11 @@ public class RegistrarLancamentoInput {
     private final String descricao;
     private final String categoriaId;
     private final String recorrenteId;
-    private final String provisaoId;
     private final List<String> tags;
 
     public RegistrarLancamentoInput(double valor, TipoLancamento tipo, String data,
                                     String descricao, String categoriaId,
-                                    String recorrenteId, String provisaoId,
+                                    String recorrenteId,
                                     List<String> tags) {
         this.valor = valor;
         this.tipo = tipo;
@@ -27,7 +23,6 @@ public class RegistrarLancamentoInput {
         this.descricao = descricao;
         this.categoriaId = categoriaId;
         this.recorrenteId = recorrenteId;
-        this.provisaoId = provisaoId;
         this.tags = tags != null ? Collections.unmodifiableList(tags) : Collections.emptyList();
     }
 
@@ -37,6 +32,5 @@ public class RegistrarLancamentoInput {
     public String getDescricao() { return descricao; }
     public String getCategoriaId() { return categoriaId; }
     public String getRecorrenteId() { return recorrenteId; }
-    public String getProvisaoId() { return provisaoId; }
     public List<String> getTags() { return tags; }
 }

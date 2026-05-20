@@ -19,7 +19,6 @@ import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.DashboardViewModel;
 import com.financeiramente.android.viewmodel.DashboardViewModelFactory;
-import com.financeiramente.core.domain.vo.StatusSaldo;
 import com.financeiramente.core.usecase.SaldoCategoria;
 import com.financeiramente.core.usecase.SaldoMensalResult;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -116,7 +115,7 @@ public class DashboardFragment extends Fragment {
 
         // Alerta de categorias no limite ou estouradas
         List<SaldoCategoria> emAlerta = saldos.stream()
-                .filter(s -> s.getStatus() == StatusSaldo.AMARELO || s.getStatus() == StatusSaldo.VERMELHO)
+                .filter(s -> s.getLimite() > 0 && s.getGastoRealizado() / s.getLimite() >= 0.75)
                 .collect(Collectors.toList());
 
         if (emAlerta.isEmpty()) {
@@ -126,10 +125,9 @@ public class DashboardFragment extends Fragment {
             String nomes = emAlerta.stream()
                     .map(SaldoCategoria::getCategoriaNome)
                     .collect(Collectors.joining(", "));
-            long estouradas = emAlerta.stream()
-                    .filter(s -> s.getStatus() == StatusSaldo.VERMELHO)
-                    .count();
-            if (estouradas > 0) {
+            boolean temEstourada = emAlerta.stream()
+                    .anyMatch(s -> s.getGastoRealizado() > s.getLimite());
+            if (temEstourada) {
                 tvAlerta.setText(getString(R.string.dashboard_alerta_estourado, nomes));
             } else {
                 tvAlerta.setText(getString(R.string.dashboard_alerta_limite, nomes));

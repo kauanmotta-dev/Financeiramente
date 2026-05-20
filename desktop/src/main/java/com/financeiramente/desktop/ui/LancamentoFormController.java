@@ -3,6 +3,7 @@ package com.financeiramente.desktop.ui;
 import com.financeiramente.core.domain.entity.Categoria;
 import com.financeiramente.core.domain.entity.Lancamento;
 import com.financeiramente.core.domain.vo.TipoLancamento;
+import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.usecase.EditarLancamentoUseCase;
 import com.financeiramente.core.usecase.RegistrarLancamentoInput;
 import com.financeiramente.core.usecase.RegistrarLancamentoUseCase;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class LancamentoFormController {
 
@@ -71,10 +73,28 @@ public class LancamentoFormController {
             }
         });
 
+        // Carrega subcategorias compatíveis com DESPESA por padrão
         executor.execute(() -> {
-            List<Categoria> cats = AppContext.get().getCategoriaRepository().listarTodas();
+            List<Categoria> cats = subcategoriasPorTipo(TipoLancamento.DESPESA);
             Platform.runLater(() -> cbCategoria.setItems(FXCollections.observableArrayList(cats)));
         });
+
+        // Recarrega categorias quando o tipo mudar
+        tgTipo.selectedToggleProperty().addListener((obs, oldT, newT) -> {
+            if (newT == null) return;
+            TipoLancamento tipo = (newT == rbReceita) ? TipoLancamento.RECEITA : TipoLancamento.DESPESA;
+            executor.execute(() -> {
+                List<Categoria> cats = subcategoriasPorTipo(tipo);
+                Platform.runLater(() -> cbCategoria.setItems(FXCollections.observableArrayList(cats)));
+            });
+        });
+    }
+
+    private List<Categoria> subcategoriasPorTipo(TipoLancamento tipo) {
+        return AppContext.get().getCategoriaRepository().listarTodas().stream()
+                .filter(c -> c.getPaiId() != null)
+                .filter(c -> c.getTipo().isCompativelCom(tipo))
+                .collect(Collectors.toList());
     }
 
     public void carregarParaEdicao(Lancamento lancamento) {
@@ -88,9 +108,9 @@ public class LancamentoFormController {
         } else {
             rbDespesa.setSelected(true);
         }
-        // Selecionar categoria
+        // Selecionar categoria (apenas subcategorias compatíveis com o tipo)
         executor.execute(() -> {
-            List<Categoria> cats = AppContext.get().getCategoriaRepository().listarTodas();
+            List<Categoria> cats = subcategoriasPorTipo(lancamento.getTipo());
             Platform.runLater(() -> {
                 cbCategoria.setItems(FXCollections.observableArrayList(cats));
                 cats.stream()
@@ -135,7 +155,7 @@ public class LancamentoFormController {
                 ? dpData.getValue().toString() : LocalDate.now().toString();
 
         RegistrarLancamentoInput input = new RegistrarLancamentoInput(
-                valor, tipo, data, descricao, categoria.getId(), null, null, Collections.emptyList());
+                valor, tipo, data, descricao, categoria.getId(), null, Collections.emptyList());
 
         final double finalValor = valor;
         executor.execute(() -> {

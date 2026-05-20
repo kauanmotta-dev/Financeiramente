@@ -51,14 +51,8 @@
             android:id="@+id/action_configuracoesFragment_to_categoriasFragment"
             app:destination="@id/categoriasFragment" />
         <action
-            android:id="@+id/action_configuracoesFragment_to_planejamentoFragment"
-            app:destination="@id/planejamentoFragment" />
-        <action
             android:id="@+id/action_configuracoesFragment_to_recorrentesFragment"
             app:destination="@id/recorrentesFragment" />
-        <action
-            android:id="@+id/action_configuracoesFragment_to_provicoesFragment"
-            app:destination="@id/provicoesFragment" />
     </fragment>
 
     <!-- ── Lançamentos ── -->
@@ -94,12 +88,6 @@
             app:destination="@id/categoriaFormFragment" />
     </fragment>
 
-    <!-- ── Planejamento Mensal ── -->
-
-    <fragment
-        android:id="@+id/planejamentoFragment"
-        android:name="com.financeiramente.android.ui.planejamento.PlanejamentoFragment"
-        android:label="@string/nav_planejamento" />
 
     <!-- ── Lançamentos Recorrentes (EP-08) ── -->
 
@@ -118,28 +106,6 @@
         android:label="@string/form_recorrente">
         <argument
             android:name="recorrenteId"
-            app:argType="string"
-            app:nullable="true"
-            android:defaultValue="@null" />
-    </fragment>
-
-    <!-- ── Provisões (EP-09) ── -->
-
-    <fragment
-        android:id="@+id/provicoesFragment"
-        android:name="com.financeiramente.android.ui.provisoes.ProvisoesFragment"
-        android:label="@string/nav_provisoes">
-        <action
-            android:id="@+id/action_provicoesFragment_to_provisaoFormFragment"
-            app:destination="@id/provisaoFormFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/provisaoFormFragment"
-        android:name="com.financeiramente.android.ui.provisoes.ProvisaoFormFragment"
-        android:label="@string/form_provisao">
-        <argument
-            android:name="provisaoId"
             app:argType="string"
             app:nullable="true"
             android:defaultValue="@null" />

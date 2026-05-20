@@ -44,16 +44,6 @@
                        style="-fx-text-fill: #555; -fx-font-size: 12;" />
                 <Label fx:id="lblGasto" text="R$ 0,00" GridPane.columnIndex="1" GridPane.rowIndex="1"
                        style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #F44336;" />
-
-                <Label text="Provisões mensais:" GridPane.columnIndex="0" GridPane.rowIndex="2"
-                       style="-fx-text-fill: #555; -fx-font-size: 12;" />
-                <Label fx:id="lblProvisoes" text="R$ 0,00" GridPane.columnIndex="1" GridPane.rowIndex="2"
-                       style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #FF9800;" />
-
-                <Label text="Reserva imprevistos:" GridPane.columnIndex="0" GridPane.rowIndex="3"
-                       style="-fx-text-fill: #555; -fx-font-size: 12;" />
-                <Label fx:id="lblReserva" text="R$ 0,00" GridPane.columnIndex="1" GridPane.rowIndex="3"
-                       style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #9C27B0;" />
             </GridPane>
 
             <!-- Barra de progresso global -->
@@ -83,7 +73,7 @@
         <TableView fx:id="tblCategorias" style="-fx-padding: 0 16 16 16;">
             <columns>
                 <TableColumn fx:id="colStatus" text="Status" prefWidth="80">
-                    <cellValueFactory><PropertyValueFactory property="statusStr" /></cellValueFactory>
+                    <cellValueFactory><PropertyValueFactory property="statusIcon" /></cellValueFactory>
                 </TableColumn>
                 <TableColumn fx:id="colNome" text="Categoria" prefWidth="200">
                     <cellValueFactory><PropertyValueFactory property="categoriaNome" /></cellValueFactory>
@@ -102,7 +92,7 @@
                 </TableColumn>
             </columns>
             <placeholder>
-                <Label text="Nenhuma categoria com limite definida no planejamento deste mês." />
+                <Label text="Nenhuma categoria com limite mensal definido. Configure em Categorias." />
             </placeholder>
         </TableView>
     </center>
