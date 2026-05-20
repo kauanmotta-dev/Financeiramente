@@ -14,17 +14,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class FinanceCalculatorTest {
 
     @Test
-    void saldoDisponivelPlanejado_deveSubtrairLimitesProvisoeEReserva() {
+    void saldoDisponivelPlanejado_deveSubtrairLimitesEReserva() {
         List<Double> limites = Arrays.asList(500.0, 300.0);
-        List<Double> provisoes = Arrays.asList(55.0, 58.0);
-        double resultado = FinanceCalculator.saldoDisponivelPlanejado(3000.0, limites, provisoes, 200.0);
-        assertEquals(1887.0, resultado, 0.001);
+        double resultado = FinanceCalculator.saldoDisponivelPlanejado(3000.0, limites, 200.0);
+        assertEquals(2000.0, resultado, 0.001);
     }
 
     @Test
-    void saldoDisponivelReal_deveSubtrairGastoProvisoeEReserva() {
-        double resultado = FinanceCalculator.saldoDisponivelReal(3000.0, 1200.0, 113.0, 200.0);
-        assertEquals(1487.0, resultado, 0.001);
+    void saldoDisponivelReal_deveSubtrairGastoEReserva() {
+        double resultado = FinanceCalculator.saldoDisponivelReal(3000.0, 1200.0, 200.0);
+        assertEquals(1600.0, resultado, 0.001);
     }
 
     @Test
@@ -67,9 +66,9 @@ class FinanceCalculatorTest {
     }
 
     @Test
-    void saldoDisponivelPlanejado_semLimitesNemProvisoes_retornaReceitaMinusReserva() {
+    void saldoDisponivelPlanejado_semLimites_retornaReceitaMinusReserva() {
         double resultado = FinanceCalculator.saldoDisponivelPlanejado(
-                3000.0, Collections.emptyList(), Collections.emptyList(), 300.0);
+                3000.0, Collections.emptyList(), 300.0);
         assertEquals(2700.0, resultado, 0.001);
     }
 }

@@ -10,13 +10,12 @@ public class Lancamento {
     private String descricao;
     private String categoriaId;
     private String recorrenteId;
-    private String provisaoId;
     private long criadoEm;
     private long atualizadoEm;
 
     public Lancamento(String id, double valor, TipoLancamento tipo, String data,
                       String descricao, String categoriaId, String recorrenteId,
-                      String provisaoId, long criadoEm, long atualizadoEm) {
+                      long criadoEm, long atualizadoEm) {
         this.id = id;
         this.valor = valor;
         this.tipo = tipo;
@@ -24,7 +23,6 @@ public class Lancamento {
         this.descricao = descricao;
         this.categoriaId = categoriaId;
         this.recorrenteId = recorrenteId;
-        this.provisaoId = provisaoId;
         this.criadoEm = criadoEm;
         this.atualizadoEm = atualizadoEm;
     }
@@ -42,8 +40,6 @@ public class Lancamento {
     public void setCategoriaId(String categoriaId) { this.categoriaId = categoriaId; }
     public String getRecorrenteId() { return recorrenteId; }
     public void setRecorrenteId(String recorrenteId) { this.recorrenteId = recorrenteId; }
-    public String getProvisaoId() { return provisaoId; }
-    public void setProvisaoId(String provisaoId) { this.provisaoId = provisaoId; }
     public long getCriadoEm() { return criadoEm; }
     public long getAtualizadoEm() { return atualizadoEm; }
     public void setAtualizadoEm(long atualizadoEm) { this.atualizadoEm = atualizadoEm; }
@@ -58,7 +54,6 @@ public class Lancamento {
         private String descricao;
         private String categoriaId;
         private String recorrenteId;
-        private String provisaoId;
         private long criadoEm = System.currentTimeMillis();
         private long atualizadoEm = System.currentTimeMillis();
 
@@ -70,13 +65,12 @@ public class Lancamento {
         public Builder descricao(String descricao) { this.descricao = descricao; return this; }
         public Builder categoriaId(String categoriaId) { this.categoriaId = categoriaId; return this; }
         public Builder recorrenteId(String recorrenteId) { this.recorrenteId = recorrenteId; return this; }
-        public Builder provisaoId(String provisaoId) { this.provisaoId = provisaoId; return this; }
         public Builder criadoEm(long criadoEm) { this.criadoEm = criadoEm; return this; }
         public Builder atualizadoEm(long atualizadoEm) { this.atualizadoEm = atualizadoEm; return this; }
 
         public Lancamento build() {
             return new Lancamento(id, valor, tipo, data, descricao, categoriaId,
-                    recorrenteId, provisaoId, criadoEm, atualizadoEm);
+                    recorrenteId, criadoEm, atualizadoEm);
         }
     }
 }

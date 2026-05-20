@@ -21,7 +21,6 @@ import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.LancamentoFormViewModel;
 import com.financeiramente.android.viewmodel.LancamentoFormViewModelFactory;
 import com.financeiramente.core.domain.entity.Categoria;
-import com.financeiramente.core.domain.entity.Provisao;
 import com.financeiramente.core.domain.entity.Tag;
 import com.financeiramente.core.domain.vo.TipoLancamento;
 import com.google.android.material.chip.Chip;
@@ -45,13 +44,11 @@ public class LancamentoFormFragment extends Fragment {
     private TextInputEditText etDescricao;
     private TextInputLayout tilDescricao;
     private Spinner spCategoria;
-    private Spinner spProvisao;
     private TextInputEditText etData;
     private ChipGroup cgTags;
 
     private List<Categoria> listaCategorias = new ArrayList<>();
     private List<Tag> listaTags = new ArrayList<>();
-    private List<Provisao> listaProvisoes = new ArrayList<>();
 
     private String editandoId = null;
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -73,8 +70,7 @@ public class LancamentoFormFragment extends Fragment {
                 ctx.getEditarLancamentoUseCase(),
                 ctx.getCategoriaRepository(),
                 ctx.getTagRepository(),
-                ctx.getLancamentoRepository(),
-                ctx.getProvisaoRepository());
+                ctx.getLancamentoRepository());
         viewModel = new ViewModelProvider(this, factory).get(LancamentoFormViewModel.class);
 
         rgTipo = view.findViewById(R.id.rg_tipo);
@@ -83,7 +79,6 @@ public class LancamentoFormFragment extends Fragment {
         etDescricao = view.findViewById(R.id.et_descricao);
         tilDescricao = view.findViewById(R.id.til_descricao);
         spCategoria = view.findViewById(R.id.sp_categoria);
-        spProvisao = view.findViewById(R.id.sp_provisao);
         etData = view.findViewById(R.id.et_data);
         cgTags = view.findViewById(R.id.cg_tags);
 
@@ -93,6 +88,13 @@ public class LancamentoFormFragment extends Fragment {
 
         // Focar no campo valor imediatamente
         etValor.requestFocus();
+
+        // Recarregar categorias quando o tipo de lançamento mudar
+        rgTipo.setOnCheckedChangeListener((group, checkedId) -> {
+            TipoLancamento tipoSelecionado = (checkedId == R.id.rb_receita)
+                    ? TipoLancamento.RECEITA : TipoLancamento.DESPESA;
+            viewModel.carregarCategoriasPorTipo(tipoSelecionado);
+        });
 
         view.findViewById(R.id.btn_salvar).setOnClickListener(v -> salvar(view));
 
@@ -128,17 +130,6 @@ public class LancamentoFormFragment extends Fragment {
                 chip.setTag(tag.getId());
                 cgTags.addView(chip);
             }
-        });
-
-        viewModel.getProvisoes().observe(getViewLifecycleOwner(), provs -> {
-            listaProvisoes = provs;
-            List<String> nomes = new ArrayList<>();
-            nomes.add(getString(R.string.lancamento_provisao_nenhuma));
-            for (Provisao p : provs) nomes.add(p.getNome());
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
-                    android.R.layout.simple_spinner_item, nomes);
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spProvisao.setAdapter(adapter);
         });
 
         viewModel.getLancamentoCarregado().observe(getViewLifecycleOwner(), lancamento -> {
@@ -220,16 +211,10 @@ public class LancamentoFormFragment extends Fragment {
             if (chip.isChecked()) tagIds.add((String) chip.getTag());
         }
 
-        // Provisão: posição 0 = "Nenhuma" (null)
-        int provPos = spProvisao.getSelectedItemPosition();
-        String provisaoId = (provPos > 0 && provPos - 1 < listaProvisoes.size())
-                ? listaProvisoes.get(provPos - 1).getId()
-                : null;
-
         if (editandoId != null) {
-            viewModel.editar(editandoId, valor, tipo, data, descricao, categoriaId, provisaoId, tagIds);
+            viewModel.editar(editandoId, valor, tipo, data, descricao, categoriaId, tagIds);
         } else {
-            viewModel.salvar(valor, tipo, data, descricao, categoriaId, provisaoId, tagIds);
+            viewModel.salvar(valor, tipo, data, descricao, categoriaId, tagIds);
         }
     }
 

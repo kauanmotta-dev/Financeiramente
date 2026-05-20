@@ -3,34 +3,10 @@ package com.financeiramente.core.util;
 import com.financeiramente.core.domain.vo.StatusSaldo;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 
 public final class FinanceCalculator {
 
     private FinanceCalculator() {}
-
-    public static double saldoDisponivelPlanejado(
-            double receitaEsperada,
-            List<Double> limitesCategoria,
-            List<Double> valorMensalProvisoes,
-            double reservaImprevisto) {
-
-        double somaLimites = limitesCategoria.stream()
-                .mapToDouble(Double::doubleValue).sum();
-        double somaProvisoes = valorMensalProvisoes.stream()
-                .mapToDouble(Double::doubleValue).sum();
-        return receitaEsperada - somaLimites - somaProvisoes - reservaImprevisto;
-    }
-
-
-    public static double saldoDisponivelReal(
-            double receitaRealizada,
-            double totalGasto,
-            double totalMensalProvisoes,
-            double reservaImprevisto) {
-
-        return receitaRealizada - totalGasto - totalMensalProvisoes - reservaImprevisto;
-    }
 
     public static double saldoCategoria(double limite, double gastoRealizado) {
         return limite - gastoRealizado;

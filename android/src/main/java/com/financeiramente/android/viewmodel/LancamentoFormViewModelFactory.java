@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
-import com.financeiramente.core.repository.ProvisaoRepository;
 import com.financeiramente.core.repository.TagRepository;
 import com.financeiramente.core.usecase.EditarLancamentoUseCase;
 import com.financeiramente.core.usecase.RegistrarLancamentoUseCase;
@@ -18,20 +17,17 @@ public class LancamentoFormViewModelFactory implements ViewModelProvider.Factory
     private final CategoriaRepository categoriaRepository;
     private final TagRepository tagRepository;
     private final LancamentoRepository lancamentoRepository;
-    private final ProvisaoRepository provisaoRepository;
 
     public LancamentoFormViewModelFactory(RegistrarLancamentoUseCase registrar,
                                           EditarLancamentoUseCase editar,
                                           CategoriaRepository categoriaRepository,
                                           TagRepository tagRepository,
-                                          LancamentoRepository lancamentoRepository,
-                                          ProvisaoRepository provisaoRepository) {
+                                          LancamentoRepository lancamentoRepository) {
         this.registrar = registrar;
         this.editar = editar;
         this.categoriaRepository = categoriaRepository;
         this.tagRepository = tagRepository;
         this.lancamentoRepository = lancamentoRepository;
-        this.provisaoRepository = provisaoRepository;
     }
 
     @NonNull
@@ -39,6 +35,6 @@ public class LancamentoFormViewModelFactory implements ViewModelProvider.Factory
     @SuppressWarnings("unchecked")
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
         return (T) new LancamentoFormViewModel(registrar, editar,
-                categoriaRepository, tagRepository, lancamentoRepository, provisaoRepository);
+                categoriaRepository, tagRepository, lancamentoRepository);
     }
 }

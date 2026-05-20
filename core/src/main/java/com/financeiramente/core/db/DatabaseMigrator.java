@@ -2,10 +2,6 @@ package com.financeiramente.core.db;
 
 import java.util.UUID;
 
-/**
- * Aplica migrações do schema SQLite em cadeia até atingir SchemaVersion.CURRENT.
- * Na primeira execução (version == 0): cria schema + insere categorias padrão de onboarding.
- */
 public class DatabaseMigrator {
 
     private static final String CREATE_SCHEMA_VERSION =
@@ -19,7 +15,7 @@ public class DatabaseMigrator {
             "    id            TEXT PRIMARY KEY," +
             "    nome          TEXT NOT NULL," +
             "    pai_id        TEXT REFERENCES categoria(id) ON DELETE RESTRICT," +
-            "    tipo          TEXT NOT NULL CHECK(tipo IN ('essencial','nao_essencial','imprevisto','provisao'))," +
+            "    tipo          TEXT NOT NULL CHECK(tipo IN ('essencial','nao_essencial','receita'))," +
             "    limite_mensal REAL," +
             "    ordem         INTEGER NOT NULL DEFAULT 0," +
             "    criado_em     INTEGER NOT NULL" +
@@ -38,18 +34,6 @@ public class DatabaseMigrator {
             "    criado_em       INTEGER NOT NULL" +
             ")";
 
-    private static final String CREATE_PROVISAO =
-            "CREATE TABLE IF NOT EXISTS provisao (" +
-            "    id               TEXT PRIMARY KEY," +
-            "    nome             TEXT NOT NULL," +
-            "    total_anual      REAL NOT NULL CHECK(total_anual > 0)," +
-            "    valor_mensal     REAL NOT NULL CHECK(valor_mensal > 0)," +
-            "    saldo_acumulado  REAL NOT NULL DEFAULT 0 CHECK(saldo_acumulado >= 0)," +
-            "    categoria_id     TEXT REFERENCES categoria(id)," +
-            "    ativo            INTEGER NOT NULL DEFAULT 1 CHECK(ativo IN (0,1))," +
-            "    criado_em        INTEGER NOT NULL" +
-            ")";
-
     private static final String CREATE_LANCAMENTO =
             "CREATE TABLE IF NOT EXISTS lancamento (" +
             "    id             TEXT PRIMARY KEY," +
@@ -59,10 +43,8 @@ public class DatabaseMigrator {
             "    descricao      TEXT NOT NULL CHECK(length(trim(descricao)) > 0)," +
             "    categoria_id   TEXT NOT NULL REFERENCES categoria(id)," +
             "    recorrente_id  TEXT REFERENCES lancamento_recorrente(id)," +
-            "    provisao_id    TEXT REFERENCES provisao(id)," +
             "    criado_em      INTEGER NOT NULL," +
-            "    atualizado_em  INTEGER NOT NULL," +
-            "    CHECK(NOT (recorrente_id IS NOT NULL AND provisao_id IS NOT NULL))" +
+            "    atualizado_em  INTEGER NOT NULL" +
             ")";
 
     private static final String CREATE_IDX_LANCAMENTO_DATA =
@@ -84,28 +66,6 @@ public class DatabaseMigrator {
             "    lancamento_id TEXT NOT NULL REFERENCES lancamento(id) ON DELETE CASCADE," +
             "    tag_id        TEXT NOT NULL REFERENCES tag(id)," +
             "    PRIMARY KEY (lancamento_id, tag_id)" +
-            ")";
-
-    private static final String CREATE_PLANEJAMENTO_MENSAL =
-            "CREATE TABLE IF NOT EXISTS planejamento_mensal (" +
-            "    id                 TEXT PRIMARY KEY," +
-            "    ano                INTEGER NOT NULL," +
-            "    mes                INTEGER NOT NULL CHECK(mes BETWEEN 1 AND 12)," +
-            "    receita_esperada   REAL NOT NULL DEFAULT 0," +
-            "    reserva_imprevisto REAL NOT NULL DEFAULT 0," +
-            "    padrao             INTEGER NOT NULL DEFAULT 0 CHECK(padrao IN (0,1))," +
-            "    confirmado         INTEGER NOT NULL DEFAULT 0 CHECK(confirmado IN (0,1))," +
-            "    criado_em          INTEGER NOT NULL," +
-            "    UNIQUE(ano, mes)" +
-            ")";
-
-    private static final String CREATE_PLANEJAMENTO_CATEGORIA =
-            "CREATE TABLE IF NOT EXISTS planejamento_categoria (" +
-            "    id              TEXT PRIMARY KEY," +
-            "    planejamento_id TEXT NOT NULL REFERENCES planejamento_mensal(id) ON DELETE CASCADE," +
-            "    categoria_id    TEXT NOT NULL REFERENCES categoria(id)," +
-            "    limite          REAL NOT NULL DEFAULT 0," +
-            "    UNIQUE(planejamento_id, categoria_id)" +
             ")";
 
     private static final String CREATE_META =
@@ -136,9 +96,6 @@ public class DatabaseMigrator {
         this.driver = driver;
     }
 
-    /**
-     * Aplica todas as migrações pendentes até SchemaVersion.CURRENT.
-     */
     public void migrate() {
         driver.execute("PRAGMA journal_mode = WAL");
         driver.execute("PRAGMA foreign_keys = ON");
@@ -151,21 +108,17 @@ public class DatabaseMigrator {
             applyMigration1();
             driver.setSchemaVersion(1);
         }
-        // Futuras: if (currentVersion < 2) { applyMigration2(); driver.setSchemaVersion(2); }
     }
-
+    
     private void applyMigration1() {
         driver.execute(CREATE_CATEGORIA);
         driver.execute(CREATE_LANCAMENTO_RECORRENTE);
-        driver.execute(CREATE_PROVISAO);
         driver.execute(CREATE_LANCAMENTO);
         driver.execute(CREATE_IDX_LANCAMENTO_DATA);
         driver.execute(CREATE_IDX_LANCAMENTO_CATEGORIA);
         driver.execute(CREATE_IDX_LANCAMENTO_ANO_MES);
         driver.execute(CREATE_TAG);
         driver.execute(CREATE_LANCAMENTO_TAG);
-        driver.execute(CREATE_PLANEJAMENTO_MENSAL);
-        driver.execute(CREATE_PLANEJAMENTO_CATEGORIA);
         driver.execute(CREATE_META);
         driver.execute(CREATE_APORTE_META);
 
@@ -175,29 +128,89 @@ public class DatabaseMigrator {
     private void insertOnboardingData() {
         long now = System.currentTimeMillis();
 
-        // Raízes
-        String essenciaisId   = UUID.randomUUID().toString();
-        String naoEssenciaisId = UUID.randomUUID().toString();
+        // ─── Cat. Essenciais ────────────────────────────────────────────────────
+        String moradiaId      = UUID.randomUUID().toString();
+        String transporteId   = UUID.randomUUID().toString();
+        String alimentacaoId  = UUID.randomUUID().toString();
+        String saudeId        = UUID.randomUUID().toString();
+        String estudosId      = UUID.randomUUID().toString();
         String imprevistoId   = UUID.randomUUID().toString();
-        String provisoesId    = UUID.randomUUID().toString();
 
-        insertCategoria(essenciaisId,   "Gastos Essenciais",    null,           "essencial",    0,  now);
-        insertCategoria(naoEssenciaisId,"Gastos Não Essenciais",null,           "nao_essencial",1,  now);
-        insertCategoria(imprevistoId,   "Imprevistos",          null,           "imprevisto",   2,  now);
-        insertCategoria(provisoesId,    "Provisões",            null,           "provisao",     3,  now);
+        insertCategoria(moradiaId, "Moradia",           null, "essencial", 0, now);
+        insertCategoria(transporteId, "Transporte",        null, "essencial", 1, now);
+        insertCategoria(alimentacaoId, "Alimentação",       null, "essencial", 2, now);
+        insertCategoria(saudeId, "Saúde",             null, "essencial", 3, now);
+        insertCategoria(estudosId, "Estudos",           null, "essencial", 4, now);
+        insertCategoria(imprevistoId, "Imprevistos",       null, "essencial", 5, now);
 
-        // Filhas de Gastos Essenciais
-        insertCategoria(UUID.randomUUID().toString(), "Moradia",          essenciaisId, "essencial", 0, now);
-        insertCategoria(UUID.randomUUID().toString(), "Transporte",       essenciaisId, "essencial", 1, now);
-        insertCategoria(UUID.randomUUID().toString(), "Alimentação",      essenciaisId, "essencial", 2, now);
-        insertCategoria(UUID.randomUUID().toString(), "Saúde & Bem-estar",essenciaisId, "essencial", 3, now);
-        insertCategoria(UUID.randomUUID().toString(), "Estudos",          essenciaisId, "essencial", 4, now);
-        insertCategoria(UUID.randomUUID().toString(), "Doações",          essenciaisId, "essencial", 5, now);
+        // Moradia → subcategorias
+        insertCategoria(UUID.randomUUID().toString(), "Aluguel",              moradiaId, "essencial", 0, now);
+        insertCategoria(UUID.randomUUID().toString(), "Condomínio",           moradiaId, "essencial", 1, now);
+        insertCategoria(UUID.randomUUID().toString(), "Luz",                  moradiaId, "essencial", 2, now);
+        insertCategoria(UUID.randomUUID().toString(), "Água",                 moradiaId, "essencial", 3, now);
+        insertCategoria(UUID.randomUUID().toString(), "Internet",             moradiaId, "essencial", 4, now);
 
-        // Filhas de Gastos Não Essenciais
-        insertCategoria(UUID.randomUUID().toString(), "Lazer",          naoEssenciaisId, "nao_essencial", 0, now);
-        insertCategoria(UUID.randomUUID().toString(), "Presentes",      naoEssenciaisId, "nao_essencial", 1, now);
-        insertCategoria(UUID.randomUUID().toString(), "Compras & Luxo", naoEssenciaisId, "nao_essencial", 2, now);
+        // Transporte → subcategorias
+        insertCategoria(UUID.randomUUID().toString(), "Combustível",          transporteId, "essencial", 0, now);
+        insertCategoria(UUID.randomUUID().toString(), "Aplicativo",           transporteId, "essencial", 1, now);
+
+        // Alimentação → subcategorias
+        insertCategoria(UUID.randomUUID().toString(), "Supermercado",         alimentacaoId, "essencial", 0, now);
+        insertCategoria(UUID.randomUUID().toString(), "Restaurante",          alimentacaoId, "essencial", 1, now);
+        insertCategoria(UUID.randomUUID().toString(), "Delivery",             alimentacaoId, "essencial", 2, now);
+
+        // Saúde → subcategorias
+        insertCategoria(UUID.randomUUID().toString(), "Plano de Saúde",       saudeId, "essencial", 0, now);
+        insertCategoria(UUID.randomUUID().toString(), "Farmácia",             saudeId, "essencial", 1, now);
+        insertCategoria(UUID.randomUUID().toString(), "Academia",             saudeId, "essencial", 2, now);
+
+        // Estudos → subcategorias
+        insertCategoria(UUID.randomUUID().toString(), "Cursos",               estudosId, "essencial", 0, now);
+        insertCategoria(UUID.randomUUID().toString(), "Materiais",            estudosId, "essencial", 1, now);
+
+        // Imprevistos → subcategoria
+        insertCategoria(UUID.randomUUID().toString(), "Imprevistos",          imprevistoId, "essencial", 0, now);
+
+        // ─── Cat. Não Essenciais ────────────────────────────────────────────────
+        String lazerId     = UUID.randomUUID().toString();
+        String comprasId   = UUID.randomUUID().toString();
+        String doacoesId   = UUID.randomUUID().toString();
+        String imprevistosId = UUID.randomUUID().toString();
+
+        insertCategoria(lazerId,     "Lazer",          null, "nao_essencial", 6, now);
+        insertCategoria(comprasId,   "Compras & Luxo", null, "nao_essencial", 7, now);
+        insertCategoria(doacoesId,   "Doações",        null, "nao_essencial", 8, now);
+        insertCategoria(imprevistosId, "Imprevistos",      null, "nao_essencial", 9, now);
+
+        // Lazer → subcategorias
+        insertCategoria(UUID.randomUUID().toString(), "Streaming",           lazerId, "nao_essencial", 0, now);
+        insertCategoria(UUID.randomUUID().toString(), "Hobby",               lazerId, "nao_essencial", 1, now);
+        insertCategoria(UUID.randomUUID().toString(), "Eventos",             lazerId, "nao_essencial", 2, now);
+
+        // Compras & Luxo → subcategorias
+        insertCategoria(UUID.randomUUID().toString(), "Roupas",              comprasId, "nao_essencial", 0, now);
+        insertCategoria(UUID.randomUUID().toString(), "Eletrônicos",         comprasId, "nao_essencial", 1, now);
+        insertCategoria(UUID.randomUUID().toString(), "Outros",              comprasId, "nao_essencial", 2, now);
+        
+        // Doações → subcategorias
+        insertCategoria(UUID.randomUUID().toString(), "Igreja",              doacoesId, "nao_essencial", 0, now);
+
+        // Imprevistos → subcategoria
+        insertCategoria(UUID.randomUUID().toString(), "Imprevistos",         imprevistosId, "nao_essencial", 0, now);
+        
+        // ─── Cat. Receita ────────────────────────────────────────────────────────
+        String salarioId    = UUID.randomUUID().toString();
+        String rendaExtraId = UUID.randomUUID().toString();
+
+        insertCategoria(salarioId,    "Salário",     null, "receita", 10, now);
+        insertCategoria(rendaExtraId, "Renda Extra", null, "receita", 11, now);
+
+        // Salário → subcategoria
+        insertCategoria(UUID.randomUUID().toString(), "Salário CLT",         salarioId,    "receita", 0, now);
+
+        // Renda Extra → subcategorias
+        insertCategoria(UUID.randomUUID().toString(), "Freelance",           rendaExtraId, "receita", 0, now);
+        insertCategoria(UUID.randomUUID().toString(), "Outros",              rendaExtraId, "receita", 1, now);
     }
 
     private void insertCategoria(String id, String nome, String paiId, String tipo, int ordem, long now) {

@@ -21,9 +21,7 @@
             </Menu>
             <Menu text="Configurações">
                 <MenuItem text="Categorias" onAction="#abrirCategorias" />
-                <MenuItem text="Planejamento Mensal" onAction="#abrirPlanejamento" />
                 <MenuItem text="Lançamentos Recorrentes" onAction="#abrirRecorrentes" />
-                <MenuItem text="Provisões" onAction="#abrirProvisoes" />
                 <MenuItem text="Metas" onAction="#abrirMetas" />
             </Menu>
         </MenuBar>

@@ -92,6 +92,8 @@ public class CategoriasController {
                         paiIdSelecionado = sel.getPaiId();
                         lblFormTitle.setText("Editar: " + sel.getNome());
                         btnDeletar.setDisable(false);
+                        // Se é subcategoria, o tipo é herdado — não permite edição
+                        cbTipo.setDisable(sel.getPaiId() != null);
                     }
                 });
     }
@@ -116,6 +118,7 @@ public class CategoriasController {
     @FXML
     private void onNovaRaiz() {
         limparFormulario();
+        cbTipo.setDisable(false);
         lblFormTitle.setText("Nova Categoria");
     }
 
@@ -131,6 +134,8 @@ public class CategoriasController {
         String paiId = sel.getPaiId() == null ? sel.getId() : sel.getPaiId();
         limparFormulario();
         paiIdSelecionado = paiId;
+        // Tipo é herdado do pai — não deve ser editado pelo usuário
+        cbTipo.setDisable(true);
         lblFormTitle.setText("Nova Subcategoria");
     }
 
@@ -175,6 +180,7 @@ public class CategoriasController {
     @FXML
     private void onCancelar() {
         limparFormulario();
+        cbTipo.setDisable(false);
     }
 
     @FXML
@@ -200,6 +206,7 @@ public class CategoriasController {
     private void limparFormulario() {
         tfNome.clear();
         cbTipo.getSelectionModel().selectFirst();
+        cbTipo.setDisable(false);
         tfLimite.clear();
         editandoId = null;
         paiIdSelecionado = null;

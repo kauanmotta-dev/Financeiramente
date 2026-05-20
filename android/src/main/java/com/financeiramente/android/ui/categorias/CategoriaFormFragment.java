@@ -61,6 +61,11 @@ public class CategoriaFormFragment extends Fragment {
         String categoriaId = getArguments() != null ? getArguments().getString("categoriaId") : null;
         String paiId = getArguments() != null ? getArguments().getString("paiId") : null;
 
+        // Se for subcategoria, o tipo é herdado do pai — oculta o spinner
+        if (paiId != null) {
+            spTipo.setVisibility(View.GONE);
+        }
+
         // If editing, populate form with existing values
         AppContext ctx = AppContext.get(requireContext());
         if (categoriaId != null) {

@@ -20,7 +20,7 @@ public class LancamentoDao implements LancamentoRepository {
     @Override
     public void salvar(Lancamento lancamento) {
         db.execute(
-            "INSERT INTO lancamento(id, valor, tipo, data, descricao, categoria_id, recorrente_id, provisao_id, criado_em, atualizado_em) VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO lancamento(id, valor, tipo, data, descricao, categoria_id, recorrente_id, criado_em, atualizado_em) VALUES (?,?,?,?,?,?,?,?,?)",
             lancamento.getId(),
             lancamento.getValor(),
             lancamento.getTipo().name().toLowerCase(),
@@ -28,7 +28,6 @@ public class LancamentoDao implements LancamentoRepository {
             lancamento.getDescricao(),
             lancamento.getCategoriaId(),
             lancamento.getRecorrenteId(),
-            lancamento.getProvisaoId(),
             lancamento.getCriadoEm(),
             lancamento.getAtualizadoEm()
         );
@@ -37,14 +36,13 @@ public class LancamentoDao implements LancamentoRepository {
     @Override
     public void atualizar(Lancamento lancamento) {
         db.execute(
-            "UPDATE lancamento SET valor=?, tipo=?, data=?, descricao=?, categoria_id=?, recorrente_id=?, provisao_id=?, atualizado_em=? WHERE id=?",
+            "UPDATE lancamento SET valor=?, tipo=?, data=?, descricao=?, categoria_id=?, recorrente_id=?, atualizado_em=? WHERE id=?",
             lancamento.getValor(),
             lancamento.getTipo().name().toLowerCase(),
             lancamento.getData(),
             lancamento.getDescricao(),
             lancamento.getCategoriaId(),
             lancamento.getRecorrenteId(),
-            lancamento.getProvisaoId(),
             lancamento.getAtualizadoEm(),
             lancamento.getId()
         );
@@ -150,7 +148,6 @@ public class LancamentoDao implements LancamentoRepository {
         row.getString("descricao"),
         row.getString("categoria_id"),
         row.isNull("recorrente_id") ? null : row.getString("recorrente_id"),
-        row.isNull("provisao_id") ? null : row.getString("provisao_id"),
         row.getLong("criado_em"),
         row.getLong("atualizado_em")
     );
