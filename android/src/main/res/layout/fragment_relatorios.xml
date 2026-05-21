@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
@@ -20,49 +21,45 @@
             android:textColor="?attr/colorOnSurface"
             android:paddingBottom="12dp" />
 
-        <!-- Filtros de período -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/relatorio_periodo"
-            android:textStyle="bold"
-            android:paddingBottom="4dp" />
-
-        <LinearLayout
+        <!-- Filtros de período — ChipGroup M3 -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_periodo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="8dp"
+            app:singleSelection="true"
+            app:selectionRequired="true">
 
-            <Button
-                android:id="@+id/btn_semana"
-                android:layout_width="0dp"
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_semana"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/relatorio_semana"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_marginEnd="4dp" />
+                android:text="@string/relatorio_semana" />
 
-            <Button
-                android:id="@+id/btn_mes"
-                android:layout_width="0dp"
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_mes"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="@string/relatorio_mes"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp" />
+                android:checked="true" />
 
-            <Button
-                android:id="@+id/btn_personalizado"
-                android:layout_width="0dp"
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_ano"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/relatorio_personalizado"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_marginStart="4dp" />
+                android:text="@string/relatorio_ano" />
 
-        </LinearLayout>
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_personalizado"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/relatorio_personalizado" />
+
+        </com.google.android.material.chip.ChipGroup>
 
         <!-- Datas customizadas (visível só no modo personalizado) -->
         <LinearLayout
@@ -107,74 +104,32 @@
 
         </LinearLayout>
 
-        <!-- Filtros de categoria, tag e tipo -->
-        <TextView
+        <!-- 3.7 — Botão que abre o Bottom Sheet de filtros avançados -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_abrir_filtros"
+            style="@style/Widget.Material3.Button.TonalButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/relatorio_filtros"
-            android:textStyle="bold"
-            android:paddingBottom="4dp" />
-
-        <Spinner
-            android:id="@+id/spinner_categoria"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp" />
-
-        <Spinner
-            android:id="@+id/spinner_tag"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp" />
-
-        <RadioGroup
-            android:id="@+id/rg_tipo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="8dp">
-
-            <RadioButton
-                android:id="@+id/rb_todos"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/relatorio_todos"
-                android:checked="true" />
-
-            <RadioButton
-                android:id="@+id/rb_receitas"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/lancamento_receita"
-                android:layout_marginStart="12dp" />
-
-            <RadioButton
-                android:id="@+id/rb_despesas"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/lancamento_despesa"
-                android:layout_marginStart="12dp" />
-
-        </RadioGroup>
-
-        <Button
-            android:id="@+id/btn_aplicar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/relatorio_aplicar"
-            android:layout_marginBottom="16dp" />
+            android:layout_gravity="end"
+            android:layout_marginBottom="16dp"
+            android:text="@string/relatorio_filtrar"
+            app:icon="@android:drawable/ic_menu_search" />
 
         <!-- Resumo financeiro -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/cinza_divider">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:padding="16dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -182,7 +137,7 @@
                     android:text="@string/relatorio_resumo"
                     android:textStyle="bold"
                     android:textSize="16sp"
-                    android:paddingBottom="8dp" />
+                    android:paddingBottom="12dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -194,14 +149,14 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/dashboard_receita"
-                        android:textColor="#4CAF50" />
+                        android:textColor="@color/verde_success" />
 
                     <TextView
                         android:id="@+id/tv_total_receitas"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$ 0,00"
-                        android:textColor="#4CAF50"
+                        android:textColor="@color/verde_success"
                         android:textStyle="bold" />
 
                 </LinearLayout>
@@ -216,14 +171,14 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/dashboard_gasto"
-                        android:textColor="#F44336" />
+                        android:textColor="@color/vermelho_error" />
 
                     <TextView
                         android:id="@+id/tv_total_despesas"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$ 0,00"
-                        android:textColor="#F44336"
+                        android:textColor="@color/vermelho_error"
                         android:textStyle="bold" />
 
                 </LinearLayout>
@@ -252,6 +207,194 @@
 
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Card: Distribuição por Categoria (PieChart / HorizontalBarChart toggle) -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/cinza_divider">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Row: title + toggle -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/relatorio_distribuicao"
+                        android:textStyle="bold"
+                        android:textSize="16sp" />
+
+                    <!-- 3.6 — Toggle Pizza ↔ Barras -->
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/toggle_chart_tipo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:singleSelection="true"
+                        app:selectionRequired="true">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_chart_pizza"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:text="@string/relatorio_chart_pizza"
+                            android:textSize="11sp"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_chart_barras"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:text="@string/relatorio_chart_barras"
+                            android:textSize="11sp"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp" />
+
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                </LinearLayout>
+
+                <!-- PieChart (modo padrão) -->
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/pie_chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="260dp" />
+
+                <!-- HorizontalBarChart (modo barras) — oculto inicialmente -->
+                <com.github.mikephil.charting.charts.HorizontalBarChart
+                    android:id="@+id/horizontal_bar_chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="260dp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/layout_pie_legenda"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="8dp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card: Evolução dos Últimos 6 Meses (BarChart agrupado) -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/cinza_divider">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Evolução dos Últimos 6 Meses"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:paddingBottom="8dp" />
+
+                <com.github.mikephil.charting.charts.BarChart
+                    android:id="@+id/bar_chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:paddingTop="8dp">
+
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:background="@color/verde_success"
+                        android:layout_marginEnd="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Receita"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="16dp" />
+
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:background="@color/vermelho_error"
+                        android:layout_marginEnd="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Despesa"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card: Evolução do Resultado Mensal (LineChart) -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/cinza_divider">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Evolução do Resultado Mensal"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:paddingBottom="8dp" />
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/line_chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Total por categoria -->
         <TextView
             android:layout_width="wrap_content"
@@ -275,15 +418,14 @@
             android:textStyle="bold"
             android:paddingBottom="4dp" />
 
-        <TextView
-            android:id="@+id/tv_vazio"
-            android:layout_width="wrap_content"
+        <!-- Empty state para lançamentos no período — Épico 8 -->
+        <include
+            android:id="@+id/layout_empty_state"
+            layout="@layout/layout_empty_state"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/lancamentos_vazio"
-            android:textSize="14sp"
-            android:textColor="?attr/colorOnSurface"
-            android:visibility="gone"
-            android:paddingBottom="8dp" />
+            android:layout_gravity="center_horizontal"
+            android:visibility="gone" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_lancamentos"

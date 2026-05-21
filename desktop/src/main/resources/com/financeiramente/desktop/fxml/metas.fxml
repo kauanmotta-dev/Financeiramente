@@ -17,8 +17,7 @@
 
     <top>
         <VBox style="-fx-padding: 12; -fx-spacing: 8; -fx-background-color: #fafafa;">
-            <Label text="Metas Financeiras"
-                   style="-fx-font-size: 18; -fx-font-weight: bold;" />
+            <Label text="Metas Financeiras" styleClass="page-title" />
         </VBox>
     </top>
 
@@ -30,11 +29,10 @@
                 <Label text="Metas Ativas" style="-fx-font-weight: bold;" />
                 <ListView fx:id="lvMetas" VBox.vgrow="ALWAYS" prefHeight="420" />
                 <HBox spacing="8">
-                    <Button text="Nova" onAction="#novaMeta"
-                            style="-fx-background-color: #2196F3; -fx-text-fill: white;" />
-                    <Button fx:id="btnEditar" text="Editar" onAction="#editarSelecionado" disable="true" />
+                    <Button text="Nova" onAction="#novaMeta" styleClass="btn-primary" />
+                    <Button fx:id="btnEditar" text="Editar" onAction="#editarSelecionado" disable="true" styleClass="btn-ghost" />
                     <Button fx:id="btnDesativar" text="Desativar" onAction="#desativarSelecionado"
-                            style="-fx-background-color: #F44336; -fx-text-fill: white;" disable="true" />
+                            styleClass="btn-danger" disable="true" />
                 </HBox>
             </VBox>
 
@@ -44,8 +42,7 @@
             <VBox spacing="10" HBox.hgrow="ALWAYS" prefWidth="500">
 
                 <!-- Formulário da meta -->
-                <Label fx:id="lblTituloForm" text="Nova Meta"
-                       style="-fx-font-weight: bold; -fx-font-size: 14;" />
+                <Label fx:id="lblTituloForm" text="Nova Meta" styleClass="section-title" />
 
                 <Label text="Nome" />
                 <TextField fx:id="tfNome" promptText="Ex: Viagem para Europa" />
@@ -62,9 +59,8 @@
                 <Label fx:id="lblErroMeta" style="-fx-text-fill: red;" visible="false" />
 
                 <HBox spacing="8">
-                    <Button text="Salvar" onAction="#salvarMeta"
-                            style="-fx-background-color: #4CAF50; -fx-text-fill: white;" />
-                    <Button text="Cancelar" onAction="#cancelarMeta" />
+                    <Button text="Salvar" onAction="#salvarMeta" styleClass="btn-primary" />
+                    <Button text="Cancelar" onAction="#cancelarMeta" styleClass="btn-ghost" />
                 </HBox>
 
                 <Separator />
@@ -90,10 +86,8 @@
                 </HBox>
                 <Label fx:id="lblErroAporte" style="-fx-text-fill: red;" visible="false" />
                 <HBox spacing="8">
-                    <Button text="Registrar Aporte" onAction="#salvarAporte"
-                            style="-fx-background-color: #4CAF50; -fx-text-fill: white;" />
-                    <Button text="Excluir Aporte Selecionado" onAction="#deletarAporteSelecionado"
-                            style="-fx-background-color: #F44336; -fx-text-fill: white;" />
+                    <Button text="Registrar Aporte" onAction="#salvarAporte" styleClass="btn-primary" />
+                    <Button text="Excluir Aporte Selecionado" onAction="#deletarAporteSelecionado" styleClass="btn-danger" />
                 </HBox>
 
             </VBox>
@@ -102,8 +96,7 @@
     </center>
 
     <bottom>
-        <Label fx:id="lblStatus"
-               style="-fx-padding: 4 8; -fx-background-color: #f0f0f0; -fx-font-size: 12;" />
+        <Label fx:id="lblStatus" styleClass="status-bar" />
     </bottom>
 
 </BorderPane>

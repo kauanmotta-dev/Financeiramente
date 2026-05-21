@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -32,7 +33,11 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/recorrente_descricao"
                 android:layout_marginBottom="12dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                app:boxCornerRadiusTopStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusBottomEnd="8dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_descricao"
@@ -50,7 +55,11 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/recorrente_valor"
                 android:layout_marginBottom="12dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                app:boxCornerRadiusTopStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusBottomEnd="8dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_valor"
@@ -133,7 +142,11 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/recorrente_dia"
                 android:layout_marginBottom="16dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                app:boxCornerRadiusTopStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusBottomEnd="8dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_dia"

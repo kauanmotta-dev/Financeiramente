@@ -108,8 +108,18 @@ public class DatabaseMigrator {
             applyMigration1();
             driver.setSchemaVersion(1);
         }
+
+        if (currentVersion < 2) {
+            applyMigration2();
+            driver.setSchemaVersion(2);
+        }
     }
     
+    private void applyMigration2() {
+        driver.execute("ALTER TABLE categoria ADD COLUMN icone TEXT DEFAULT '\uD83D\uDCE6'");
+        driver.execute("ALTER TABLE categoria ADD COLUMN cor TEXT DEFAULT '#6366F1'");
+    }
+
     private void applyMigration1() {
         driver.execute(CREATE_CATEGORIA);
         driver.execute(CREATE_LANCAMENTO_RECORRENTE);

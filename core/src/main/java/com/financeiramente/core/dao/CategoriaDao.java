@@ -20,26 +20,30 @@ public class CategoriaDao implements CategoriaRepository {
     @Override
     public void salvar(Categoria categoria) {
         db.execute(
-            "INSERT INTO categoria(id, nome, pai_id, tipo, limite_mensal, ordem, criado_em) VALUES (?,?,?,?,?,?,?)",
+            "INSERT INTO categoria(id, nome, pai_id, tipo, limite_mensal, ordem, criado_em, icone, cor) VALUES (?,?,?,?,?,?,?,?,?)",
             categoria.getId(),
             categoria.getNome(),
             categoria.getPaiId(),
             categoria.getTipo().name().toLowerCase(),
             categoria.getLimiteMensal(),
             categoria.getOrdem(),
-            categoria.getCriadoEm()
+            categoria.getCriadoEm(),
+            categoria.getIcone(),
+            categoria.getCor()
         );
     }
 
     @Override
     public void atualizar(Categoria categoria) {
         db.execute(
-            "UPDATE categoria SET nome=?, pai_id=?, tipo=?, limite_mensal=?, ordem=? WHERE id=?",
+            "UPDATE categoria SET nome=?, pai_id=?, tipo=?, limite_mensal=?, ordem=?, icone=?, cor=? WHERE id=?",
             categoria.getNome(),
             categoria.getPaiId(),
             categoria.getTipo().name().toLowerCase(),
             categoria.getLimiteMensal(),
             categoria.getOrdem(),
+            categoria.getIcone(),
+            categoria.getCor(),
             categoria.getId()
         );
     }
@@ -75,14 +79,17 @@ public class CategoriaDao implements CategoriaRepository {
         String tipoStr = row.getString("tipo");
         TipoCategoria tipo = TipoCategoria.valueOf(tipoStr.toUpperCase());
         Double limiteMensal = row.isNull("limite_mensal") ? null : row.getDouble("limite_mensal");
-        return new Categoria(
-            row.getString("id"),
-            row.getString("nome"),
-            row.isNull("pai_id") ? null : row.getString("pai_id"),
-            tipo,
-            limiteMensal,
-            row.getInt("ordem"),
-            row.getLong("criado_em")
-        );
+        String icone = row.isNull("icone") ? "\uD83D\uDCE6" : row.getString("icone");
+        String cor = row.isNull("cor") ? "#6366F1" : row.getString("cor");
+        return Categoria.builder(row.getString("id"))
+            .nome(row.getString("nome"))
+            .paiId(row.isNull("pai_id") ? null : row.getString("pai_id"))
+            .tipo(tipo)
+            .limiteMensal(limiteMensal)
+            .ordem(row.getInt("ordem"))
+            .criadoEm(row.getLong("criado_em"))
+            .icone(icone)
+            .cor(cor)
+            .build();
     };
 }

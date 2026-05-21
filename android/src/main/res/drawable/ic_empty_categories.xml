@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Circle background -->
+    <path
+        android:fillColor="#F1F5F9"
+        android:pathData="M60,10 a50,50 0 1,0 0.001,0 Z" />
+
+    <!-- Folder back -->
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M34,46 Q34,42 38,42 L50,42 Q52,42 53,44 L55,47 L82,47 Q86,47 86,51 L86,82 Q86,86 82,86 L38,86 Q34,86 34,82 Z" />
+
+    <!-- Folder front face -->
+    <path
+        android:fillColor="#E2E8F0"
+        android:pathData="M34,51 L86,51 L86,82 Q86,86 82,86 L38,86 Q34,86 34,82 Z" />
+
+    <!-- Folder tab -->
+    <path
+        android:fillColor="#B0BAC8"
+        android:pathData="M38,42 L50,42 Q52,42 53,44 L55,47 L38,47 Z" />
+
+    <!-- Empty interior lines (suggesting nothing inside) -->
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M44,62 L76,62 A2,2 0 0,1 76,66 L44,66 A2,2 0 0,1 44,62 Z" />
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M44,72 L68,72 A2,2 0 0,1 68,76 L44,76 A2,2 0 0,1 44,72 Z" />
+
+    <!-- Plus (+) hint badge — top-right of folder -->
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M79,32 a10,10 0 1,0 0.001,0 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M78,36 L80,36 L80,33 L83,33 L83,31 L80,31 L80,28 L78,28 L78,31 L75,31 L75,33 L78,33 Z" />
+
+</vector>

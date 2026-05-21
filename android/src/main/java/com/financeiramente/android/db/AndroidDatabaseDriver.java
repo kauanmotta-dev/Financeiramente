@@ -24,12 +24,30 @@ public class AndroidDatabaseDriver implements DatabaseDriver {
 
     @Override
     public void execute(String sql) {
-        db.execSQL(sql);
+        String s = sql == null ? "" : sql.trim().toUpperCase();
+        if (s.startsWith("PRAGMA") || s.startsWith("SELECT") || s.startsWith("WITH")) {
+            try (Cursor c = db.rawQuery(sql, null)) {
+                while (c.moveToNext()) {
+                    // no-op; just ensure the statement is executed and cursor closed
+                }
+            }
+        } else {
+            db.execSQL(sql);
+        }
     }
 
     @Override
     public void execute(String sql, Object... args) {
-        db.execSQL(sql, args);
+        String s = sql == null ? "" : sql.trim().toUpperCase();
+        if (s.startsWith("PRAGMA") || s.startsWith("SELECT") || s.startsWith("WITH")) {
+            String[] strArgs = toStringArray(args);
+            try (Cursor c = db.rawQuery(sql, strArgs)) {
+                while (c.moveToNext()) {
+                }
+            }
+        } else {
+            db.execSQL(sql, args);
+        }
     }
 
     @Override
@@ -46,8 +64,13 @@ public class AndroidDatabaseDriver implements DatabaseDriver {
 
     @Override
     public <T> Optional<T> queryOne(String sql, RowMapper<T> mapper, Object... args) {
-        List<T> results = query(sql, mapper, args);
-        return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+        String[] strArgs = toStringArray(args);
+        try (Cursor cursor = db.rawQuery(sql, strArgs)) {
+            if (cursor.moveToFirst()) {
+                return Optional.of(mapper.map(new CursorResultRow(cursor)));
+            }
+            return Optional.empty();
+        }
     }
 
     @Override
@@ -68,7 +91,6 @@ public class AndroidDatabaseDriver implements DatabaseDriver {
 
     @Override
     public int getSchemaVersion() {
-        String[] tables = new String[]{"schema_version"};
         try (Cursor c = db.rawQuery(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_version'", null)) {
             if (!c.moveToFirst()) return 0;
@@ -108,7 +130,7 @@ public class AndroidDatabaseDriver implements DatabaseDriver {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            db.execSQL("PRAGMA foreign_keys = ON");
+            // Foreign keys habilitados em onOpen, que é sempre chamado após onCreate
         }
 
         @Override

@@ -66,7 +66,8 @@
             app:destination="@id/lancamentoFormFragment" />
     </fragment>
 
-    <fragment
+    <!-- BottomSheetDialogFragment — deve ser declarado como <dialog> no Navigation Component -->
+    <dialog
         android:id="@+id/lancamentoFormFragment"
         android:name="com.financeiramente.android.ui.lancamentos.LancamentoFormFragment"
         android:label="@string/form_lancamento">
@@ -75,7 +76,7 @@
             app:argType="string"
             app:nullable="true"
             android:defaultValue="@null" />
-    </fragment>
+    </dialog>
 
     <!-- ── Categorias ── -->
 

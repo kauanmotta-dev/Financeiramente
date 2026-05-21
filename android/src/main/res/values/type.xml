@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base style required for dot-notation inheritance -->
+    <style name="TextAppearance.Financeiramente" parent="TextAppearance.Material3.BodyMedium" />
+
+    <!-- HeroDisplay — Saldo principal no hero card (48sp) -->
+    <style name="TextAppearance.Financeiramente.HeroDisplay">
+        <item name="android:textSize">48sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <!-- Display — Números grandes secundários (36sp) -->
+    <style name="TextAppearance.Financeiramente.Display">
+        <item name="android:textSize">36sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/cinza_on_surface</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <!-- Title — Títulos de seção, cabeçalhos de card -->
+    <style name="TextAppearance.Financeiramente.Title">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/cinza_on_surface</item>
+    </style>
+
+    <!-- Subtitle — Subtítulos, labels de campo -->
+    <style name="TextAppearance.Financeiramente.Subtitle">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/cinza_on_surface</item>
+    </style>
+
+    <!-- Amount — Valores monetários em cards e listas (18sp semibold) -->
+    <style name="TextAppearance.Financeiramente.Amount">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/cinza_on_surface</item>
+    </style>
+
+    <!-- Body — Texto corrente -->
+    <style name="TextAppearance.Financeiramente.Body">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/cinza_on_surface</item>
+    </style>
+
+    <!-- Caption — Labels secundários, metadata, datas -->
+    <style name="TextAppearance.Financeiramente.Caption">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/cinza_secondary</item>
+    </style>
+
+    <!-- Label — Chips, badges, status pills (11sp, all caps) -->
+    <style name="TextAppearance.Financeiramente.Label">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/cinza_secondary</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+</resources>

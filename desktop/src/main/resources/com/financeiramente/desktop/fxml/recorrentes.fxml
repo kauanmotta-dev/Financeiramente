@@ -19,8 +19,7 @@
 
     <top>
         <VBox style="-fx-padding: 12; -fx-spacing: 8; -fx-background-color: #fafafa;">
-            <Label text="Lançamentos Recorrentes"
-                   style="-fx-font-size: 18; -fx-font-weight: bold;" />
+            <Label text="Lançamentos Recorrentes" styleClass="page-title" />
         </VBox>
     </top>
 
@@ -32,12 +31,11 @@
                 <Label text="Recorrentes Ativos" style="-fx-font-weight: bold;" />
                 <ListView fx:id="lvRecorrentes" VBox.vgrow="ALWAYS" prefHeight="500" />
                 <HBox spacing="8">
-                    <Button text="Novo" onAction="#novoRecorrente"
-                            style="-fx-background-color: #2196F3; -fx-text-fill: white;" />
+                    <Button text="Novo" onAction="#novoRecorrente" styleClass="btn-primary" />
                     <Button fx:id="btnEditar" text="Editar" onAction="#editarSelecionado"
-                            disable="true" />
+                            styleClass="btn-ghost" disable="true" />
                     <Button fx:id="btnDesativar" text="Desativar" onAction="#desativarSelecionado"
-                            style="-fx-background-color: #F44336; -fx-text-fill: white;"
+                            styleClass="btn-danger"
                             disable="true" />
                 </HBox>
             </VBox>
@@ -46,8 +44,7 @@
 
             <!-- Formulário -->
             <VBox fx:id="vboxForm" spacing="10" prefWidth="340">
-                <Label fx:id="lblTituloForm" text="Novo Recorrente"
-                       style="-fx-font-weight: bold; -fx-font-size: 14;" />
+                <Label fx:id="lblTituloForm" text="Novo Recorrente" styleClass="section-title" />
 
                 <Label text="Descrição" />
                 <TextField fx:id="tfDescricao" promptText="Ex: Salário CLT" />
@@ -75,9 +72,8 @@
                 <Label fx:id="lblErro" style="-fx-text-fill: red;" visible="false" />
 
                 <HBox spacing="8">
-                    <Button text="Salvar" onAction="#salvar"
-                            style="-fx-background-color: #4CAF50; -fx-text-fill: white;" />
-                    <Button text="Cancelar" onAction="#cancelar" />
+                    <Button text="Salvar" onAction="#salvar" styleClass="btn-primary" />
+                    <Button text="Cancelar" onAction="#cancelar" styleClass="btn-ghost" />
                 </HBox>
             </VBox>
 
@@ -85,8 +81,7 @@
     </center>
 
     <bottom>
-        <Label fx:id="lblStatus"
-               style="-fx-padding: 4 8; -fx-background-color: #f0f0f0; -fx-font-size: 12;" />
+        <Label fx:id="lblStatus" styleClass="status-bar" />
     </bottom>
 
 </BorderPane>

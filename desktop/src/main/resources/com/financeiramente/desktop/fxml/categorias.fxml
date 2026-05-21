@@ -19,7 +19,7 @@
 
     <!-- ── Painel esquerdo: árvore de categorias ── -->
     <VBox spacing="8.0" style="-fx-padding: 12;">
-        <Label text="Categorias" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+        <Label text="Categorias" styleClass="page-title" />
 
         <HBox spacing="8.0">
             <Button fx:id="btnNovaRaiz" text="Nova Categoria" onAction="#onNovaRaiz" />
@@ -31,8 +31,7 @@
 
     <!-- ── Painel direito: formulário ── -->
     <VBox spacing="12.0" style="-fx-padding: 16;">
-        <Label fx:id="lblFormTitle" text="Nova Categoria"
-               style="-fx-font-size: 16; -fx-font-weight: bold;" />
+        <Label fx:id="lblFormTitle" text="Nova Categoria" styleClass="section-title" />
 
         <Label text="Nome *" />
         <TextField fx:id="tfNome" promptText="Nome da categoria" />
@@ -45,11 +44,9 @@
 
         <ButtonBar>
             <buttons>
-                <Button fx:id="btnSalvar" text="Salvar" onAction="#onSalvar"
-                        style="-fx-background-color: #6200EE; -fx-text-fill: white;" />
-                <Button fx:id="btnCancelar" text="Cancelar" onAction="#onCancelar" />
-                <Button fx:id="btnDeletar" text="Excluir" onAction="#onDeletar"
-                        style="-fx-background-color: #F44336; -fx-text-fill: white;"
+                <Button fx:id="btnSalvar" text="Salvar" onAction="#onSalvar" styleClass="btn-primary" />
+                <Button fx:id="btnCancelar" text="Cancelar" onAction="#onCancelar" styleClass="btn-ghost" />
+                <Button fx:id="btnDeletar" text="Excluir" onAction="#onDeletar" styleClass="btn-danger"
                         disable="true" />
             </buttons>
         </ButtonBar>

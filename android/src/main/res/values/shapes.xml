@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base shape styles required for dot-notation inheritance -->
+    <style name="ShapeAppearance.Financeiramente" parent="ShapeAppearance.Material3.Corner.None" />
+    <style name="ShapeAppearance.Financeiramente.Card" parent="ShapeAppearance.Material3.Corner.Medium" />
+
+    <!-- Pills — chips, badges, status indicators -->
+    <style name="ShapeAppearance.Financeiramente.Pill">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- Small card — itens de lista, mini-cards -->
+    <style name="ShapeAppearance.Financeiramente.Card.Small">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <!-- Medium card — cards de seção padrão -->
+    <style name="ShapeAppearance.Financeiramente.Card.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <!-- Large card — hero card do dashboard -->
+    <style name="ShapeAppearance.Financeiramente.Card.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
+    </style>
+
+    <!-- Circle — ícones de categoria, avatares -->
+    <style name="ShapeAppearance.Financeiramente.Circle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- Bottom sheet — modal de formulário rápido -->
+    <style name="ShapeAppearance.Financeiramente.BottomSheet">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">24dp</item>
+        <item name="cornerSizeTopRight">24dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+</resources>

@@ -14,19 +14,18 @@
 
     <top>
         <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 10;">
-            <Label text="Lançamentos" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+            <Label text="Lançamentos" styleClass="page-title" />
             <HBox style="-fx-hgrow: ALWAYS;" HBox.hgrow="ALWAYS" />
-            <Button text="◀" onAction="#mesAnterior" />
+            <Button text="◀" onAction="#mesAnterior" styleClass="btn-ghost" />
             <Label fx:id="lblMes" text="Mai / 2026"
-                   style="-fx-font-size: 14; -fx-min-width: 100; -fx-alignment: center;" />
-            <Button text="▶" onAction="#mesSeguinte" />
-            <Button text="+ Novo" onAction="#novoLancamento"
-                    style="-fx-background-color: #1976D2; -fx-text-fill: white;" />
+                   style="-fx-min-width: 100; -fx-alignment: center;" />
+            <Button text="▶" onAction="#mesSeguinte" styleClass="btn-ghost" />
+            <Button text="+ Novo" onAction="#novoLancamento" styleClass="btn-primary" />
         </HBox>
     </top>
 
     <center>
-        <TableView fx:id="tabelaLancamentos" style="-fx-padding: 0 10 10 10;">
+        <TableView fx:id="tabelaLancamentos" styleClass="table-view">
             <columns>
                 <TableColumn fx:id="colData" text="Data" prefWidth="100" />
                 <TableColumn fx:id="colDescricao" text="Descrição" prefWidth="280" />
@@ -41,9 +40,8 @@
 
     <bottom>
         <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 10;">
-            <Button text="Editar" onAction="#editarSelecionado" />
-            <Button text="Excluir" onAction="#excluirSelecionado"
-                    style="-fx-background-color: #C62828; -fx-text-fill: white;" />
+            <Button text="Editar" onAction="#editarSelecionado" styleClass="btn-ghost" />
+            <Button text="Excluir" onAction="#excluirSelecionado" styleClass="btn-danger" />
         </HBox>
     </bottom>
 

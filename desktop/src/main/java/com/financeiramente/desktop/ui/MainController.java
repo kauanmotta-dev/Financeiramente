@@ -9,11 +9,13 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Locale;
 
 public class MainController {
@@ -21,10 +23,29 @@ public class MainController {
     @FXML private Label statusLabel;
     @FXML private StackPane contentPane;
 
+    @FXML private Button btnDashboard;
+    @FXML private Button btnLancamentos;
+    @FXML private Button btnMetas;
+    @FXML private Button btnRelatorios;
+    @FXML private Button btnCategorias;
+    @FXML private Button btnRecorrentes;
+
     @FXML
     public void initialize() {
         gerarLancamentosRecorrentesDoMes();
         abrirDashboard();
+        setActiveNav(btnDashboard);
+    }
+
+    private void setActiveNav(Button activeButton) {
+        List.of(btnDashboard, btnLancamentos, btnMetas,
+                btnRelatorios, btnCategorias, btnRecorrentes).forEach(b -> {
+            b.getStyleClass().removeAll("nav-button-active");
+            if (!b.getStyleClass().contains("nav-button"))
+                b.getStyleClass().add("nav-button");
+        });
+        activeButton.getStyleClass().remove("nav-button");
+        activeButton.getStyleClass().add("nav-button-active");
     }
 
     /**
@@ -61,6 +82,7 @@ public class MainController {
 
     @FXML
     private void abrirCategorias() {
+        setActiveNav(btnCategorias);
         try {
             Parent view = FXMLLoader.load(
                     getClass().getResource("/com/financeiramente/desktop/fxml/categorias.fxml"));
@@ -73,6 +95,7 @@ public class MainController {
 
     @FXML
     private void abrirLancamentos() {
+        setActiveNav(btnLancamentos);
         try {
             Parent view = FXMLLoader.load(
                     getClass().getResource("/com/financeiramente/desktop/fxml/lancamentos_list.fxml"));
@@ -85,6 +108,7 @@ public class MainController {
 
     @FXML
     private void abrirRecorrentes() {
+        setActiveNav(btnRecorrentes);
         try {
             Parent view = FXMLLoader.load(
                     getClass().getResource("/com/financeiramente/desktop/fxml/recorrentes.fxml"));
@@ -97,6 +121,7 @@ public class MainController {
 
     @FXML
     private void abrirMetas() {
+        setActiveNav(btnMetas);
         try {
             Parent view = FXMLLoader.load(
                     getClass().getResource("/com/financeiramente/desktop/fxml/metas.fxml"));
@@ -104,6 +129,19 @@ public class MainController {
             statusLabel.setText("Metas");
         } catch (IOException e) {
             statusLabel.setText("Erro ao abrir Metas: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void abrirRelatorios() {
+        setActiveNav(btnRelatorios);
+        try {
+            Parent view = FXMLLoader.load(
+                    getClass().getResource("/com/financeiramente/desktop/fxml/relatorios.fxml"));
+            contentPane.getChildren().setAll(view);
+            statusLabel.setText("Relatórios");
+        } catch (IOException e) {
+            statusLabel.setText("Erro ao abrir Relatórios: " + e.getMessage());
         }
     }
 

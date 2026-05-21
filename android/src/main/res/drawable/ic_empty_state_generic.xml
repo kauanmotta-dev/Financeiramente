@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Circle background -->
+    <path
+        android:fillColor="#F1F5F9"
+        android:pathData="M60,10 a50,50 0 1,0 0.001,0 Z" />
+
+    <!-- Document/folder icon -->
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M40,35 L65,35 L80,50 L80,85 L40,85 Z" />
+    <path
+        android:fillColor="#E2E8F0"
+        android:pathData="M65,35 L65,50 L80,50 Z" />
+
+    <!-- Lines suggesting content -->
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M48,62 L72,62 A2,2 0 0,1 72,66 L48,66 A2,2 0 0,1 48,62 Z" />
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M48,72 L68,72 A2,2 0 0,1 68,76 L48,76 A2,2 0 0,1 48,72 Z" />
+
+</vector>
