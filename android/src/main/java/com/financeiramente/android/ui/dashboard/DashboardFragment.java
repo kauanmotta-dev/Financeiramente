@@ -8,16 +8,14 @@ import android.view.animation.DecelerateInterpolator;
 import android.animation.ValueAnimator;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 import android.widget.TextView;
+import android.graphics.drawable.GradientDrawable;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.widget.NestedScrollView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
@@ -25,51 +23,45 @@ import com.financeiramente.android.viewmodel.DashboardViewModel;
 import com.financeiramente.android.viewmodel.DashboardViewModelFactory;
 import com.financeiramente.core.usecase.SaldoCategoria;
 import com.financeiramente.core.usecase.SaldoMensalResult;
-import com.github.mikephil.charting.animation.Easing;
-import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.data.PieData;
-import com.github.mikephil.charting.data.PieDataSet;
-import com.github.mikephil.charting.data.PieEntry;
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
+import com.financeiramente.core.domain.vo.TipoCategoria;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.time.Month;
 import java.time.format.TextStyle;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class DashboardFragment extends Fragment {
 
-    private static final int[] CAT_COLORS = {
-            0xFF6366F1, 0xFF0EA5E9, 0xFFF97316, 0xFF10B981, 0xFF8B5CF6,
-            0xFFEC4899, 0xFFF59E0B, 0xFFEF4444, 0xFF64748B, 0xFF14B8A6,
-    };
-
     private DashboardViewModel viewModel;
-    private SaldoCategoriaAdapter adapter;
-    private PieLegendAdapter pieLegendAdapter;
 
     private TextView tvMesAtual;
+    private TextView tvSaldoReal;
     private TextView tvSaldoDisponivel;
     private TextView tvGastoTotal;
     private TextView tvReceitaTotal;
     private LinearProgressIndicator pbGlobal;
+
+    private MaterialCardView cardAvisoDashboard;
+    private TextView tvAvisoEssenciais;
+    private TextView tvAvisoMetas;
+    private View viewAvisoEssenciaisStatus;
+    private View viewAvisoMetasStatus;
+
     private boolean saldoOculto = false;
     private double ultimoSaldo = 0;
-    private TextView tvMiniDespesas;
-    private TextView tvMiniReceitas;
-    private TextView tvMiniSaldo;
-    private TextView tvMiniUso;
-    private PieChart pieChart;
-    private TextView tvChartVazio;
-    private View cardAlerta;
-    private TextView tvAlerta;
-    private TextView tvCategoriasVazio;
-    private SwipeRefreshLayout swipeRefresh;
-    private ExtendedFloatingActionButton fab;
+    private double ultimoSaldoReal = 0;
+    private double ultimoPercentualMetas = 0.0;
+
+    private enum NivelAviso {
+        VERDE,
+        AMARELO,
+        VERMELHO,
+        PRETO,
+        CINZA
+    }
 
     @Nullable
     @Override
@@ -84,80 +76,56 @@ public class DashboardFragment extends Fragment {
 
         // Vincular views do hero card
         tvMesAtual        = view.findViewById(R.id.tv_mes_atual);
+        tvSaldoReal       = view.findViewById(R.id.tv_saldo_real);
         tvSaldoDisponivel = view.findViewById(R.id.tv_saldo_disponivel);
         tvGastoTotal      = view.findViewById(R.id.tv_gasto_total);
         tvReceitaTotal    = view.findViewById(R.id.tv_receita_total);
         pbGlobal          = view.findViewById(R.id.pb_global);
 
-        // Mini-cards
-        tvMiniDespesas = view.findViewById(R.id.tv_mini_despesas);
-        tvMiniReceitas = view.findViewById(R.id.tv_mini_receitas);
-        tvMiniSaldo    = view.findViewById(R.id.tv_mini_saldo);
-        tvMiniUso      = view.findViewById(R.id.tv_mini_uso);
-
-        // PieChart
-        pieChart     = view.findViewById(R.id.pie_chart);
-        tvChartVazio = view.findViewById(R.id.tv_chart_vazio);
-        configurarPieChart();
-
-        // RecyclerView da legenda do pie
-        RecyclerView rvPieLegenda = view.findViewById(R.id.rv_pie_legenda);
-        pieLegendAdapter = new PieLegendAdapter();
-        rvPieLegenda.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvPieLegenda.setAdapter(pieLegendAdapter);
-
-        // Alerta + categorias
-        cardAlerta        = view.findViewById(R.id.card_alerta);
-        tvAlerta          = view.findViewById(R.id.tv_alerta);
-        tvCategoriasVazio = view.findViewById(R.id.tv_categorias_vazio);
-
-        // RecyclerView de categorias
-        RecyclerView rvCategorias = view.findViewById(R.id.rv_categorias);
-        adapter = new SaldoCategoriaAdapter();
-        rvCategorias.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvCategorias.setAdapter(adapter);
+        cardAvisoDashboard = view.findViewById(R.id.card_aviso_dashboard);
+        tvAvisoEssenciais = view.findViewById(R.id.tv_aviso_essenciais);
+        tvAvisoMetas = view.findViewById(R.id.tv_aviso_metas);
+        viewAvisoEssenciaisStatus = view.findViewById(R.id.view_aviso_essenciais_status);
+        viewAvisoMetasStatus = view.findViewById(R.id.view_aviso_metas_status);
 
         // ViewModel
         AppContext ctx = AppContext.get(requireContext());
         DashboardViewModelFactory factory = new DashboardViewModelFactory(
                 ctx.getCalcularSaldoMensalUseCase(),
-                ctx.getDeletarLancamentoUseCase());
+            ctx.getDeletarLancamentoUseCase(),
+            ctx.getMetaRepository(),
+            ctx.getAporteMetaRepository());
         viewModel = new ViewModelProvider(this, factory).get(DashboardViewModel.class);
 
-        // SwipeRefreshLayout
-        swipeRefresh = view.findViewById(R.id.swipe_refresh);
-        swipeRefresh.setOnRefreshListener(() -> viewModel.carregarDashboard());
-
         viewModel.getSaldoMensal().observe(getViewLifecycleOwner(), resultado -> {
-            swipeRefresh.setRefreshing(false);
             atualizarUI(resultado);
+        });
+        viewModel.getPercentualMetas().observe(getViewLifecycleOwner(), percentual -> {
+            ultimoPercentualMetas = percentual != null ? percentual : 0.0;
+            SaldoMensalResult atual = viewModel.getSaldoMensal().getValue();
+            if (atual != null) {
+                atualizarAvisos(atual);
+            }
         });
         // Botão olho — ocultar/mostrar saldo
         view.findViewById(R.id.btn_toggle_saldo).setOnClickListener(v -> {
             saldoOculto = !saldoOculto;
             if (saldoOculto) {
+                tvSaldoReal.setText("R$ ••••••");
                 tvSaldoDisponivel.setText("R$ ••••••");
             } else {
+                tvSaldoReal.setText(
+                        String.format(Locale.getDefault(), "R$ %.2f", ultimoSaldoReal));
                 tvSaldoDisponivel.setText(
                         String.format(Locale.getDefault(), "R$ %.2f", ultimoSaldo));
             }
         });
-        // FAB estendido: field-level (ícone + texto), colapsa ao scrollar
-        fab = view.findViewById(R.id.fab_novo_lancamento);
-        fab.setOnClickListener(v ->
+            view.findViewById(R.id.btn_registrar_lancamento).setOnClickListener(v ->
                 Navigation.findNavController(view)
-                        .navigate(R.id.action_dashboardFragment_to_lancamentoFormFragment));
-
-        // FAB colapsa ao scrollar para baixo, expande ao scrollar para cima
-        NestedScrollView nestedScrollView = view.findViewById(R.id.nested_scroll);
-        nestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener)
-                (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-                    if (scrollY > oldScrollY && scrollY > 0) {
-                        fab.shrink();
-                    } else if (scrollY <= oldScrollY) {
-                        fab.extend();
-                    }
-                });
+                    .navigate(R.id.action_dashboardFragment_to_lancamentoFormFragment));
+            view.findViewById(R.id.btn_abrir_configuracoes).setOnClickListener(v ->
+                Navigation.findNavController(view)
+                    .navigate(R.id.nav_configuracoes));
 
         // Snackbar "Lançamento salvo" com ação Desfazer
         getParentFragmentManager().setFragmentResultListener(
@@ -180,20 +148,6 @@ public class DashboardFragment extends Fragment {
         if (viewModel != null) {
             viewModel.carregarDashboard();
         }
-    }
-
-    private void configurarPieChart() {
-        pieChart.getDescription().setEnabled(false);
-        pieChart.setDrawHoleEnabled(true);
-        pieChart.setHoleColor(android.graphics.Color.TRANSPARENT);
-        pieChart.setHoleRadius(60f);
-        pieChart.setTransparentCircleRadius(65f);
-        pieChart.setDrawCenterText(false);
-        pieChart.setRotationEnabled(false);
-        pieChart.setHighlightPerTapEnabled(false);
-        pieChart.getLegend().setEnabled(false);
-        pieChart.setDrawEntryLabels(false);
-        pieChart.setExtraOffsets(4f, 4f, 4f, 4f);
     }
 
     private void atualizarUI(SaldoMensalResult resultado) {
@@ -231,89 +185,122 @@ public class DashboardFragment extends Fragment {
                 : 0;
         pbGlobal.setProgress(progressoGlobal);
 
-        // Mini-cards
-        tvMiniDespesas.setText(
-                String.format(Locale.getDefault(), "R$ %.2f", resultado.getTotalGasto()));
-        tvMiniReceitas.setText(
-                String.format(Locale.getDefault(), "R$ %.2f", resultado.getReceitaRealizada()));
-        tvMiniSaldo.setText(
-                String.format(Locale.getDefault(), "R$ %.2f", resultado.getSaldoDisponivel()));
-        tvMiniUso.setText(String.format(Locale.getDefault(), "%d%%", progressoGlobal));
-
-        // Lista de categorias
+        // Saldo real usa limite + excedente para mostrar um cenário mais conservador.
         List<SaldoCategoria> saldos = resultado.getSaldosPorCategoria();
-        adapter.setItems(saldos);
-        tvCategoriasVazio.setVisibility(saldos.isEmpty() ? View.VISIBLE : View.GONE);
+        double totalLimitesCategorias = saldos.stream()
+            .filter(s -> s.getLimite() > 0)
+            .mapToDouble(SaldoCategoria::getLimite)
+            .sum();
 
-        // Pie chart â€” top 5 por gasto
-        atualizarPieChart(saldos);
+        double excedenteLimites = saldos.stream()
+            .filter(s -> s.getLimite() > 0)
+            .mapToDouble(s -> Math.max(0.0, s.getGastoRealizado() - s.getLimite()))
+            .sum();
 
-        // Alerta de categorias no limite ou estouradas
-        List<SaldoCategoria> emAlerta = saldos.stream()
-                .filter(s -> s.getLimite() > 0 && s.getGastoRealizado() / s.getLimite() >= 0.75)
+        double totalRecebido = resultado.getReceitaRealizada();
+        double saldoAposDescontoLimites = totalRecebido - totalLimitesCategorias - excedenteLimites;
+        ultimoSaldoReal = saldoAposDescontoLimites;
+
+        if (!saldoOculto) {
+            ValueAnimator saldoRealAnimator = ValueAnimator.ofFloat(0f, (float) ultimoSaldoReal);
+            saldoRealAnimator.setDuration(700);
+            saldoRealAnimator.setInterpolator(new DecelerateInterpolator());
+            saldoRealAnimator.addUpdateListener(anim -> {
+                float animatedValue = (float) anim.getAnimatedValue();
+                tvSaldoReal.setText(
+                        String.format(Locale.getDefault(), "R$ %.2f", animatedValue));
+            });
+            saldoRealAnimator.start();
+        }
+
+        atualizarAvisos(resultado);
+    }
+
+    private void atualizarAvisos(SaldoMensalResult resultado) {
+        List<SaldoCategoria> saldos = resultado.getSaldosPorCategoria();
+        List<SaldoCategoria> essenciaisComLimite = saldos.stream()
+                .filter(s -> s.getTipoCategoria() == TipoCategoria.ESSENCIAL)
+                .filter(s -> s.getLimite() > 0)
                 .collect(Collectors.toList());
 
-        if (emAlerta.isEmpty()) {
-            cardAlerta.setVisibility(View.GONE);
+        String statusEssenciais;
+        NivelAviso nivelEssenciais;
+
+        if (essenciaisComLimite.isEmpty()) {
+            nivelEssenciais = NivelAviso.CINZA;
+            statusEssenciais = "Essenciais sem limite planejado";
         } else {
-            cardAlerta.setVisibility(View.VISIBLE);
-            String nomes = emAlerta.stream()
-                    .map(SaldoCategoria::getCategoriaNome)
-                    .collect(Collectors.joining(", "));
-            boolean temEstourada = emAlerta.stream()
-                    .anyMatch(s -> s.getGastoRealizado() > s.getLimite());
-            if (temEstourada) {
-                tvAlerta.setText(getString(R.string.dashboard_alerta_estourado, nomes));
+            double receitaEssenciais = resultado.getReceitaRealizada();
+            double totalLimitesEssenciais = essenciaisComLimite.stream()
+                    .mapToDouble(SaldoCategoria::getLimite)
+                    .sum();
+            double percentualEssenciais = receitaEssenciais > 0
+                    ? (totalLimitesEssenciais / receitaEssenciais) * 100.0
+                    : 999.0;
+
+            if (percentualEssenciais <= 50.0) {
+                nivelEssenciais = NivelAviso.VERDE;
+            } else if (percentualEssenciais <= 75.0) {
+                nivelEssenciais = NivelAviso.AMARELO;
+            } else if (percentualEssenciais <= 100.0) {
+                nivelEssenciais = NivelAviso.VERMELHO;
             } else {
-                tvAlerta.setText(getString(R.string.dashboard_alerta_limite, nomes));
+                nivelEssenciais = NivelAviso.PRETO;
             }
+            statusEssenciais = "Essenciais: " + formatarPercentual(percentualEssenciais) + " da receita";
+        }
+
+        String statusMetas = "Metas: " + formatarPercentual(ultimoPercentualMetas) + " concluído";
+        NivelAviso nivelMetas;
+        if (ultimoPercentualMetas == 0.0) {
+            nivelMetas = NivelAviso.PRETO;
+        } else if (ultimoPercentualMetas < 10.0) {
+            nivelMetas = NivelAviso.VERMELHO;
+        } else if (ultimoPercentualMetas < 20.0) {
+            nivelMetas = NivelAviso.AMARELO;
+        } else {
+            nivelMetas = NivelAviso.VERDE;
+        }
+
+        cardAvisoDashboard.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.cinza_surface));
+        cardAvisoDashboard.setStrokeColor(ContextCompat.getColor(requireContext(), R.color.cinza_divider));
+        tvAvisoEssenciais.setTextColor(ContextCompat.getColor(requireContext(), R.color.cinza_secondary));
+        tvAvisoMetas.setTextColor(ContextCompat.getColor(requireContext(), R.color.cinza_secondary));
+
+        tvAvisoEssenciais.setText(statusEssenciais);
+        tvAvisoMetas.setText(statusMetas);
+        aplicarCorDot(viewAvisoEssenciaisStatus, nivelEssenciais);
+        aplicarCorDot(viewAvisoMetasStatus, nivelMetas);
+    }
+
+    private void aplicarCorDot(View dotView, NivelAviso nivel) {
+        int dotColor;
+
+        switch (nivel) {
+            case VERDE:
+                dotColor = ContextCompat.getColor(requireContext(), R.color.status_ok);
+                break;
+            case AMARELO:
+                dotColor = ContextCompat.getColor(requireContext(), R.color.status_warning);
+                break;
+            case VERMELHO:
+                dotColor = ContextCompat.getColor(requireContext(), R.color.status_danger);
+                break;
+            case PRETO:
+                dotColor = ContextCompat.getColor(requireContext(), R.color.black);
+                break;
+            case CINZA:
+            default:
+                dotColor = ContextCompat.getColor(requireContext(), R.color.cinza_secondary);
+                break;
+        }
+
+        if (dotView.getBackground() instanceof GradientDrawable) {
+            ((GradientDrawable) dotView.getBackground().mutate()).setColor(dotColor);
         }
     }
 
-    private void atualizarPieChart(List<SaldoCategoria> saldos) {
-        List<SaldoCategoria> comGasto = saldos.stream()
-                .filter(s -> s.getGastoRealizado() > 0)
-                .sorted(Comparator.comparingDouble(SaldoCategoria::getGastoRealizado).reversed())
-                .limit(5)
-                .collect(Collectors.toList());
-
-        if (comGasto.isEmpty()) {
-            pieChart.setVisibility(View.GONE);
-            tvChartVazio.setVisibility(View.VISIBLE);
-            pieLegendAdapter.setItems(new ArrayList<>());
-            return;
-        }
-
-        pieChart.setVisibility(View.VISIBLE);
-        tvChartVazio.setVisibility(View.GONE);
-
-        double totalGasto = comGasto.stream()
-                .mapToDouble(SaldoCategoria::getGastoRealizado).sum();
-
-        List<PieEntry> entries = new ArrayList<>();
-        List<Integer> colors  = new ArrayList<>();
-        List<PieLegendAdapter.LegendItem> legendItems = new ArrayList<>();
-
-        for (int i = 0; i < comGasto.size(); i++) {
-            SaldoCategoria s = comGasto.get(i);
-            entries.add(new PieEntry((float) s.getGastoRealizado()));
-            int color = CAT_COLORS[Math.abs(s.getCategoriaNome().hashCode()) % CAT_COLORS.length];
-            colors.add(color);
-            float pct = totalGasto > 0 ? (float) (s.getGastoRealizado() / totalGasto * 100f) : 0f;
-            legendItems.add(new PieLegendAdapter.LegendItem(s.getCategoriaNome(), pct, color));
-        }
-
-        PieDataSet dataSet = new PieDataSet(entries, "");
-        dataSet.setColors(colors);
-        dataSet.setSliceSpace(2f);
-        dataSet.setSelectionShift(4f);
-        dataSet.setDrawValues(false);
-
-        PieData pieData = new PieData(dataSet);
-        pieChart.setData(pieData);
-        pieChart.animateY(800, Easing.EaseInOutQuad);
-        pieChart.invalidate();
-
-        pieLegendAdapter.setItems(legendItems);
+    private String formatarPercentual(double valor) {
+        return String.format(Locale.getDefault(), "%.0f%%", valor);
     }
 }

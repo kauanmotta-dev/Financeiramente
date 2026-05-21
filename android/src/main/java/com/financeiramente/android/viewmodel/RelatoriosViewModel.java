@@ -17,8 +17,10 @@ import com.financeiramente.core.usecase.FiltroRelatorio;
 import com.financeiramente.core.usecase.GerarRelatorioUseCase;
 import com.financeiramente.core.usecase.RelatorioResult;
 
+import java.util.LinkedHashMap;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -35,6 +37,8 @@ public class RelatoriosViewModel extends ViewModel {
     private final MutableLiveData<RelatorioResult> resultado = new MutableLiveData<>();
     private final MutableLiveData<List<Categoria>> categorias = new MutableLiveData<>();
     private final MutableLiveData<List<Tag>> tags = new MutableLiveData<>();
+    private final MutableLiveData<Map<String, Categoria>> categoriasMap = new MutableLiveData<>(new LinkedHashMap<>());
+    private final MutableLiveData<Map<String, List<Tag>>> tagsPorLancamento = new MutableLiveData<>(new LinkedHashMap<>());
     private final MutableLiveData<String> erro = new MutableLiveData<>();
 
     // Dados históricos dos últimos 6 meses para os gráficos de barras e linha
@@ -129,7 +133,22 @@ public class RelatoriosViewModel extends ViewModel {
         executor.execute(() -> {
             try {
                 RelatorioResult res = gerarRelatorio.executar(filtro);
-                mainHandler.post(() -> resultado.setValue(res));
+                List<Categoria> todasCategorias = categoriaRepository.listarTodas();
+                Map<String, Categoria> mapCategorias = new LinkedHashMap<>();
+                for (Categoria categoria : todasCategorias) {
+                    mapCategorias.put(categoria.getId(), categoria);
+                }
+
+                Map<String, List<Tag>> mapTags = new LinkedHashMap<>();
+                for (com.financeiramente.core.domain.entity.Lancamento lancamento : res.getLancamentos()) {
+                    mapTags.put(lancamento.getId(), tagRepository.listarPorLancamento(lancamento.getId()));
+                }
+
+                mainHandler.post(() -> {
+                    categoriasMap.setValue(mapCategorias);
+                    tagsPorLancamento.setValue(mapTags);
+                    resultado.setValue(res);
+                });
             } catch (Exception e) {
                 mainHandler.post(() -> erro.setValue(e.getMessage()));
             }
@@ -139,6 +158,8 @@ public class RelatoriosViewModel extends ViewModel {
     public LiveData<RelatorioResult> getResultado()   { return resultado; }
     public LiveData<List<Categoria>> getCategorias()  { return categorias; }
     public LiveData<List<Tag>> getTags()              { return tags; }
+    public LiveData<Map<String, Categoria>> getCategoriasMap() { return categoriasMap; }
+    public LiveData<Map<String, List<Tag>>> getTagsPorLancamento() { return tagsPorLancamento; }
     public LiveData<String> getErro()                 { return erro; }
     public LiveData<float[]> getReceitasMensais()     { return receitasMensais; }
     public LiveData<float[]> getDespesasMensais()     { return despesasMensais; }

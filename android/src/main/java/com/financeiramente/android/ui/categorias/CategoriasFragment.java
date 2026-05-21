@@ -17,7 +17,6 @@ import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.CategoriasViewModel;
 import com.financeiramente.android.viewmodel.CategoriasViewModelFactory;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -35,6 +34,9 @@ public class CategoriasFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        view.findViewById(R.id.btn_back_categorias).setOnClickListener(v ->
+            Navigation.findNavController(view).navigateUp());
 
         AppContext ctx = AppContext.get(requireContext());
         CategoriasViewModelFactory factory = new CategoriasViewModelFactory(
@@ -57,8 +59,7 @@ public class CategoriasFragment extends Fragment {
                     : getString(R.string.tab_receitas));
         }).attach();
 
-        FloatingActionButton fab = view.findViewById(R.id.fab_add_categoria);
-        fab.setOnClickListener(v -> navigateToForm(null, null));
+        view.findViewById(R.id.btn_add_categoria).setOnClickListener(v -> navigateToForm(null, null));
 
         viewModel.getErro().observe(getViewLifecycleOwner(), erro -> {
             if (erro != null) {

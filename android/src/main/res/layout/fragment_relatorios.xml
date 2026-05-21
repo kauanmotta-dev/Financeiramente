@@ -11,15 +11,34 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Título -->
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/nav_relatorios"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface"
-            android:paddingBottom="12dp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingBottom="12dp">
+
+            <ImageButton
+                android:id="@+id/btn_back_relatorios"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/voltar"
+                android:padding="8dp"
+                android:src="@android:drawable/ic_media_previous"
+                android:tint="?attr/colorOnSurfaceVariant" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/nav_relatorios"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
 
         <!-- Filtros de período — ChipGroup M3 -->
         <com.google.android.material.chip.ChipGroup

@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -22,7 +23,6 @@ import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.MetaDetalheViewModel;
 import com.financeiramente.android.viewmodel.MetaDetalheViewModelFactory;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.time.LocalDate;
 import java.util.Locale;
@@ -38,6 +38,7 @@ public class MetaDetalheFragment extends Fragment {
     private TextView tvValores;
     private TextView tvProjecao;
     private TextView tvVazioAportes;
+    private TextView tvTituloMeta;
 
     @Nullable
     @Override
@@ -49,6 +50,9 @@ public class MetaDetalheFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        view.findViewById(R.id.btn_back_meta_detalhe).setOnClickListener(v ->
+            Navigation.findNavController(view).navigateUp());
 
         if (getArguments() != null) {
             metaId = getArguments().getString("metaId");
@@ -68,6 +72,7 @@ public class MetaDetalheFragment extends Fragment {
         tvValores = view.findViewById(R.id.tv_detalhe_valores);
         tvProjecao = view.findViewById(R.id.tv_detalhe_projecao);
         tvVazioAportes = view.findViewById(R.id.tv_vazio_aportes);
+        tvTituloMeta = view.findViewById(R.id.tv_titulo_meta_detalhe);
 
         RecyclerView rvAportes = view.findViewById(R.id.rv_aportes);
         rvAportes.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -92,7 +97,7 @@ public class MetaDetalheFragment extends Fragment {
             tvPercentual.setText(String.format(Locale.getDefault(), "%.1f%%", Math.min(pct, 100)));
             tvValores.setText(String.format(Locale.getDefault(),
                     "R$ %.2f / R$ %.2f", meta.getValorAtual(), meta.getValorObjetivo()));
-            requireActivity().setTitle(meta.getNome());
+                tvTituloMeta.setText(meta.getNome());
         });
 
         viewModel.getAportes().observe(getViewLifecycleOwner(), lista -> {
@@ -112,8 +117,7 @@ public class MetaDetalheFragment extends Fragment {
             if (msg != null) Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
         });
 
-        FloatingActionButton fab = view.findViewById(R.id.fab_novo_aporte);
-        fab.setOnClickListener(v -> mostrarDialogoNovoAporte());
+        view.findViewById(R.id.btn_novo_aporte).setOnClickListener(v -> mostrarDialogoNovoAporte());
 
         if (metaId != null) {
             viewModel.carregar(metaId);

@@ -20,6 +20,7 @@
         <item name="colorSurface">@color/dark_surface</item>
         <item name="colorOnSurface">@color/dark_on_surface</item>
         <item name="colorOnSurfaceVariant">@color/dark_on_surface_variant</item>
+        <item name="colorBackground">@color/dark_background</item>
         <item name="android:colorBackground">@color/dark_background</item>
 
         <!-- Barra de status e navegação -->

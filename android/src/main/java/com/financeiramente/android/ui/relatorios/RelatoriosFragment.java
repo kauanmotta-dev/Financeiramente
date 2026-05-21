@@ -6,11 +6,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,16 +19,20 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
+import com.financeiramente.android.ui.common.CategoriaVisualFallback;
 import com.financeiramente.android.ui.lancamentos.LancamentoAdapter;
 import com.financeiramente.android.viewmodel.RelatoriosViewModel;
 import com.financeiramente.android.viewmodel.RelatoriosViewModelFactory;
 import com.financeiramente.core.domain.entity.Categoria;
+import com.financeiramente.core.domain.entity.Lancamento;
 import com.financeiramente.core.domain.entity.Tag;
+import com.financeiramente.core.domain.vo.TipoCategoria;
 import com.financeiramente.core.domain.vo.TipoLancamento;
 import com.financeiramente.core.usecase.FiltroRelatorio;
 import com.financeiramente.core.usecase.RelatorioResult;
@@ -51,14 +51,19 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 public class RelatoriosFragment extends Fragment {
 
@@ -82,9 +87,9 @@ public class RelatoriosFragment extends Fragment {
     private TextInputEditText etDataInicio, etDataFim;
 
     // filter state — maintained across bottom sheet opens
-    private String filtroCategoriaSelecionadaId  = null;
-    private String filtroTagSelecionadaId        = null;
-    private TipoLancamento filtroTipoSelecionado = null;
+    private final Set<String> filtrosCategoriasSelecionadas = new LinkedHashSet<>();
+    private final Set<String> filtrosTagsSelecionadas = new LinkedHashSet<>();
+    private final Set<TipoCategoria> filtrosTiposCategoriaSelecionados = new LinkedHashSet<>();
 
     private TextView tvTotalReceitas, tvTotalDespesas, tvSaldo;
     private View emptyState;
@@ -99,8 +104,11 @@ public class RelatoriosFragment extends Fragment {
 
     private Map<String, Double> ultimoTotalPorCategoria = null;
 
+    private RelatorioResult ultimoResultadoBruto = null;
     private List<Categoria> listaCategorias = new ArrayList<>();
     private List<Tag> listaTags = new ArrayList<>();
+    private Map<String, Categoria> categoriaPorId = new LinkedHashMap<>();
+    private Map<String, List<Tag>> tagsPorLancamento = new LinkedHashMap<>();
     private int modoAtual = MODO_MES;
 
     @Nullable
@@ -123,6 +131,11 @@ public class RelatoriosFragment extends Fragment {
         viewModel = new ViewModelProvider(this, factory).get(RelatoriosViewModel.class);
 
         bindViews(view);
+        view.findViewById(R.id.btn_back_relatorios).setOnClickListener(v -> {
+            if (!Navigation.findNavController(view).navigateUp()) {
+                Navigation.findNavController(view).navigate(R.id.nav_dashboard);
+            }
+        });
         configurarEmptyState();
         configurarChipsPeriodo();
         configurarBotaoFiltrar(view);
@@ -218,68 +231,85 @@ public class RelatoriosFragment extends Fragment {
                 .inflate(R.layout.bottom_sheet_relatorios_filtros, null);
         sheet.setContentView(sheetView);
 
-        Spinner spCategoria = sheetView.findViewById(R.id.spinner_categoria);
-        Spinner spTag       = sheetView.findViewById(R.id.spinner_tag);
-        RadioGroup rgTipo   = sheetView.findViewById(R.id.rg_tipo);
+        ChipGroup chipGroupTipo = sheetView.findViewById(R.id.chip_group_tipo);
+        ChipGroup chipGroupCategorias = sheetView.findViewById(R.id.chip_group_categorias);
+        ChipGroup chipGroupTags = sheetView.findViewById(R.id.chip_group_tags);
 
-        // Populate categoria spinner
-        List<String> catNomes = new ArrayList<>();
-        catNomes.add(getString(R.string.relatorio_todas_categorias));
-        for (Categoria c : listaCategorias) catNomes.add(c.getNome());
-        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(),
-                android.R.layout.simple_spinner_item, catNomes);
-        catAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spCategoria.setAdapter(catAdapter);
+        ((Chip) sheetView.findViewById(R.id.chip_tipo_todos))
+            .setChecked(filtrosTiposCategoriaSelecionados.isEmpty());
+        ((Chip) sheetView.findViewById(R.id.chip_tipo_essenciais))
+            .setChecked(filtrosTiposCategoriaSelecionados.contains(TipoCategoria.ESSENCIAL));
+        ((Chip) sheetView.findViewById(R.id.chip_tipo_nao_essenciais))
+            .setChecked(filtrosTiposCategoriaSelecionados.contains(TipoCategoria.NAO_ESSENCIAL));
+        ((Chip) sheetView.findViewById(R.id.chip_tipo_receitas))
+            .setChecked(filtrosTiposCategoriaSelecionados.contains(TipoCategoria.RECEITA));
 
-        // Restore previous selection
-        if (filtroCategoriaSelecionadaId != null) {
-            for (int i = 0; i < listaCategorias.size(); i++) {
-                if (listaCategorias.get(i).getId().equals(filtroCategoriaSelecionadaId)) {
-                    spCategoria.setSelection(i + 1);
-                    break;
-                }
-            }
+        chipGroupCategorias.removeAllViews();
+        for (Categoria categoria : categoriasRaizOrdenadas()) {
+            Chip chip = new Chip(requireContext());
+            chip.setText(CategoriaVisualFallback.icone(categoria, null) + " " + categoria.getNome());
+            chip.setTag(categoria.getId());
+            chip.setCheckable(true);
+            chip.setChecked(filtrosCategoriasSelecionadas.contains(categoria.getId()));
+            chipGroupCategorias.addView(chip);
         }
 
-        // Populate tag spinner
-        List<String> tagNomes = new ArrayList<>();
-        tagNomes.add(getString(R.string.relatorio_todas_tags));
-        for (Tag t : listaTags) tagNomes.add(t.getNome());
-        ArrayAdapter<String> tagAdapter = new ArrayAdapter<>(requireContext(),
-                android.R.layout.simple_spinner_item, tagNomes);
-        tagAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spTag.setAdapter(tagAdapter);
-
-        // Restore previous tag selection
-        if (filtroTagSelecionadaId != null) {
-            for (int i = 0; i < listaTags.size(); i++) {
-                if (listaTags.get(i).getId().equals(filtroTagSelecionadaId)) {
-                    spTag.setSelection(i + 1);
-                    break;
-                }
-            }
+        chipGroupTags.removeAllViews();
+        for (Tag tag : listaTags) {
+            Chip chip = new Chip(requireContext());
+            chip.setText(tag.getEmoji() + " " + tag.getNome());
+            chip.setTag(tag.getId());
+            chip.setCheckable(true);
+            chip.setChecked(filtrosTagsSelecionadas.contains(tag.getId()));
+            chipGroupTags.addView(chip);
         }
 
-        // Restore tipo selection
-        if (filtroTipoSelecionado == TipoLancamento.RECEITA) {
-            ((RadioButton) sheetView.findViewById(R.id.rb_receitas)).setChecked(true);
-        } else if (filtroTipoSelecionado == TipoLancamento.DESPESA) {
-            ((RadioButton) sheetView.findViewById(R.id.rb_despesas)).setChecked(true);
-        }
+        sheetView.findViewById(R.id.btn_limpar).setOnClickListener(v -> {
+            filtrosCategoriasSelecionadas.clear();
+            filtrosTagsSelecionadas.clear();
+            filtrosTiposCategoriaSelecionados.clear();
+            sheet.dismiss();
+            aplicarFiltro();
+        });
 
         sheetView.findViewById(R.id.btn_aplicar).setOnClickListener(v -> {
-            int catPos = spCategoria.getSelectedItemPosition();
-            filtroCategoriaSelecionadaId = (catPos > 0 && catPos - 1 < listaCategorias.size())
-                    ? listaCategorias.get(catPos - 1).getId() : null;
+            filtrosCategoriasSelecionadas.clear();
+            for (int i = 0; i < chipGroupCategorias.getChildCount(); i++) {
+                View child = chipGroupCategorias.getChildAt(i);
+                if (child instanceof Chip) {
+                    Chip chip = (Chip) child;
+                    if (chip.isChecked() && chip.getTag() instanceof String) {
+                        filtrosCategoriasSelecionadas.add((String) chip.getTag());
+                    }
+                }
+            }
 
-            int tagPos = spTag.getSelectedItemPosition();
-            filtroTagSelecionadaId = (tagPos > 0 && tagPos - 1 < listaTags.size())
-                    ? listaTags.get(tagPos - 1).getId() : null;
+            filtrosTagsSelecionadas.clear();
+            for (int i = 0; i < chipGroupTags.getChildCount(); i++) {
+                View child = chipGroupTags.getChildAt(i);
+                if (child instanceof Chip) {
+                    Chip chip = (Chip) child;
+                    if (chip.isChecked() && chip.getTag() instanceof String) {
+                        filtrosTagsSelecionadas.add((String) chip.getTag());
+                    }
+                }
+            }
 
-            int checkedId = rgTipo.getCheckedRadioButtonId();
-            if (checkedId == R.id.rb_receitas) filtroTipoSelecionado = TipoLancamento.RECEITA;
-            else if (checkedId == R.id.rb_despesas) filtroTipoSelecionado = TipoLancamento.DESPESA;
-            else filtroTipoSelecionado = null;
+            filtrosTiposCategoriaSelecionados.clear();
+            for (int i = 0; i < chipGroupTipo.getChildCount(); i++) {
+                View child = chipGroupTipo.getChildAt(i);
+                if (!(child instanceof Chip)) continue;
+                Chip chip = (Chip) child;
+                if (!chip.isChecked()) continue;
+                int id = chip.getId();
+                if (id == R.id.chip_tipo_essenciais) {
+                    filtrosTiposCategoriaSelecionados.add(TipoCategoria.ESSENCIAL);
+                } else if (id == R.id.chip_tipo_nao_essenciais) {
+                    filtrosTiposCategoriaSelecionados.add(TipoCategoria.NAO_ESSENCIAL);
+                } else if (id == R.id.chip_tipo_receitas) {
+                    filtrosTiposCategoriaSelecionados.add(TipoCategoria.RECEITA);
+                }
+            }
 
             sheet.dismiss();
             aplicarFiltro();
@@ -335,12 +365,15 @@ public class RelatoriosFragment extends Fragment {
         horizontalBarChart.getLegend().setEnabled(false);
         horizontalBarChart.setDrawGridBackground(false);
         horizontalBarChart.getAxisRight().setEnabled(false);
+        horizontalBarChart.setExtraLeftOffset(6f);
+        horizontalBarChart.setExtraRightOffset(12f);
         horizontalBarChart.getAxisLeft().setAxisMinimum(0f);
         horizontalBarChart.getAxisLeft().setDrawGridLines(true);
         horizontalBarChart.getAxisLeft().setGridColor(0x33000000);
         horizontalBarChart.getXAxis().setDrawGridLines(false);
-        horizontalBarChart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM_INSIDE);
+        horizontalBarChart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
         horizontalBarChart.getXAxis().setGranularity(1f);
+        horizontalBarChart.getXAxis().setTextSize(11f);
         horizontalBarChart.setNoDataText(getString(R.string.lancamentos_vazio));
         horizontalBarChart.setFitBars(true);
     }
@@ -402,7 +435,15 @@ public class RelatoriosFragment extends Fragment {
         BarData data = new BarData(dataSet);
         data.setBarWidth(0.6f);
         horizontalBarChart.setData(data);
-        horizontalBarChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labels));
+        horizontalBarChart.getXAxis().setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                int index = Math.round(value);
+                if (index < 0 || index >= labels.size()) return "";
+                String label = labels.get(index);
+                return label.length() > 18 ? label.substring(0, 18) + "…" : label;
+            }
+        });
         horizontalBarChart.getXAxis().setLabelCount(labels.size());
         horizontalBarChart.animateX(500);
         horizontalBarChart.invalidate();
@@ -514,7 +555,18 @@ public class RelatoriosFragment extends Fragment {
     // ─── Observers & Filter ──────────────────────────────────────────────────
 
     private void observarViewModel() {
-        viewModel.getResultado().observe(getViewLifecycleOwner(), this::atualizarUI);
+        viewModel.getResultado().observe(getViewLifecycleOwner(), res -> {
+            ultimoResultadoBruto = res;
+            renderResultadoFiltrado();
+        });
+        viewModel.getCategoriasMap().observe(getViewLifecycleOwner(), map -> {
+            categoriaPorId = map != null ? map : new LinkedHashMap<>();
+            renderResultadoFiltrado();
+        });
+        viewModel.getTagsPorLancamento().observe(getViewLifecycleOwner(), map -> {
+            tagsPorLancamento = map != null ? map : new LinkedHashMap<>();
+            renderResultadoFiltrado();
+        });
         viewModel.getErro().observe(getViewLifecycleOwner(), msg -> {
             if (msg != null) Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
         });
@@ -559,7 +611,7 @@ public class RelatoriosFragment extends Fragment {
         }
 
         viewModel.filtrar(new FiltroRelatorio(dataInicio, dataFim,
-                filtroCategoriaSelecionadaId, filtroTagSelecionadaId, filtroTipoSelecionado));
+            null, null, null));
     }
 
     private void atualizarUI(RelatorioResult res) {
@@ -589,6 +641,7 @@ public class RelatoriosFragment extends Fragment {
             tvNome.setLayoutParams(new LinearLayout.LayoutParams(
                     0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
             tvNome.setText(entry.getKey());
+                tvNome.setTextColor(ContextCompat.getColor(requireContext(), R.color.cinza_on_surface));
 
             TextView tvValor = new TextView(requireContext());
             tvValor.setText(String.format(Locale.getDefault(), "R$ %.2f", entry.getValue()));
@@ -599,8 +652,89 @@ public class RelatoriosFragment extends Fragment {
             layoutCategorias.addView(row);
         }
 
-        lancamentoAdapter.setData(res.getLancamentos(), null, null);
+        lancamentoAdapter.setData(res.getLancamentos(), categoriaPorId, tagsPorLancamento);
         emptyState.setVisibility(res.getLancamentos().isEmpty() ? View.VISIBLE : View.GONE);
+    }
+
+    private void renderResultadoFiltrado() {
+        if (ultimoResultadoBruto == null) return;
+        atualizarUI(aplicarFiltrosLocais(ultimoResultadoBruto));
+    }
+
+    private RelatorioResult aplicarFiltrosLocais(RelatorioResult original) {
+        List<Lancamento> filtrados = new ArrayList<>();
+        for (Lancamento lancamento : original.getLancamentos()) {
+            if (!matchesTipoCategoriaSelecionado(lancamento)) continue;
+            if (!matchesCategoriasSelecionadas(lancamento)) continue;
+            if (!matchesTagsSelecionadas(lancamento)) continue;
+            filtrados.add(lancamento);
+        }
+
+        double receitas = 0.0;
+        double despesas = 0.0;
+        Map<String, Double> totalPorCategoria = new LinkedHashMap<>();
+        for (Lancamento lancamento : filtrados) {
+            if (lancamento.getTipo() == TipoLancamento.RECEITA) {
+                receitas += lancamento.getValor();
+                continue;
+            }
+
+            despesas += lancamento.getValor();
+            Categoria categoriaRaiz = encontrarCategoriaRaiz(lancamento.getCategoriaId());
+            String nomeCategoria;
+            if (categoriaRaiz != null) {
+                nomeCategoria = CategoriaVisualFallback.icone(categoriaRaiz, null) + " " + categoriaRaiz.getNome();
+            } else {
+                nomeCategoria = lancamento.getCategoriaId();
+            }
+            totalPorCategoria.merge(nomeCategoria, lancamento.getValor(), Double::sum);
+        }
+
+        return new RelatorioResult(filtrados, receitas, despesas, totalPorCategoria);
+    }
+
+    private boolean matchesCategoriasSelecionadas(Lancamento lancamento) {
+        if (filtrosCategoriasSelecionadas.isEmpty()) return true;
+        Categoria raiz = encontrarCategoriaRaiz(lancamento.getCategoriaId());
+        return raiz != null && filtrosCategoriasSelecionadas.contains(raiz.getId());
+    }
+
+    private boolean matchesTipoCategoriaSelecionado(Lancamento lancamento) {
+        if (filtrosTiposCategoriaSelecionados.isEmpty()) return true;
+        Categoria raiz = encontrarCategoriaRaiz(lancamento.getCategoriaId());
+        return raiz != null && filtrosTiposCategoriaSelecionados.contains(raiz.getTipo());
+    }
+
+    private boolean matchesTagsSelecionadas(Lancamento lancamento) {
+        if (filtrosTagsSelecionadas.isEmpty()) return true;
+        List<Tag> tags = tagsPorLancamento.get(lancamento.getId());
+        if (tags == null || tags.isEmpty()) return false;
+        for (Tag tag : tags) {
+            if (filtrosTagsSelecionadas.contains(tag.getId())) return true;
+        }
+        return false;
+    }
+
+    private Categoria encontrarCategoriaRaiz(String categoriaId) {
+        Categoria atual = categoriaPorId.get(categoriaId);
+        int guard = 0;
+        while (atual != null && atual.getPaiId() != null && guard++ < 8) {
+            Categoria pai = categoriaPorId.get(atual.getPaiId());
+            if (pai == null) break;
+            atual = pai;
+        }
+        return atual;
+    }
+
+    private List<Categoria> categoriasRaizOrdenadas() {
+        List<Categoria> raizes = new ArrayList<>();
+        for (Categoria categoria : listaCategorias) {
+            if (categoria.getPaiId() == null) {
+                raizes.add(categoria);
+            }
+        }
+        raizes.sort((a, b) -> a.getNome().compareToIgnoreCase(b.getNome()));
+        return raizes;
     }
 
     private void mostrarDatePicker(TextInputEditText campo) {

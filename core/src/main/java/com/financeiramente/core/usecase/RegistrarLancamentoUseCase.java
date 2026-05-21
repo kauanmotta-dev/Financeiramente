@@ -24,9 +24,6 @@ public class RegistrarLancamentoUseCase {
     }
 
     public Lancamento executar(RegistrarLancamentoInput input) {
-        if (input.getDescricao() == null || input.getDescricao().trim().isEmpty()) {
-            throw new DomainException("Descrição é obrigatória.");
-        }
         if (input.getValor() <= 0) {
             throw new DomainException("Valor deve ser maior que zero.");
         }
@@ -41,13 +38,15 @@ public class RegistrarLancamentoUseCase {
             throw new DomainException(
                     "Categoria '" + categoria.getNome() + "' não é compatível com o tipo de lançamento informado.");
         }
+        
+        String descricao = input.getDescricao() != null ? input.getDescricao().trim() : categoria.getNome().toString();
 
         long now = System.currentTimeMillis();
         Lancamento lancamento = Lancamento.builder(UUID.randomUUID().toString())
                 .valor(input.getValor())
                 .tipo(input.getTipo())
                 .data(input.getData())
-                .descricao(input.getDescricao().trim())
+                .descricao(descricao)
                 .categoriaId(input.getCategoriaId())
                 .recorrenteId(input.getRecorrenteId())
                 .criadoEm(now)

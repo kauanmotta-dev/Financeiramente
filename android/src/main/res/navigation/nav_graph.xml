@@ -44,6 +44,11 @@
         android:label="@string/nav_relatorios" />
 
     <fragment
+        android:id="@+id/nav_gastos"
+        android:name="com.financeiramente.android.ui.gastos.GastosCategoriaFragment"
+        android:label="@string/nav_gastos" />
+
+    <fragment
         android:id="@+id/nav_configuracoes"
         android:name="com.financeiramente.android.ui.configuracoes.ConfiguracoesFragment"
         android:label="@string/nav_configuracoes">
@@ -53,7 +58,15 @@
         <action
             android:id="@+id/action_configuracoesFragment_to_recorrentesFragment"
             app:destination="@id/recorrentesFragment" />
+        <action
+            android:id="@+id/action_configuracoesFragment_to_tagsFragment"
+            app:destination="@id/tagsFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/tagsFragment"
+        android:name="com.financeiramente.android.ui.configuracoes.TagsFragment"
+        android:label="@string/nav_tags" />
 
     <!-- ── Lançamentos ── -->
 

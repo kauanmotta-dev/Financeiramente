@@ -1,8 +1,10 @@
 # Binaries
 /build
 /core/build
+/core/bin
 /android/build
 /desktop/build
+/desktop/bin
 
 # Gradle wrapper (jar is checked in, but generated files are not)
 .gradle/

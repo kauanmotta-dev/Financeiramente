@@ -81,6 +81,17 @@ public class CategoriasPorTipoFragment extends Fragment
         recyclerView.setAdapter(adapter);
 
         observeViewModel();
+
+        getParentFragmentManager().setFragmentResultListener(
+                "categoria_form_saved",
+                getViewLifecycleOwner(),
+                (requestKey, result) -> {
+                    String expandRootId = result.getString("expandRootId");
+                    if (expandRootId != null) {
+                        adapter.expandRootCategoria(expandRootId);
+                    }
+                }
+        );
     }
 
     @Override
@@ -105,11 +116,12 @@ public class CategoriasPorTipoFragment extends Fragment
             emptyState.setVisibility(View.GONE);
         }
 
-        List<Categoria> filhasMap = new ArrayList<>();
-        for (Categoria raiz : raizes != null ? raizes : new ArrayList<Categoria>()) {
-            filhasMap.addAll(getParentViewModel().listarFilhas(raiz.getId()));
-        }
-        adapter.submitData(raizes != null ? raizes : new ArrayList<>(), getParentViewModel());
+        boolean agruparDespesasPorTipo = tabPosition == 0;
+        adapter.submitData(
+                raizes != null ? raizes : new ArrayList<>(),
+                getParentViewModel(),
+                agruparDespesasPorTipo
+        );
     }
 
     @Override

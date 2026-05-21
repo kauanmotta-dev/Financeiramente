@@ -3,6 +3,7 @@ package com.financeiramente.core.usecase;
 import com.financeiramente.core.domain.entity.LancamentoRecorrente;
 import com.financeiramente.core.domain.vo.TipoLancamento;
 import com.financeiramente.core.domain.vo.TipoRecorrencia;
+import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.LancamentoRecorrenteRepository;
 import com.financeiramente.core.util.DomainException;
 
@@ -11,27 +12,33 @@ import java.util.UUID;
 public class CriarLancamentoRecorrenteUseCase {
 
     private final LancamentoRecorrenteRepository repository;
+    private final CategoriaRepository categoriaRepository;
 
-    public CriarLancamentoRecorrenteUseCase(LancamentoRecorrenteRepository repository) {
+    public CriarLancamentoRecorrenteUseCase(LancamentoRecorrenteRepository repository, CategoriaRepository categoriaRepository) {
         this.repository = repository;
+        this.categoriaRepository = categoriaRepository;
     }
 
     public LancamentoRecorrente executar(String descricao, double valor, TipoLancamento tipo,
                                          String categoriaId, TipoRecorrencia recorrencia,
                                          Integer diaRecorrencia) {
-        if (descricao == null || descricao.trim().isEmpty()) {
-            throw new DomainException("Descrição é obrigatória.");
-        }
-        if (valor <= 0) {
-            throw new DomainException("Valor deve ser maior que zero.");
-        }
+                                            
         if (categoriaId == null || categoriaId.trim().isEmpty()) {
             throw new DomainException("Categoria é obrigatória.");
         }
+        
+        if (valor <= 0) {
+            throw new DomainException("Valor deve ser maior que zero.");
+        }
+
+        String descricaoLancamento = (descricao == null || descricao.trim().isEmpty()) 
+            ? categoriaRepository.buscarPorId(categoriaId).orElseThrow(() -> 
+                new DomainException("Categoria não encontrada.")).getNome() 
+            : descricao.trim();
 
         LancamentoRecorrente rec = new LancamentoRecorrente(
                 UUID.randomUUID().toString(),
-                descricao.trim(),
+                descricaoLancamento,
                 valor,
                 tipo,
                 categoriaId,

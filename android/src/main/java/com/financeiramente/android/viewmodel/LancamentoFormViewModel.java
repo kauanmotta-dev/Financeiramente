@@ -78,6 +78,7 @@ public class LancamentoFormViewModel extends ViewModel {
     private List<Categoria> subcategoriasPorTipo(TipoLancamento tipo) {
         return categoriaRepository.listarTodas().stream()
                 .filter(c -> c.getPaiId() != null)
+                .filter(c -> c.getTipo() != null)
                 .filter(c -> c.getTipo().isCompativelCom(tipo))
                 .collect(Collectors.toList());
     }

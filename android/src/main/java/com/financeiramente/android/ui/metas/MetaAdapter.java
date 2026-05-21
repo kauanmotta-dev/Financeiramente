@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.financeiramente.android.R;
@@ -78,6 +79,26 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
         h.tvValores.setText(String.format(Locale.getDefault(),
                 "R$ %.2f / R$ %.2f", meta.getValorAtual(), meta.getValorObjetivo()));
 
+        if (meta.getDescricao() != null && !meta.getDescricao().trim().isEmpty()) {
+            h.tvDescricao.setText(meta.getDescricao().trim());
+            h.tvDescricao.setVisibility(View.VISIBLE);
+        } else {
+            h.tvDescricao.setVisibility(View.GONE);
+        }
+
+        int statusColor;
+        if (percentual >= 100.0) {
+            h.tvStatus.setText(R.string.meta_status_concluida);
+            statusColor = ContextCompat.getColor(h.itemView.getContext(), R.color.verde_success);
+        } else if (estaAtrasada(meta)) {
+            h.tvStatus.setText(R.string.meta_status_em_risco);
+            statusColor = ContextCompat.getColor(h.itemView.getContext(), R.color.vermelho_error);
+        } else {
+            h.tvStatus.setText(R.string.meta_status_em_progresso);
+            statusColor = ContextCompat.getColor(h.itemView.getContext(), R.color.azul_primary);
+        }
+        h.tvStatus.getBackground().setTint(statusColor);
+
         // Data alvo
         if (meta.getDataAlvo() != null && !meta.getDataAlvo().isEmpty()) {
             try {
@@ -107,6 +128,15 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
         h.btnAporte.setOnClickListener(v -> {
             if (onAporteClick != null) onAporteClick.onAporteClick(meta);
         });
+    }
+
+    private boolean estaAtrasada(Meta meta) {
+        if (meta.getDataAlvo() == null || meta.getDataAlvo().isEmpty()) return false;
+        try {
+            return LocalDate.parse(meta.getDataAlvo()).isBefore(LocalDate.now());
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     @Override
@@ -150,8 +180,10 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         CircularProgressView cpvProgresso;
+        TextView tvStatus;
         TextView tvNome;
         TextView tvValores;
+        TextView tvDescricao;
         TextView tvDataAlvo;
         TextView tvProjecao;
         MaterialButton btnAporte;
@@ -159,8 +191,10 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             cpvProgresso = itemView.findViewById(R.id.cpv_meta_progresso);
+            tvStatus = itemView.findViewById(R.id.tv_meta_status);
             tvNome = itemView.findViewById(R.id.tv_meta_nome);
             tvValores = itemView.findViewById(R.id.tv_meta_valores);
+            tvDescricao = itemView.findViewById(R.id.tv_meta_descricao);
             tvDataAlvo = itemView.findViewById(R.id.tv_meta_data_alvo);
             tvProjecao = itemView.findViewById(R.id.tv_meta_projecao);
             btnAporte = itemView.findViewById(R.id.btn_registrar_aporte);

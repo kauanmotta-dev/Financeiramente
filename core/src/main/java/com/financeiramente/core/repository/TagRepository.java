@@ -6,6 +6,7 @@ import java.util.Optional;
 
 public interface TagRepository {
     void salvar(Tag tag);
+    void atualizar(Tag tag);
     void deletar(String id);
     List<Tag> listarTodas();
     Optional<Tag> buscarPorNome(String nome);

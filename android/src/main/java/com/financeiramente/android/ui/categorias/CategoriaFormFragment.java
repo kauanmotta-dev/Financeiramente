@@ -18,6 +18,7 @@ import com.financeiramente.android.app.AppContext;
 import com.financeiramente.core.domain.entity.Categoria;
 import com.financeiramente.core.domain.vo.TipoCategoria;
 import com.financeiramente.core.util.DomainException;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputEditText;
@@ -30,6 +31,7 @@ public class CategoriaFormFragment extends Fragment {
     private TextInputLayout tilNome;
     private TextInputEditText etNome;
     private TabLayout tabTipo;
+    private TabLayout tabDespesaClassificacao;
     private TextInputEditText etLimite;
     private IconeSelectorAdapter iconeSelectorAdapter;
     private CorSelectorAdapter corSelectorAdapter;
@@ -45,12 +47,20 @@ public class CategoriaFormFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        view.findViewById(R.id.btn_back_categoria_form).setOnClickListener(v ->
+            Navigation.findNavController(view).navigateUp());
+
         tilNome  = view.findViewById(R.id.til_nome);
         etNome   = view.findViewById(R.id.et_nome);
         tabTipo  = view.findViewById(R.id.tab_tipo);
+        tabDespesaClassificacao = view.findViewById(R.id.tab_despesa_classificacao);
         etLimite = view.findViewById(R.id.et_limite);
         MaterialButton btnSalvar = view.findViewById(R.id.btn_salvar);
+        MaterialButton btnExcluirSubcategoria = view.findViewById(R.id.btn_excluir_subcategoria);
         View llTipoContainer = view.findViewById(R.id.ll_tipo_container);
+        View llDespesaClassificacao = view.findViewById(R.id.ll_despesa_classificacao);
+        View tvLabelCor = view.findViewById(R.id.tv_label_cor);
+        View tvSubcategoriaCorHint = view.findViewById(R.id.tv_subcategoria_cor_hint);
         RecyclerView rvIcones = view.findViewById(R.id.rv_icones);
         RecyclerView rvCores  = view.findViewById(R.id.rv_cores);
 
@@ -58,13 +68,21 @@ public class CategoriaFormFragment extends Fragment {
         String paiId       = getArguments() != null ? getArguments().getString("paiId") : null;
 
         // Type selector: hidden for subcategories
-        if (paiId != null) {
+        boolean isSubcategoria = paiId != null;
+        if (isSubcategoria) {
             llTipoContainer.setVisibility(View.GONE);
+            llDespesaClassificacao.setVisibility(View.GONE);
+            rvCores.setVisibility(View.GONE);
+            tvLabelCor.setVisibility(View.GONE);
+            tvSubcategoriaCorHint.setVisibility(View.VISIBLE);
+        } else {
+            llDespesaClassificacao.setVisibility(View.VISIBLE);
+            tvSubcategoriaCorHint.setVisibility(View.GONE);
         }
 
         // Default selections
-        String initialIcone = IconeSelectorAdapter.ICONES.get(0);
-        String initialCor   = CorSelectorAdapter.CORES.get(0);
+        final String[] initialIcone = { IconeSelectorAdapter.ICONES.get(0) };
+        final String[] initialCor   = { CorSelectorAdapter.CORES.get(0) };
 
         // Load existing values if editing
         AppContext ctx = AppContext.get(requireContext());
@@ -81,26 +99,75 @@ public class CategoriaFormFragment extends Fragment {
                 if (tabTipo.getTabAt(tabIndex) != null) {
                     tabTipo.selectTab(tabTipo.getTabAt(tabIndex));
                 }
-                initialIcone = categoria.getIcone();
-                initialCor   = categoria.getCor();
+                if (categoria.getTipo() == TipoCategoria.NAO_ESSENCIAL
+                        && tabDespesaClassificacao.getTabAt(1) != null) {
+                    tabDespesaClassificacao.selectTab(tabDespesaClassificacao.getTabAt(1));
+                } else if (tabDespesaClassificacao.getTabAt(0) != null) {
+                    tabDespesaClassificacao.selectTab(tabDespesaClassificacao.getTabAt(0));
+                }
+                initialIcone[0] = categoria.getIcone();
+                initialCor[0] = categoria.getCor();
             }
+        }
+
+        tabTipo.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                boolean despesaSelecionada = tab != null && tab.getPosition() == 0;
+                if (!isSubcategoria) {
+                    llDespesaClassificacao.setVisibility(despesaSelecionada ? View.VISIBLE : View.GONE);
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
+        });
+        if (!isSubcategoria) {
+            llDespesaClassificacao.setVisibility(
+                    tabTipo.getSelectedTabPosition() == 0 ? View.VISIBLE : View.GONE);
         }
 
         // Icon grid
         iconeSelectorAdapter = new IconeSelectorAdapter(
-                requireContext(), initialIcone, icone -> { /* selection tracked in adapter */ });
+                requireContext(), initialIcone[0], icone -> { /* selection tracked in adapter */ });
         rvIcones.setLayoutManager(new GridLayoutManager(requireContext(), 6));
         rvIcones.setAdapter(iconeSelectorAdapter);
 
         // Color grid
         corSelectorAdapter = new CorSelectorAdapter(
-                requireContext(), initialCor, cor -> { /* selection tracked in adapter */ });
+            requireContext(), initialCor[0], cor -> { /* selection tracked in adapter */ });
         rvCores.setLayoutManager(new GridLayoutManager(requireContext(), 8));
         rvCores.setAdapter(corSelectorAdapter);
+
+        if (categoriaId != null && isSubcategoria) {
+            btnExcluirSubcategoria.setVisibility(View.VISIBLE);
+            btnExcluirSubcategoria.setOnClickListener(v -> confirmarExclusaoSubcategoria(categoriaId, view, ctx));
+        }
 
         final String finalCategoriaId = categoriaId;
         final String finalPaiId       = paiId;
         btnSalvar.setOnClickListener(v -> salvar(finalCategoriaId, finalPaiId, ctx, view));
+    }
+
+    private void confirmarExclusaoSubcategoria(String categoriaId, View view, AppContext ctx) {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.excluir_subcategoria)
+                .setMessage(R.string.confirmar_excluir_subcategoria)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    try {
+                        ctx.getDeletarCategoriaUseCase().executar(categoriaId);
+                        Navigation.findNavController(view).popBackStack();
+                    } catch (DomainException e) {
+                        Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     private void salvar(String categoriaId, String paiId, AppContext ctx, View view) {
@@ -117,7 +184,13 @@ public class CategoriaFormFragment extends Fragment {
             tipo = TipoCategoria.ESSENCIAL; // will be overridden by use case with parent's tipo
         } else {
             int selectedTab = tabTipo.getSelectedTabPosition();
-            tipo = (selectedTab == 1) ? TipoCategoria.RECEITA : TipoCategoria.ESSENCIAL;
+            if (selectedTab == 1) {
+                tipo = TipoCategoria.RECEITA;
+            } else {
+                tipo = tabDespesaClassificacao.getSelectedTabPosition() == 1
+                        ? TipoCategoria.NAO_ESSENCIAL
+                        : TipoCategoria.ESSENCIAL;
+            }
         }
 
         Double limiteMensal = null;
@@ -133,7 +206,9 @@ public class CategoriaFormFragment extends Fragment {
         }
 
         String icone = iconeSelectorAdapter.getSelectedIcone();
-        String cor   = corSelectorAdapter.getSelectedCor();
+        String cor = paiId != null
+                ? buscarCorCategoriaPai(ctx, paiId, corSelectorAdapter.getSelectedCor())
+                : corSelectorAdapter.getSelectedCor();
 
         try {
             if (categoriaId != null) {
@@ -141,9 +216,23 @@ public class CategoriaFormFragment extends Fragment {
             } else {
                 ctx.getCriarCategoriaUseCase().executar(nome, tipo, paiId, limiteMensal, icone, cor);
             }
+
+            String expandRootId = paiId != null ? paiId : categoriaId;
+            if (expandRootId != null) {
+                Bundle result = new Bundle();
+                result.putString("expandRootId", expandRootId);
+                getParentFragmentManager().setFragmentResult("categoria_form_saved", result);
+            }
             Navigation.findNavController(view).popBackStack();
         } catch (DomainException e) {
             Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_LONG).show();
         }
+    }
+
+    private String buscarCorCategoriaPai(AppContext ctx, String paiId, String fallbackCor) {
+        return ctx.getCategoriaRepository()
+                .buscarPorId(paiId)
+                .map(Categoria::getCor)
+                .orElse(fallbackCor);
     }
 }

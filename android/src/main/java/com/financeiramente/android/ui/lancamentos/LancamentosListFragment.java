@@ -22,16 +22,21 @@ import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.LancamentosListViewModel;
 import com.financeiramente.android.viewmodel.LancamentosListViewModelFactory;
 import com.financeiramente.core.domain.entity.Lancamento;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.financeiramente.core.domain.vo.TipoLancamento;
+import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.search.SearchBar;
 import com.google.android.material.search.SearchView;
 import com.google.android.material.snackbar.Snackbar;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class LancamentosListFragment extends Fragment {
 
     private LancamentosListViewModel viewModel;
     private LancamentoAdapter adapter;
     private View emptyState;
+    private TipoLancamento filtroTipoAtual = null;
 
     @Nullable
     @Override
@@ -44,6 +49,12 @@ public class LancamentosListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        view.findViewById(R.id.btn_back_lancamentos).setOnClickListener(v -> {
+            if (!Navigation.findNavController(view).navigateUp()) {
+                Navigation.findNavController(view).navigate(R.id.nav_dashboard);
+            }
+        });
+
         AppContext ctx = AppContext.get(requireContext());
         LancamentosListViewModelFactory factory = new LancamentosListViewModelFactory(
                 ctx.getListarLancamentosUseCase(),
@@ -55,7 +66,7 @@ public class LancamentosListFragment extends Fragment {
         // ── Empty state — Épico 8 ─────────────────────────────────────────
         emptyState = view.findViewById(R.id.layout_empty_state);
         ((ImageView) emptyState.findViewById(R.id.iv_empty_illustration))
-                .setImageResource(R.drawable.ic_empty_transactions);
+            .setVisibility(View.GONE);
         ((TextView) emptyState.findViewById(R.id.tv_empty_title))
                 .setText(R.string.empty_lancamentos_title);
         ((TextView) emptyState.findViewById(R.id.tv_empty_subtitle))
@@ -124,12 +135,6 @@ public class LancamentosListFragment extends Fragment {
 
         new ItemTouchHelper(swipeCallback).attachToRecyclerView(rv);
 
-        // ── FAB ──────────────────────────────────────────────────────────────
-        FloatingActionButton fab = view.findViewById(R.id.fab_novo_lancamento);
-        fab.setOnClickListener(v ->
-                Navigation.findNavController(view)
-                        .navigate(R.id.action_lancamentosListFragment_to_lancamentoFormFragment));
-
         // ── SearchBar / SearchView ────────────────────────────────────────────
         SearchBar searchBar  = view.findViewById(R.id.search_bar);
         SearchView searchView = view.findViewById(R.id.search_view);
@@ -153,21 +158,30 @@ public class LancamentosListFragment extends Fragment {
             }
         });
 
+        ChipGroup chipGroupTipo = view.findViewById(R.id.chip_group_lancamentos_tipo);
+        chipGroupTipo.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.isEmpty()) return;
+            int id = checkedIds.get(0);
+            if (id == R.id.chip_lancamentos_receitas) {
+                filtroTipoAtual = TipoLancamento.RECEITA;
+            } else if (id == R.id.chip_lancamentos_despesas) {
+                filtroTipoAtual = TipoLancamento.DESPESA;
+            } else {
+                filtroTipoAtual = null;
+            }
+            renderLista();
+        });
+
         // ── Observe ──────────────────────────────────────────────────────────
         viewModel.getLancamentos().observe(getViewLifecycleOwner(), lancamentos -> {
-            adapter.setData(lancamentos,
-                    viewModel.getCategorias().getValue(),
-                    viewModel.getTagsMap().getValue());
-            emptyState.setVisibility(lancamentos == null || lancamentos.isEmpty() ? View.VISIBLE : View.GONE);
+            renderLista();
         });
 
         viewModel.getCategorias().observe(getViewLifecycleOwner(), cats ->
-                adapter.setData(viewModel.getLancamentos().getValue(), cats,
-                        viewModel.getTagsMap().getValue()));
+            renderLista());
 
         viewModel.getTagsMap().observe(getViewLifecycleOwner(), tags ->
-                adapter.setData(viewModel.getLancamentos().getValue(),
-                        viewModel.getCategorias().getValue(), tags));
+            renderLista());
 
         viewModel.getErro().observe(getViewLifecycleOwner(), msg -> {
             if (msg != null) Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
@@ -193,6 +207,22 @@ public class LancamentosListFragment extends Fragment {
     public void onResume() {
         super.onResume();
         viewModel.carregarLancamentos();
+    }
+
+    private void renderLista() {
+        List<Lancamento> base = viewModel.getLancamentos().getValue();
+        List<Lancamento> filtrada = new ArrayList<>();
+        if (base != null) {
+            for (Lancamento lancamento : base) {
+                if (filtroTipoAtual == null || filtroTipoAtual == lancamento.getTipo()) {
+                    filtrada.add(lancamento);
+                }
+            }
+        }
+        adapter.setData(filtrada,
+                viewModel.getCategorias().getValue(),
+                viewModel.getTagsMap().getValue());
+        emptyState.setVisibility(filtrada.isEmpty() ? View.VISIBLE : View.GONE);
     }
 }
 

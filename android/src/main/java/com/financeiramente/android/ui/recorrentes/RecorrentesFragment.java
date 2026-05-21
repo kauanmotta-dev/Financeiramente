@@ -18,9 +18,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
+import com.financeiramente.android.ui.common.CategoriaVisualFallback;
 import com.financeiramente.android.viewmodel.RecorrentesViewModel;
 import com.financeiramente.android.viewmodel.RecorrentesViewModelFactory;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.financeiramente.core.domain.entity.Categoria;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class RecorrentesFragment extends Fragment {
 
@@ -38,6 +43,9 @@ public class RecorrentesFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        view.findViewById(R.id.btn_back_recorrentes).setOnClickListener(v ->
+            Navigation.findNavController(view).navigateUp());
 
         AppContext ctx = AppContext.get(requireContext());
         RecorrentesViewModelFactory factory = new RecorrentesViewModelFactory(
@@ -69,8 +77,7 @@ public class RecorrentesFragment extends Fragment {
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
         rv.setAdapter(adapter);
 
-        FloatingActionButton fab = view.findViewById(R.id.fab_novo_recorrente);
-        fab.setOnClickListener(v ->
+        view.findViewById(R.id.btn_novo_recorrente).setOnClickListener(v ->
                 Navigation.findNavController(view)
                         .navigate(R.id.action_recorrentesFragment_to_recorrenteFormFragment));
 
@@ -82,11 +89,46 @@ public class RecorrentesFragment extends Fragment {
         viewModel.getErro().observe(getViewLifecycleOwner(), erro -> {
             if (erro != null) Toast.makeText(requireContext(), erro, Toast.LENGTH_LONG).show();
         });
+
+        carregarLabelsCategorias(ctx);
     }
 
     @Override
     public void onResume() {
         super.onResume();
         viewModel.carregar();
+    }
+
+    private void carregarLabelsCategorias(AppContext ctx) {
+        new Thread(() -> {
+            try {
+                List<Categoria> categorias = ctx.getCategoriaRepository().listarTodas();
+                Map<String, Categoria> porId = new LinkedHashMap<>();
+                for (Categoria categoria : categorias) {
+                    porId.put(categoria.getId(), categoria);
+                }
+
+                Map<String, String> labels = new LinkedHashMap<>();
+                for (Categoria categoria : categorias) {
+                    String label = CategoriaVisualFallback.icone(categoria, null)
+                            + " " + categoria.getNome();
+                    if (categoria.getPaiId() != null) {
+                        Categoria pai = porId.get(categoria.getPaiId());
+                        if (pai != null) {
+                            label = CategoriaVisualFallback.icone(pai, null)
+                                    + " " + pai.getNome()
+                                    + " > "
+                                    + CategoriaVisualFallback.icone(categoria, null)
+                                    + " " + categoria.getNome();
+                        }
+                    }
+                    labels.put(categoria.getId(), label);
+                }
+
+                requireActivity().runOnUiThread(() -> adapter.setCategoryLabels(labels));
+            } catch (Exception ignored) {
+                // Mantém fallback sem interromper a tela.
+            }
+        }).start();
     }
 }

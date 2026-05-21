@@ -18,7 +18,9 @@ public class DatabaseMigrator {
             "    tipo          TEXT NOT NULL CHECK(tipo IN ('essencial','nao_essencial','receita'))," +
             "    limite_mensal REAL," +
             "    ordem         INTEGER NOT NULL DEFAULT 0," +
-            "    criado_em     INTEGER NOT NULL" +
+            "    criado_em     INTEGER NOT NULL," +
+            "    icone         TEXT DEFAULT '\uD83D\uDCE6'," +
+            "    cor           TEXT DEFAULT '#6366F1'" +
             ")";
 
     private static final String CREATE_LANCAMENTO_RECORRENTE =
@@ -58,6 +60,8 @@ public class DatabaseMigrator {
             "CREATE TABLE IF NOT EXISTS tag (" +
             "    id        TEXT PRIMARY KEY," +
             "    nome      TEXT NOT NULL UNIQUE COLLATE NOCASE," +
+            "    emoji     TEXT NOT NULL DEFAULT '🏷️'," +
+            "    cor       TEXT NOT NULL DEFAULT '#6366F1'," +
             "    criado_em INTEGER NOT NULL" +
             ")";
 
@@ -108,16 +112,6 @@ public class DatabaseMigrator {
             applyMigration1();
             driver.setSchemaVersion(1);
         }
-
-        if (currentVersion < 2) {
-            applyMigration2();
-            driver.setSchemaVersion(2);
-        }
-    }
-    
-    private void applyMigration2() {
-        driver.execute("ALTER TABLE categoria ADD COLUMN icone TEXT DEFAULT '\uD83D\uDCE6'");
-        driver.execute("ALTER TABLE categoria ADD COLUMN cor TEXT DEFAULT '#6366F1'");
     }
 
     private void applyMigration1() {
@@ -219,14 +213,24 @@ public class DatabaseMigrator {
         insertCategoria(UUID.randomUUID().toString(), "Salário CLT",         salarioId,    "receita", 0, now);
 
         // Renda Extra → subcategorias
-        insertCategoria(UUID.randomUUID().toString(), "Freelance",           rendaExtraId, "receita", 0, now);
-        insertCategoria(UUID.randomUUID().toString(), "Outros",              rendaExtraId, "receita", 1, now);
+                insertCategoria(UUID.randomUUID().toString(), "Freelance",           rendaExtraId, "receita", 0, now);
+                insertCategoria(UUID.randomUUID().toString(), "Outros",              rendaExtraId, "receita", 1, now);
+
+        // Meta padrão inicial
+        insertMeta(UUID.randomUUID().toString(), "Liberdade financeira", 1_000_000.0, now);
     }
 
-    private void insertCategoria(String id, String nome, String paiId, String tipo, int ordem, long now) {
+        private void insertCategoria(String id, String nome, String paiId, String tipo, int ordem, long now) {
         driver.execute(
-            "INSERT OR IGNORE INTO categoria(id, nome, pai_id, tipo, limite_mensal, ordem, criado_em) VALUES (?,?,?,?,NULL,?,?)",
-            id, nome, paiId, tipo, ordem, now
+                                "INSERT OR IGNORE INTO categoria(id, nome, pai_id, tipo, limite_mensal, ordem, criado_em) VALUES (?,?,?,?,NULL,?,?)",
+                                id, nome, paiId, tipo, ordem, now
         );
     }
+
+        private void insertMeta(String id, String nome, double valorObjetivo, long now) {
+                driver.execute(
+                                "INSERT OR IGNORE INTO meta(id, nome, valor_objetivo, valor_atual, data_alvo, descricao, ativo, criado_em) VALUES (?,?,?,?,NULL,NULL,1,?)",
+                                id, nome, valorObjetivo, 0.0, now
+                );
+        }
 }
