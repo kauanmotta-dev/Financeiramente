@@ -32,7 +32,13 @@ public class CalcularSaldoMensalUseCase {
             double limite = cat.getLimiteMensal();
             double gasto  = lancamentoRepository.somarPorCategoria(cat.getId(), ano, mes);
             double saldo  = FinanceCalculator.saldoCategoria(limite, gasto);
-            saldosPorCategoria.add(new SaldoCategoria(cat.getId(), cat.getNome(), limite, gasto, saldo));
+            saldosPorCategoria.add(new SaldoCategoria(
+                    cat.getId(),
+                    cat.getNome(),
+                    cat.getTipo(),
+                    limite,
+                    gasto,
+                    saldo));
         }
 
         return new SaldoMensalResult(receitaRealizada, totalGasto, saldoDisponivel, saldosPorCategoria);

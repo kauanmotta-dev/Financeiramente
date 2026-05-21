@@ -13,8 +13,10 @@ import com.financeiramente.core.domain.entity.LancamentoRecorrente;
 import com.financeiramente.core.domain.vo.TipoLancamento;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class RecorrenteAdapter extends RecyclerView.Adapter<RecorrenteAdapter.ViewHolder> {
 
@@ -25,6 +27,7 @@ public class RecorrenteAdapter extends RecyclerView.Adapter<RecorrenteAdapter.Vi
     private final OnItemClick onEdit;
     private final OnItemClick onDesativar;
     private final List<LancamentoRecorrente> items = new ArrayList<>();
+    private final Map<String, String> categoriaLabelPorId = new LinkedHashMap<>();
 
     public RecorrenteAdapter(OnItemClick onEdit, OnItemClick onDesativar) {
         this.onEdit = onEdit;
@@ -34,6 +37,14 @@ public class RecorrenteAdapter extends RecyclerView.Adapter<RecorrenteAdapter.Vi
     public void setItems(List<LancamentoRecorrente> lista) {
         items.clear();
         if (lista != null) items.addAll(lista);
+        notifyDataSetChanged();
+    }
+
+    public void setCategoryLabels(Map<String, String> labels) {
+        categoriaLabelPorId.clear();
+        if (labels != null) {
+            categoriaLabelPorId.putAll(labels);
+        }
         notifyDataSetChanged();
     }
 
@@ -59,7 +70,8 @@ public class RecorrenteAdapter extends RecyclerView.Adapter<RecorrenteAdapter.Vi
                         : android.R.color.holo_red_dark));
 
         holder.tvRecorrencia.setText(rec.getRecorrencia().name().toLowerCase());
-        holder.tvCategoria.setText(rec.getCategoriaId());
+        String categoriaLabel = categoriaLabelPorId.get(rec.getCategoriaId());
+        holder.tvCategoria.setText(categoriaLabel != null ? categoriaLabel : "Categoria");
 
         holder.itemView.setOnClickListener(v -> onEdit.onClick(rec));
         holder.itemView.setOnLongClickListener(v -> {

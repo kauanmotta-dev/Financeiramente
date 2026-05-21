@@ -14,11 +14,15 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.financeiramente.android.R;
+import com.financeiramente.android.ui.common.CategoriaVisualFallback;
 import com.financeiramente.android.viewmodel.CategoriasViewModel;
 import com.financeiramente.core.domain.entity.Categoria;
+import com.financeiramente.core.domain.vo.TipoCategoria;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Expandable RecyclerView adapter for categories.
@@ -35,18 +39,34 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
 
     static final int TYPE_HEADER = 0;
     static final int TYPE_CHILD  = 1;
+    static final int TYPE_SECTION = 2;
+    private static final int SECTION_ESSENCIAIS = 0;
+    private static final int SECTION_NAO_ESSENCIAIS = 1;
 
     private static class Item {
         final int type;
         final Categoria categoria;
+        final String sectionTitle;
+        final int sectionType;
         boolean expanded;
         int childCount;
 
         Item(int type, Categoria categoria, boolean expanded, int childCount) {
             this.type = type;
             this.categoria = categoria;
+            this.sectionTitle = null;
+            this.sectionType = -1;
             this.expanded = expanded;
             this.childCount = childCount;
+        }
+
+        Item(String sectionTitle, int sectionType, boolean expanded) {
+            this.type = TYPE_SECTION;
+            this.categoria = null;
+            this.sectionTitle = sectionTitle;
+            this.sectionType = sectionType;
+            this.expanded = expanded;
+            this.childCount = 0;
         }
     }
 
@@ -55,45 +75,114 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
     private List<Item> items = new ArrayList<>();
     private List<Categoria> rootCategories = new ArrayList<>();
     private CategoriasViewModel viewModel;
+    private boolean agruparDespesasPorTipo;
+    private boolean secaoEssenciaisExpandida = true;
+    private boolean secaoNaoEssenciaisExpandida = true;
+    private final Map<String, Boolean> expandedStateById = new LinkedHashMap<>();
 
     public CategoriaRecyclerAdapter(Context context, OnItemActionListener listener) {
         this.context = context;
         this.listener = listener;
     }
 
-    public void submitData(List<Categoria> roots, CategoriasViewModel vm) {
+    public void submitData(List<Categoria> roots, CategoriasViewModel vm, boolean agruparDespesasPorTipo) {
         this.rootCategories = roots != null ? roots : new ArrayList<>();
         this.viewModel = vm;
+        this.agruparDespesasPorTipo = agruparDespesasPorTipo;
+        if (!agruparDespesasPorTipo) {
+            secaoEssenciaisExpandida = true;
+            secaoNaoEssenciaisExpandida = true;
+        }
         rebuildItems();
     }
 
-    private void rebuildItems() {
-        List<Item> newItems = new ArrayList<>();
+    public void expandRootCategoria(String rootId) {
+        if (rootId == null || rootId.isEmpty()) {
+            return;
+        }
         for (Categoria root : rootCategories) {
+            if (rootId.equals(root.getId())) {
+                expandedStateById.put(rootId, true);
+                if (agruparDespesasPorTipo) {
+                    if (root.getTipo() == TipoCategoria.NAO_ESSENCIAL) {
+                        secaoNaoEssenciaisExpandida = true;
+                    } else {
+                        secaoEssenciaisExpandida = true;
+                    }
+                }
+                rebuildItems();
+                return;
+            }
+        }
+    }
+
+    private void rebuildItems() {
+        for (Item existing : items) {
+            if (existing.type == TYPE_HEADER && existing.categoria != null) {
+                expandedStateById.put(existing.categoria.getId(), existing.expanded);
+            }
+        }
+
+        List<Item> newItems = new ArrayList<>();
+        List<Categoria> essenciais = new ArrayList<>();
+        List<Categoria> naoEssenciais = new ArrayList<>();
+
+        for (Categoria root : rootCategories) {
+            if (agruparDespesasPorTipo && root.getTipo() == TipoCategoria.NAO_ESSENCIAL) {
+                naoEssenciais.add(root);
+            } else {
+                essenciais.add(root);
+            }
+        }
+
+        if (agruparDespesasPorTipo) {
+            if (!essenciais.isEmpty()) {
+                newItems.add(new Item(
+                        context.getString(R.string.categorias_secao_essenciais),
+                        SECTION_ESSENCIAIS,
+                        secaoEssenciaisExpandida
+                ));
+                if (secaoEssenciaisExpandida) {
+                    appendHeadersAndExpandedChildren(newItems, essenciais, expandedStateById);
+                }
+            }
+            if (!naoEssenciais.isEmpty()) {
+                newItems.add(new Item(
+                        context.getString(R.string.categorias_secao_nao_essenciais),
+                        SECTION_NAO_ESSENCIAIS,
+                        secaoNaoEssenciaisExpandida
+                ));
+                if (secaoNaoEssenciaisExpandida) {
+                    appendHeadersAndExpandedChildren(newItems, naoEssenciais, expandedStateById);
+                }
+            }
+        } else {
+            appendHeadersAndExpandedChildren(newItems, rootCategories, expandedStateById);
+        }
+
+        items = newItems;
+        notifyDataSetChanged();
+    }
+
+    private void appendHeadersAndExpandedChildren(List<Item> target,
+                                                  List<Categoria> roots,
+                                                  Map<String, Boolean> expandedStateById) {
+        for (Categoria root : roots) {
             List<Categoria> children = viewModel != null
                     ? viewModel.listarFilhas(root.getId())
                     : new ArrayList<>();
 
-            // Find existing expanded state
-            boolean wasExpanded = false;
-            for (Item existing : items) {
-                if (existing.type == TYPE_HEADER && existing.categoria.getId().equals(root.getId())) {
-                    wasExpanded = existing.expanded;
-                    break;
-                }
-            }
+            boolean wasExpanded = Boolean.TRUE.equals(expandedStateById.get(root.getId()));
 
             Item header = new Item(TYPE_HEADER, root, wasExpanded, children.size());
-            newItems.add(header);
+            target.add(header);
 
             if (wasExpanded) {
                 for (Categoria child : children) {
-                    newItems.add(new Item(TYPE_CHILD, child, false, 0));
+                    target.add(new Item(TYPE_CHILD, child, false, 0));
                 }
             }
         }
-        items = newItems;
-        notifyDataSetChanged();
     }
 
     @Override
@@ -108,6 +197,9 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
         if (viewType == TYPE_HEADER) {
             View view = inflater.inflate(R.layout.item_categoria_raiz, parent, false);
             return new HeaderViewHolder(view);
+        } else if (viewType == TYPE_SECTION) {
+            View view = inflater.inflate(R.layout.item_categoria_secao, parent, false);
+            return new SectionViewHolder(view);
         } else {
             View view = inflater.inflate(R.layout.item_categoria_filha, parent, false);
             return new ChildViewHolder(view);
@@ -119,18 +211,28 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
         Item item = items.get(position);
         if (item.type == TYPE_HEADER) {
             bindHeader((HeaderViewHolder) holder, item);
+        } else if (item.type == TYPE_SECTION) {
+            bindSection((SectionViewHolder) holder, item);
         } else {
             bindChild((ChildViewHolder) holder, item);
         }
+    }
+
+    private void bindSection(SectionViewHolder holder, Item item) {
+        holder.tvTitulo.setText(item.sectionTitle);
+        holder.ivArrow.setRotation(item.expanded ? 180f : 0f);
+        holder.itemView.setOnClickListener(v -> toggleSection(item.sectionType));
     }
 
     private void bindHeader(HeaderViewHolder holder, Item item) {
         Categoria cat = item.categoria;
 
         // Icon + color
-        holder.tvIcone.setText(cat.getIcone());
+        String icone = CategoriaVisualFallback.icone(cat, null);
+        String cor = CategoriaVisualFallback.cor(cat, null);
+        holder.tvIcone.setText(icone);
         try {
-            int color = Color.parseColor(cat.getCor());
+            int color = Color.parseColor(cor);
             GradientDrawable bg = new GradientDrawable();
             bg.setShape(GradientDrawable.OVAL);
             bg.setColor(color);
@@ -142,18 +244,12 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
 
         holder.tvNome.setText(cat.getNome());
 
-        // Subtitle: "X subcategorias • R$ Y/mês" or "X subcategorias"
-        StringBuilder info = new StringBuilder();
-        if (item.childCount == 1) {
-            info.append("1 subcategoria");
-        } else if (item.childCount > 1) {
-            info.append(item.childCount).append(" subcategorias");
-        }
         if (cat.getLimiteMensal() != null) {
-            if (info.length() > 0) info.append("  •  ");
-            info.append(String.format("R$ %.0f/mês", cat.getLimiteMensal()));
+            holder.tvInfo.setText(String.format("R$ %.2f/mês", cat.getLimiteMensal()));
+            holder.tvInfo.setVisibility(View.VISIBLE);
+        } else {
+            holder.tvInfo.setVisibility(View.GONE);
         }
-        holder.tvInfo.setText(info.toString());
 
         // Expand arrow rotation
         float rotation = item.expanded ? 180f : 0f;
@@ -161,16 +257,22 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
 
         holder.itemView.setOnClickListener(v -> {
             int pos = holder.getAdapterPosition();
-            if (pos == RecyclerView.NO_ID) return;
+            if (pos == RecyclerView.NO_POSITION) return;
             toggleExpand(pos);
             listener.onHeaderClick(items.get(pos).categoria);
         });
 
         holder.itemView.setOnLongClickListener(v -> {
             int pos = holder.getAdapterPosition();
-            if (pos == RecyclerView.NO_ID) return false;
+            if (pos == RecyclerView.NO_POSITION) return false;
             listener.onHeaderLongClick(items.get(pos).categoria);
             return true;
+        });
+
+        holder.btnEditar.setOnClickListener(v -> {
+            int pos = holder.getAdapterPosition();
+            if (pos == RecyclerView.NO_POSITION) return;
+            listener.onHeaderLongClick(items.get(pos).categoria);
         });
     }
 
@@ -186,12 +288,12 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
 
         holder.itemView.setOnClickListener(v -> {
             int pos = holder.getAdapterPosition();
-            if (pos != RecyclerView.NO_ID) listener.onChildClick(items.get(pos).categoria);
+            if (pos != RecyclerView.NO_POSITION) listener.onChildClick(items.get(pos).categoria);
         });
 
         holder.itemView.setOnLongClickListener(v -> {
             int pos = holder.getAdapterPosition();
-            if (pos == RecyclerView.NO_ID) return false;
+            if (pos == RecyclerView.NO_POSITION) return false;
             listener.onChildLongClick(items.get(pos).categoria);
             return true;
         });
@@ -213,6 +315,7 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
                 items.remove(headerPos + 1);
             }
             header.expanded = false;
+            expandedStateById.put(header.categoria.getId(), false);
             notifyItemChanged(headerPos);
             notifyItemRangeRemoved(headerPos + 1, childrenToRemove);
         } else {
@@ -225,9 +328,19 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
             for (int i = 0; i < children.size(); i++) {
                 items.add(insertPos + i, new Item(TYPE_CHILD, children.get(i), false, 0));
             }
+            expandedStateById.put(header.categoria.getId(), true);
             notifyItemChanged(headerPos);
             notifyItemRangeInserted(insertPos, children.size());
         }
+    }
+
+    private void toggleSection(int sectionType) {
+        if (sectionType == SECTION_ESSENCIAIS) {
+            secaoEssenciaisExpandida = !secaoEssenciaisExpandida;
+        } else if (sectionType == SECTION_NAO_ESSENCIAIS) {
+            secaoNaoEssenciaisExpandida = !secaoNaoEssenciaisExpandida;
+        }
+        rebuildItems();
     }
 
     @Override
@@ -247,6 +360,7 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
         final TextView tvNome;
         final TextView tvInfo;
         final ImageView ivArrow;
+        final ImageView btnEditar;
 
         HeaderViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -255,6 +369,7 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
             tvNome  = itemView.findViewById(R.id.tv_categoria_nome);
             tvInfo  = itemView.findViewById(R.id.tv_categoria_info);
             ivArrow = itemView.findViewById(R.id.iv_expand_arrow);
+            btnEditar = itemView.findViewById(R.id.btn_edit_categoria);
         }
     }
 
@@ -266,6 +381,17 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
             super(itemView);
             tvNome   = itemView.findViewById(R.id.tv_subcategoria_nome);
             tvLimite = itemView.findViewById(R.id.tv_subcategoria_limite);
+        }
+    }
+
+    static class SectionViewHolder extends RecyclerView.ViewHolder {
+        final TextView tvTitulo;
+        final ImageView ivArrow;
+
+        SectionViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvTitulo = itemView.findViewById(R.id.tv_categoria_secao_titulo);
+            ivArrow = itemView.findViewById(R.id.iv_categoria_secao_arrow);
         }
     }
 }

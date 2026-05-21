@@ -10,6 +10,35 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <ImageButton
+                android:id="@+id/btn_back_categoria_form"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/voltar"
+                android:padding="8dp"
+                android:src="@android:drawable/ic_media_previous"
+                android:tint="?attr/colorOnSurfaceVariant" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/form_categoria"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
         <!-- Type selector — hidden for subcategories -->
         <LinearLayout
             android:id="@+id/ll_tipo_container"
@@ -46,6 +75,47 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/categoria_tipo_receita" />
+
+            </com.google.android.material.tabs.TabLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_despesa_classificacao"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/categoria_classificacao_despesa"
+                android:textSize="12sp"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:layout_marginBottom="6dp" />
+
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tab_despesa_classificacao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:tabMode="fixed"
+                app:tabGravity="fill"
+                app:tabIndicatorColor="?attr/colorPrimary"
+                app:tabSelectedTextColor="?attr/colorPrimary"
+                app:tabTextColor="?attr/colorOnSurfaceVariant"
+                style="@style/Widget.Material3.TabLayout.Secondary">
+
+                <com.google.android.material.tabs.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/categoria_tipo_essencial" />
+
+                <com.google.android.material.tabs.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/categoria_tipo_nao_essencial" />
 
             </com.google.android.material.tabs.TabLayout>
 
@@ -90,6 +160,7 @@
 
         <!-- Color selector -->
         <TextView
+            android:id="@+id/tv_label_cor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
@@ -103,6 +174,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:nestedScrollingEnabled="false" />
+
+        <TextView
+            android:id="@+id/tv_subcategoria_cor_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/subcategoria_cor_herdada"
+            android:textSize="12sp"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="gone" />
 
         <!-- Monthly limit -->
         <com.google.android.material.textfield.TextInputLayout
@@ -131,6 +212,17 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="@string/salvar" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_excluir_subcategoria"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/excluir_subcategoria"
+            android:visibility="gone"
+            app:strokeColor="@color/vermelho_error"
+            android:textColor="@color/vermelho_error" />
 
     </LinearLayout>
 

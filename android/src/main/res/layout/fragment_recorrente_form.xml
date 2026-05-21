@@ -16,15 +16,35 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <TextView
-                android:id="@+id/tv_titulo_form"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/form_recorrente"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="?attr/colorOnSurface"
-                android:layout_marginBottom="16dp" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <ImageButton
+                    android:id="@+id/btn_back_recorrente_form"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/voltar"
+                    android:padding="8dp"
+                    android:src="@android:drawable/ic_media_previous"
+                    android:tint="?attr/colorOnSurfaceVariant" />
+
+                <TextView
+                    android:id="@+id/tv_titulo_form"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/form_recorrente"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface" />
+
+            </LinearLayout>
 
             <!-- Descrição -->
             <com.google.android.material.textfield.TextInputLayout
@@ -113,11 +133,22 @@
                 android:alpha="0.7"
                 android:layout_marginBottom="4dp" />
 
-            <Spinner
-                android:id="@+id/sp_categoria"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_selecionar_subcategoria"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="8dp"
+                android:text="@string/recorrente_selecionar_subcategoria"
+                style="@style/Widget.Material3.Button.OutlinedButton" />
+
+            <TextView
+                android:id="@+id/tv_subcategoria_selecionada"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="@string/recorrente_subcategoria_nao_selecionada"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="12sp" />
 
             <!-- Recorrência -->
             <TextView

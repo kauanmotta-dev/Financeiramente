@@ -1,6 +1,7 @@
 package com.financeiramente.android.app;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.financeiramente.android.db.AndroidDatabaseDriver;
 import com.financeiramente.core.dao.AporteMetaDao;
@@ -39,6 +40,9 @@ import com.financeiramente.core.usecase.ReordenarCategoriasUseCase;
 
 public class AppContext {
 
+    private static final String TAG = "AppContext";
+    private static final String DB_NAME = "financeiramente.db";
+
     private static AppContext instance;
 
     private final AndroidDatabaseDriver databaseDriver;
@@ -72,8 +76,7 @@ public class AppContext {
     private final GerarRelatorioUseCase gerarRelatorioUseCase;
 
     private AppContext(Context context) {
-        this.databaseDriver = new AndroidDatabaseDriver(context);
-        new DatabaseMigrator(databaseDriver).migrate();
+        this.databaseDriver = inicializarDriverComRecuperacao(context);
 
         this.categoriaRepository             = new CategoriaDao(databaseDriver);
         this.lancamentoRepository            = new LancamentoDao(databaseDriver);
@@ -92,7 +95,7 @@ public class AppContext {
         this.listarLancamentosUseCase     = new ListarLancamentosUseCase(lancamentoRepository);
         this.calcularSaldoMensalUseCase   = new CalcularSaldoMensalUseCase(
                 lancamentoRepository, categoriaRepository);
-        this.criarLancamentoRecorrenteUseCase    = new CriarLancamentoRecorrenteUseCase(lancamentoRecorrenteRepository);
+        this.criarLancamentoRecorrenteUseCase    = new CriarLancamentoRecorrenteUseCase(lancamentoRecorrenteRepository, categoriaRepository);
         this.editarLancamentoRecorrenteUseCase   = new EditarLancamentoRecorrenteUseCase(lancamentoRecorrenteRepository);
         this.desativarLancamentoRecorrenteUseCase = new DesativarLancamentoRecorrenteUseCase(lancamentoRecorrenteRepository);
         this.gerarLancamentosRecorrentesUseCase  = new GerarLancamentosRecorrentesUseCase(lancamentoRecorrenteRepository, lancamentoRepository);
@@ -103,6 +106,25 @@ public class AppContext {
         this.deletarAporteMetaUseCase    = new DeletarAporteMetaUseCase(metaRepository, aporteMetaRepository);
         this.calcularProjecaoMetaUseCase = new CalcularProjecaoMetaUseCase(metaRepository);
         this.gerarRelatorioUseCase       = new GerarRelatorioUseCase(lancamentoRepository, categoriaRepository, tagRepository);
+    }
+
+    private AndroidDatabaseDriver inicializarDriverComRecuperacao(Context context) {
+        try {
+            AndroidDatabaseDriver driver = new AndroidDatabaseDriver(context);
+            new DatabaseMigrator(driver).migrate();
+            return driver;
+        } catch (Exception firstFailure) {
+            // If Android restores an old DB backup, migration can fail at startup.
+            Log.w(TAG, "Falha ao iniciar banco; tentando recriar base local", firstFailure);
+            context.deleteDatabase(DB_NAME);
+            try {
+                AndroidDatabaseDriver driver = new AndroidDatabaseDriver(context);
+                new DatabaseMigrator(driver).migrate();
+                return driver;
+            } catch (Exception secondFailure) {
+                throw new IllegalStateException("Nao foi possivel inicializar o banco de dados", secondFailure);
+            }
+        }
     }
 
     public static synchronized AppContext get(Context context) {

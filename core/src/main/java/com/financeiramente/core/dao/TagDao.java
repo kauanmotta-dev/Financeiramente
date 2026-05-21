@@ -19,8 +19,16 @@ public class TagDao implements TagRepository {
     @Override
     public void salvar(Tag tag) {
         db.execute(
-            "INSERT INTO tag(id, nome, criado_em) VALUES (?,?,?)",
-            tag.getId(), tag.getNome(), tag.getCriadoEm()
+            "INSERT INTO tag(id, nome, emoji, cor, criado_em) VALUES (?,?,?,?,?)",
+            tag.getId(), tag.getNome(), tag.getEmoji(), tag.getCor(), tag.getCriadoEm()
+        );
+    }
+
+    @Override
+    public void atualizar(Tag tag) {
+        db.execute(
+            "UPDATE tag SET nome=?, emoji=?, cor=? WHERE id=?",
+            tag.getNome(), tag.getEmoji(), tag.getCor(), tag.getId()
         );
     }
 
@@ -65,6 +73,8 @@ public class TagDao implements TagRepository {
     private static final RowMapper<Tag> MAPPER = row -> new Tag(
         row.getString("id"),
         row.getString("nome"),
+        row.getString("emoji"),
+        row.getString("cor"),
         row.getLong("criado_em")
     );
 }

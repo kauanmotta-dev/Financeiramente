@@ -3,8 +3,10 @@
     <string name="app_name">Financeiramente</string>
     <string name="nav_dashboard">Dashboard</string>
     <string name="nav_metas">Metas</string>
-    <string name="nav_relatorios">Relatórios</string>
-    <string name="nav_configuracoes">Configurações</string>
+    <string name="nav_relatorios">Gráficos</string>
+    <string name="nav_gastos">Gastos</string>
+    <string name="nav_menu_relatorio">Relatório</string>
+    <string name="nav_configuracoes">Preferências</string>
     <string name="nav_categorias">Categorias</string>
     <string name="nav_lancamentos">Lançamentos</string>
     <string name="add_categoria">Adicionar categoria</string>
@@ -13,14 +15,22 @@
     <string name="categoria_tipo">Tipo</string>
     <string name="categoria_tipo_despesa">Despesa</string>
     <string name="categoria_tipo_receita">Receita</string>
+    <string name="categoria_classificacao_despesa">Classificação da despesa</string>
+    <string name="categoria_tipo_essencial">Essencial</string>
+    <string name="categoria_tipo_nao_essencial">Não essencial</string>
     <string name="categoria_icone">Ícone</string>
     <string name="categoria_cor">Cor</string>
+    <string name="subcategoria_cor_herdada">Subcategorias usam automaticamente a cor da categoria-mãe.</string>
     <string name="categoria_limite_mensal">Limite Mensal (R$) — opcional</string>
     <string name="categorias_vazio">Nenhuma categoria cadastrada</string>
     <string name="tab_despesas">Despesas</string>
     <string name="tab_receitas">Receitas</string>
+    <string name="categorias_secao_essenciais">Despesas essenciais</string>
+    <string name="categorias_secao_nao_essenciais">Despesas não essenciais</string>
     <string name="opcional">Opcional</string>
     <string name="salvar">Salvar</string>
+    <string name="voltar">Voltar</string>
+    <string name="fechar">Fechar</string>
     <string name="em_construcao">Em construção</string>
     <string name="erro_nome_obrigatorio">Nome é obrigatório</string>
     <string name="erro_limite_invalido">Valor de limite inválido</string>
@@ -29,8 +39,20 @@
     <string name="editar">Editar</string>
     <string name="excluir">Excluir</string>
     <string name="nova_subcategoria">Nova subcategoria</string>
+    <string name="excluir_subcategoria">Excluir subcategoria</string>
+    <string name="confirmar_excluir_subcategoria">Deseja excluir esta subcategoria?</string>
     <string name="form_categoria">Categoria</string>
     <string name="gerenciar_categorias">Gerenciar Categorias</string>
+    <string name="gerenciar_tags">Gerenciar Tags</string>
+    <string name="nav_tags">Tags</string>
+    <string name="tag_nome">Nome da tag</string>
+    <string name="tag_emoji">Emoji</string>
+    <string name="tag_cor">Cor</string>
+    <string name="tag_add">Adicionar tag</string>
+    <string name="tag_erro_nome">Informe o nome da tag</string>
+    <string name="tag_erro_existente">Essa tag já existe</string>
+    <string name="tag_criada">Tag criada</string>
+    <string name="tags_vazio">Nenhuma tag criada ainda</string>
     <!-- Lançamentos -->
     <string name="form_lancamento">Lançamento</string>
     <string name="lancamento_valor">Valor (R$)</string>
@@ -59,6 +81,7 @@
     <string name="ontem">Ontem</string>
     <!-- Dashboard EP-06 -->
     <string name="dashboard_saldo_disponivel">Saldo Disponível</string>
+    <string name="dashboard_saldo_real">Saldo Real</string>
     <string name="dashboard_progresso_global">Progresso global</string>
     <string name="dashboard_gasto">Gasto</string>
     <string name="dashboard_receita">Receita</string>
@@ -73,7 +96,28 @@
     <string name="dashboard_uso">Uso</string>
     <string name="dashboard_gastos_categoria">Gastos por Categoria</string>
     <string name="dashboard_sem_gastos_chart">Nenhum gasto registrado neste mês</string>
+    <string name="dashboard_resumo_limites">Resumo financeiro</string>
+    <string name="dashboard_gastos_previstos">Gastos Previstos</string>
+    <string name="dashboard_previsao_gastos_limites">Previsão de gastos (baseada nos limites)</string>
+    <string name="dashboard_saldo_disponivel_total">Saldo disponível total</string>
+    <string name="dashboard_total_recebido">Total recebido</string>
+    <string name="dashboard_saldo_apos_limites">Saldo disponível após atingir os limites</string>
     <string name="dashboard_registrar">Registrar</string>
+    <string name="dashboard_registrar_lancamento">Registrar lançamento</string>
+    <string name="dashboard_abrir_configuracoes">Ajustar preferências</string>
+    <string name="dashboard_aviso_essenciais_titulo">Essenciais previstos: %s da receita</string>
+    <string name="dashboard_aviso_essenciais_desc">Limites essenciais: %1$s em cima de uma receita de %2$s.</string>
+    <string name="dashboard_aviso_essenciais_sem_limite_titulo">Essenciais sem planejamento</string>
+    <string name="dashboard_aviso_essenciais_sem_limite_desc">Defina limite mensal nas categorias essenciais para ativar este alerta.</string>
+    <string name="dashboard_aviso_caixa_titulo">Reserva de caixa: %s da receita</string>
+    <string name="dashboard_aviso_caixa_desc">Saldo disponível: %1$s sobre %2$s recebido no mês.</string>
+    <string name="dashboard_aviso_caixa_sem_receita_titulo">Reserva de caixa sem base de receita</string>
+    <string name="dashboard_aviso_caixa_sem_receita_desc">Registre receitas no mês para acompanhar a sua margem de segurança.</string>
+    <string name="dashboard_aviso_ritmo_titulo">Ritmo de gasto: %1$s usado vs %2$s esperado no mês</string>
+    <string name="dashboard_aviso_ritmo_desc">Despesas atuais: %1$s de %2$s da receita.</string>
+    <string name="dashboard_aviso_ritmo_sem_receita_titulo">Ritmo de gasto sem base de receita</string>
+    <string name="dashboard_aviso_ritmo_sem_receita_desc">Registre receitas para comparar o ritmo de gasto com o avanço do mês.</string>
+    <string name="dashboard_aviso_unico_desc">Caixa: %1$s da receita. Uso atual: %2$s. Ritmo esperado: %3$s.</string>
     <!-- Lançamentos Recorrentes EP-08 -->
     <string name="nav_recorrentes">Recorrentes</string>
     <string name="gerenciar_recorrentes">Lançamentos Recorrentes</string>
@@ -83,6 +127,12 @@
     <string name="recorrente_tipo">Tipo</string>
     <string name="recorrente_recorrencia">Recorrência</string>
     <string name="recorrente_dia">Dia do mês (opcional)</string>
+    <string name="recorrente_selecionar_subcategoria">Selecionar subcategoria</string>
+    <string name="recorrente_subcategoria_nao_selecionada">Nenhuma subcategoria selecionada</string>
+    <string name="recorrente_sem_categorias">Cadastre categorias primeiro</string>
+    <string name="recorrente_selecione_categoria_mae">Selecione a categoria</string>
+    <string name="recorrente_categoria_sem_subcategorias">Essa categoria não possui subcategorias</string>
+    <string name="recorrente_selecione_subcategoria">Subcategorias de %s</string>
     <string name="recorrentes_vazio">Nenhum lançamento recorrente ativo</string>
     <string name="add_recorrente">Novo recorrente</string>
     <string name="desativar_recorrente">Desativar recorrente</string>
@@ -114,6 +164,9 @@
     <string name="metas_filtro_em_andamento">Em andamento</string>
     <string name="metas_filtro_proximas">Próximas da meta</string>
     <string name="metas_filtro_concluidas">Concluídas</string>
+    <string name="meta_status_em_progresso">Em progresso</string>
+    <string name="meta_status_concluida">Concluída</string>
+    <string name="meta_status_em_risco">Em risco</string>
     <plurals name="metas_resumo_total">
         <item quantity="one">%d meta ativa</item>
         <item quantity="other">%d metas ativas</item>
@@ -137,14 +190,40 @@
     <string name="relatorio_datas_obrigatorias">Informe as datas de início e fim</string>
     <string name="relatorio_filtrar">Filtrar</string>
     <string name="relatorio_filtros_titulo">Filtros Avançados</string>
+    <string name="relatorio_filtro_tipo_categoria">Tipo da categoria</string>
+    <string name="relatorio_filtro_categorias">Categorias</string>
+    <string name="relatorio_filtro_tags">Tags</string>
+    <string name="limpar_filtros">Limpar filtros</string>
     <string name="relatorio_distribuicao">Distribuição de Gastos</string>
     <string name="relatorio_chart_pizza">Pizza</string>
     <string name="relatorio_chart_barras">Barras</string>
+
+    <string name="gastos_secao_essenciais">Despesas Essenciais</string>
+    <string name="gastos_secao_nao_essenciais">Despesas Não Essenciais</string>
+    <string name="gastos_secao_receitas">Receitas</string>
+    <string name="gastos_secao_com_valor">%1$s%2$s  •  %3$s</string>
+    <string name="gastos_secao_resumo">Usado %1$s de %2$s (%3$d%%)</string>
+    <string name="gastos_secao_resumo_sem_limite">Usado %1$s</string>
+    <string name="gastos_utilizado">Utilizado</string>
+    <string name="gastos_total">Total da categoria</string>
+    <string name="gastos_total_recebido">Total recebido</string>
+    <string name="gastos_total_gasto">Total gasto</string>
+    <string name="gastos_modo_gastos">Gastos</string>
+    <string name="gastos_modo_recebido">Recebido</string>
+    <string name="gastos_abrir_relatorios">Ver relatórios</string>
+    <string name="gastos_abrir_graficos">Ver gráficos</string>
+    <string name="gastos_resumo_valores">%1$s / %2$s</string>
+    <string name="gastos_resumo_mae">Limite %1$s • Usado %2$s</string>
+    <string name="gastos_mes_anterior">Mês anterior</string>
+    <string name="gastos_proximo_mes">Próximo mês</string>
+    <string name="gastos_sem_subcategorias">Sem subcategorias</string>
+    <string name="gastos_acessibilidade_categoria">Categoria %1$s. Utilizado: %2$s. Total: %3$s.</string>
 
     <!-- Épico 8 — Empty States -->
     <string name="empty_lancamentos_title">Sem lançamentos aqui</string>
     <string name="empty_lancamentos_subtitle">Registre suas receitas e despesas\npara acompanhar seus gastos.</string>
     <string name="empty_lancamentos_cta">Registrar Lançamento</string>
+    <string name="lancamentos_controle_titulo">Controle de lançamentos</string>
 
     <string name="empty_metas_title">Nenhuma meta criada</string>
     <string name="empty_metas_subtitle">Defina objetivos financeiros\ne acompanhe seu progresso.</string>
@@ -157,5 +236,13 @@
     <string name="empty_categorias_title">Nenhuma categoria aqui</string>
     <string name="empty_categorias_subtitle">Crie categorias para organizar\nsuas receitas e despesas.</string>
     <string name="empty_categorias_cta">Criar Categoria</string>
+
+    <string name="empty_gastos_title">Sem gastos por categoria</string>
+    <string name="empty_gastos_subtitle">Cadastre categorias e lançamentos\npara acompanhar seus gastos mensais.</string>
+
+    <plurals name="gastos_subcategorias">
+        <item quantity="one">%d subcategoria</item>
+        <item quantity="other">%d subcategorias</item>
+    </plurals>
 
 </resources>

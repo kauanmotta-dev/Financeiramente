@@ -10,17 +10,36 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- Title -->
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/nav_metas"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface"
-            android:paddingHorizontal="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp"
             android:paddingTop="16dp"
-            android:paddingBottom="8dp" />
+            android:paddingBottom="8dp">
+
+            <ImageButton
+                android:id="@+id/btn_back_metas"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/voltar"
+                android:padding="8dp"
+                android:src="@android:drawable/ic_media_previous"
+                android:tint="?attr/colorOnSurfaceVariant" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/nav_metas"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
 
         <!-- Summary card -->
         <com.google.android.material.card.MaterialCardView
@@ -75,52 +94,53 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Filter chips -->
-        <HorizontalScrollView
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/toggle_group_filtro"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:scrollbars="none"
-            android:paddingHorizontal="16dp"
-            android:layout_marginBottom="4dp">
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="6dp"
+            app:selectionRequired="true"
+            app:singleSelection="true">
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chip_group_filtro"
-                android:layout_width="wrap_content"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chip_todas"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:singleSelection="true"
-                app:selectionRequired="true">
+                android:layout_weight="1"
+                android:checkable="true"
+                android:checked="true"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/metas_filtro_todas"
+                android:textAllCaps="false" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_todas"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/metas_filtro_todas"
-                    android:checked="true" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chip_em_andamento"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:checkable="true"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/metas_filtro_em_andamento"
+                android:textAllCaps="false" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_em_andamento"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/metas_filtro_em_andamento" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chip_concluidas"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:checkable="true"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/metas_filtro_concluidas"
+                android:textAllCaps="false" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_proximas"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/metas_filtro_proximas" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_concluidas"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/metas_filtro_concluidas" />
-
-            </com.google.android.material.chip.ChipGroup>
-        </HorizontalScrollView>
+        </com.google.android.material.button.MaterialButtonToggleGroup>
 
         <!-- List + empty state wrapped in FrameLayout for proper centering -->
         <FrameLayout
@@ -147,15 +167,16 @@
 
         </FrameLayout>
 
-    </LinearLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_nova_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:text="@string/add_meta"
+            app:icon="@android:drawable/ic_input_add" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_nova_meta"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:src="@android:drawable/ic_input_add"
-        android:contentDescription="@string/add_meta" />
+    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

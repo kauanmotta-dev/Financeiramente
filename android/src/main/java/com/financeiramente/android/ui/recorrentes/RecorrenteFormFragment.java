@@ -1,12 +1,16 @@
 package com.financeiramente.android.ui.recorrentes;
 
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -17,16 +21,21 @@ import androidx.navigation.Navigation;
 
 import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
+import com.financeiramente.android.ui.common.CategoriaVisualFallback;
 import com.financeiramente.android.viewmodel.RecorrentesViewModel;
 import com.financeiramente.android.viewmodel.RecorrentesViewModelFactory;
 import com.financeiramente.core.domain.entity.Categoria;
 import com.financeiramente.core.domain.entity.LancamentoRecorrente;
 import com.financeiramente.core.domain.vo.TipoLancamento;
 import com.financeiramente.core.domain.vo.TipoRecorrencia;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RecorrenteFormFragment extends Fragment {
 
@@ -36,10 +45,15 @@ public class RecorrenteFormFragment extends Fragment {
     private TextInputEditText etValor;
     private TextInputEditText etDia;
     private RadioGroup rgTipo;
-    private Spinner spCategoria;
+    private MaterialButton btnSelecionarSubcategoria;
+    private TextView tvSubcategoriaSelecionada;
     private Spinner spRecorrencia;
 
     private List<Categoria> categorias = new ArrayList<>();
+    private final Map<String, Categoria> categoriasPorId = new LinkedHashMap<>();
+    private final List<Categoria> categoriasRaiz = new ArrayList<>();
+    private final Map<String, List<Categoria>> subcategoriasPorRaiz = new LinkedHashMap<>();
+    private String categoriaIdSelecionada;
     private String recorrenteId; // null = novo
 
     @Nullable
@@ -52,6 +66,9 @@ public class RecorrenteFormFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        view.findViewById(R.id.btn_back_recorrente_form).setOnClickListener(v ->
+            Navigation.findNavController(view).navigateUp());
 
         AppContext ctx = AppContext.get(requireContext());
         RecorrentesViewModelFactory factory = new RecorrentesViewModelFactory(
@@ -66,8 +83,10 @@ public class RecorrenteFormFragment extends Fragment {
         etValor       = view.findViewById(R.id.et_valor);
         etDia         = view.findViewById(R.id.et_dia);
         rgTipo        = view.findViewById(R.id.rg_tipo);
-        spCategoria   = view.findViewById(R.id.sp_categoria);
+        btnSelecionarSubcategoria = view.findViewById(R.id.btn_selecionar_subcategoria);
+        tvSubcategoriaSelecionada = view.findViewById(R.id.tv_subcategoria_selecionada);
         spRecorrencia = view.findViewById(R.id.sp_recorrencia);
+        btnSelecionarSubcategoria.setOnClickListener(v -> abrirSeletorCategoriasRaiz());
 
         // Carregar argumentos (edição)
         if (getArguments() != null) {
@@ -107,12 +126,22 @@ public class RecorrenteFormFragment extends Fragment {
             try {
                 categorias = ctx.getCategoriaRepository().listarTodas();
                 requireActivity().runOnUiThread(() -> {
-                    List<String> nomes = new ArrayList<>();
-                    for (Categoria c : categorias) nomes.add(c.getNome());
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
-                            android.R.layout.simple_spinner_item, nomes);
-                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    spCategoria.setAdapter(adapter);
+                    categoriasPorId.clear();
+                    categoriasRaiz.clear();
+                    subcategoriasPorRaiz.clear();
+
+                    for (Categoria categoria : categorias) {
+                        categoriasPorId.put(categoria.getId(), categoria);
+                        if (categoria.getPaiId() == null) {
+                            categoriasRaiz.add(categoria);
+                        } else {
+                            subcategoriasPorRaiz
+                                    .computeIfAbsent(categoria.getPaiId(), k -> new ArrayList<>())
+                                    .add(categoria);
+                        }
+                    }
+
+                    atualizarResumoSubcategoria();
 
                     if (recorrenteId != null) preencherFormulario();
                 });
@@ -151,12 +180,8 @@ public class RecorrenteFormFragment extends Fragment {
                 }
 
                 // Selecionar categoria
-                for (int i = 0; i < categorias.size(); i++) {
-                    if (categorias.get(i).getId().equals(rec.getCategoriaId())) {
-                        spCategoria.setSelection(i);
-                        break;
-                    }
-                }
+                categoriaIdSelecionada = rec.getCategoriaId();
+                atualizarResumoSubcategoria();
                 break;
             }
         }
@@ -200,21 +225,101 @@ public class RecorrenteFormFragment extends Fragment {
             return;
         }
 
-        if (categorias.isEmpty()) {
+        if (categoriaIdSelecionada == null || categoriaIdSelecionada.isEmpty()) {
             Toast.makeText(requireContext(), R.string.erro_categoria_obrigatoria, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String categoriaId = categorias.get(spCategoria.getSelectedItemPosition()).getId();
         TipoLancamento tipo = rgTipo.getCheckedRadioButtonId() == R.id.rb_receita
                 ? TipoLancamento.RECEITA : TipoLancamento.DESPESA;
         TipoRecorrencia recorrencia = recorrenciaDaSelecao(spRecorrencia.getSelectedItemPosition());
         Integer dia = diaStr.isEmpty() ? null : Integer.parseInt(diaStr);
 
         if (recorrenteId == null) {
-            viewModel.criar(descricao, valor, tipo, categoriaId, recorrencia, dia);
+            viewModel.criar(descricao, valor, tipo, categoriaIdSelecionada, recorrencia, dia);
         } else {
-            viewModel.editar(recorrenteId, descricao, valor, tipo, categoriaId, recorrencia, dia);
+            viewModel.editar(recorrenteId, descricao, valor, tipo, categoriaIdSelecionada, recorrencia, dia);
         }
+    }
+
+    private void abrirSeletorCategoriasRaiz() {
+        if (categoriasRaiz.isEmpty()) {
+            Toast.makeText(requireContext(), R.string.recorrente_sem_categorias, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        CharSequence[] opcoes = new CharSequence[categoriasRaiz.size()];
+        for (int i = 0; i < categoriasRaiz.size(); i++) {
+            opcoes[i] = montarLabelCategoria(categoriasRaiz.get(i));
+        }
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.recorrente_selecione_categoria_mae)
+                .setItems(opcoes, (dialog, which) -> {
+                    Categoria categoriaRaiz = categoriasRaiz.get(which);
+                    abrirSeletorSubcategorias(categoriaRaiz);
+                })
+                .show();
+    }
+
+    private void abrirSeletorSubcategorias(Categoria categoriaRaiz) {
+        List<Categoria> subcategorias = subcategoriasPorRaiz.get(categoriaRaiz.getId());
+        if (subcategorias == null || subcategorias.isEmpty()) {
+            Toast.makeText(requireContext(), R.string.recorrente_categoria_sem_subcategorias, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        CharSequence[] opcoes = new CharSequence[subcategorias.size()];
+        for (int i = 0; i < subcategorias.size(); i++) {
+            opcoes[i] = montarLabelCategoria(subcategorias.get(i));
+        }
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(getString(R.string.recorrente_selecione_subcategoria, categoriaRaiz.getNome()))
+                .setItems(opcoes, (dialog, which) -> {
+                    categoriaIdSelecionada = subcategorias.get(which).getId();
+                    atualizarResumoSubcategoria();
+                })
+                .show();
+    }
+
+    private void atualizarResumoSubcategoria() {
+        if (categoriaIdSelecionada == null) {
+            tvSubcategoriaSelecionada.setText(R.string.recorrente_subcategoria_nao_selecionada);
+            return;
+        }
+
+        Categoria subcategoria = categoriasPorId.get(categoriaIdSelecionada);
+        if (subcategoria == null) {
+            tvSubcategoriaSelecionada.setText(R.string.recorrente_subcategoria_nao_selecionada);
+            return;
+        }
+
+        Categoria categoriaRaiz = subcategoria;
+        if (subcategoria.getPaiId() != null) {
+            Categoria possivelRaiz = categoriasPorId.get(subcategoria.getPaiId());
+            if (possivelRaiz != null) {
+                categoriaRaiz = possivelRaiz;
+            }
+        }
+
+        String label = CategoriaVisualFallback.icone(categoriaRaiz, null)
+                + " " + categoriaRaiz.getNome()
+                + "  >  "
+                + CategoriaVisualFallback.icone(subcategoria, null)
+                + " " + subcategoria.getNome();
+        tvSubcategoriaSelecionada.setText(label);
+    }
+
+    private CharSequence montarLabelCategoria(Categoria categoria) {
+        String label = "● " + CategoriaVisualFallback.icone(categoria, null) + " " + categoria.getNome();
+        SpannableString spannable = new SpannableString(label);
+        try {
+            int color = android.graphics.Color.parseColor(CategoriaVisualFallback.cor(categoria, null));
+            spannable.setSpan(new ForegroundColorSpan(color), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        } catch (IllegalArgumentException ignored) {
+            // Keep default text color when category color is invalid.
+        }
+        return spannable;
     }
 }

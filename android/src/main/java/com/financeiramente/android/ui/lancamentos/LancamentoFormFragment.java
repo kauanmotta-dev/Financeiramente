@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,6 +19,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
+import com.financeiramente.android.ui.common.CategoriaVisualFallback;
 import com.financeiramente.android.viewmodel.LancamentoFormViewModel;
 import com.financeiramente.android.viewmodel.LancamentoFormViewModelFactory;
 import com.financeiramente.core.domain.entity.Categoria;
@@ -37,7 +39,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class LancamentoFormFragment extends BottomSheetDialogFragment {
 
@@ -48,9 +52,10 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
     private TextInputLayout tilValor;
     private TextInputEditText etDescricao;
     private TextInputEditText etData;
-    private ChipGroup cgCategoria;
+    private LinearLayout layoutCategoriaLinhas;
     private ChipGroup cgTags;
     private LinearLayout layoutDetalhesCompletos;
+    private final List<ChipGroup> chipGroupsCategorias = new ArrayList<>();
 
     private List<Categoria> listaCategorias = new ArrayList<>();
     private String categoriaIdSelecionada = null;
@@ -83,9 +88,10 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         tilValor = view.findViewById(R.id.til_valor);
         etDescricao = view.findViewById(R.id.et_descricao);
         etData = view.findViewById(R.id.et_data);
-        cgCategoria = view.findViewById(R.id.cg_categoria);
+        layoutCategoriaLinhas = view.findViewById(R.id.layout_categoria_linhas);
         cgTags = view.findViewById(R.id.cg_tags);
         layoutDetalhesCompletos = view.findViewById(R.id.layout_detalhes_completos);
+        view.findViewById(R.id.btn_fechar_form).setOnClickListener(v -> dismiss());
 
         // Data padrão = hoje
         etData.setText(LocalDate.now().format(FORMATTER));
@@ -130,13 +136,19 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         BottomSheetDialog bsd = (BottomSheetDialog) getDialog();
         bsd.setOnShowListener(d -> {
             BottomSheetBehavior<FrameLayout> behavior = bsd.getBehavior();
-            // ~380dp — cobre drag handle + título + toggle + valor + categoria chips + botão salvar
-            int peekPx = (int) (getResources().getDisplayMetrics().density * 380);
+            // ~460dp — cobre também o bloco de tags no modo rápido.
+            int peekPx = (int) (getResources().getDisplayMetrics().density * 460);
             behavior.setPeekHeight(peekPx);
+            behavior.setDraggable(true);
+            behavior.setHideable(true);
             behavior.setSkipCollapsed(false);
             behavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
                 @Override
-                public void onStateChanged(@NonNull View bottomSheet, int newState) { }
+                public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                    if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+                        dismiss();
+                    }
+                }
 
                 @Override
                 public void onSlide(@NonNull View bottomSheet, float slideOffset) {
@@ -161,8 +173,10 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
      * Despesa → vermelho;  Receita → verde.
      */
     private void atualizarEstiloToggle(TipoLancamento tipo) {
-        MaterialButton btnDespesa = requireView().findViewById(R.id.btn_despesa);
-        MaterialButton btnReceita = requireView().findViewById(R.id.btn_receita);
+        View root = getView();
+        if (root == null) return;
+        MaterialButton btnDespesa = root.findViewById(R.id.btn_despesa);
+        MaterialButton btnReceita = root.findViewById(R.id.btn_receita);
 
         int corNeutra = getResources().getColor(R.color.cinza_secondary, requireContext().getTheme());
 
@@ -185,17 +199,22 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
 
     private void observarViewModel() {
         viewModel.getCategorias().observe(getViewLifecycleOwner(), cats -> {
-            listaCategorias = cats;
-            popularChipsCategoria(cats);
+            listaCategorias = cats != null ? cats : new ArrayList<>();
+            popularChipsCategoria(listaCategorias);
         });
 
         viewModel.getTags().observe(getViewLifecycleOwner(), tags -> {
             cgTags.removeAllViews();
+            if (tags == null) return;
             for (Tag tag : tags) {
                 Chip chip = new Chip(requireContext());
-                chip.setText(tag.getNome());
+                String emoji = tag.getEmoji() == null || tag.getEmoji().trim().isEmpty()
+                        ? "🏷️"
+                        : tag.getEmoji();
+                chip.setText(emoji + " " + tag.getNome());
                 chip.setCheckable(true);
                 chip.setTag(tag.getId());
+                aplicarEstiloTagChip(chip, tag.getCor());
                 cgTags.addView(chip);
             }
         });
@@ -232,34 +251,95 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
 
     /** Popula o ChipGroup de categorias com chips coloridos (ícone + nome). */
     private void popularChipsCategoria(List<Categoria> cats) {
-        cgCategoria.removeAllViews();
-        for (Categoria cat : cats) {
-            Chip chip = new Chip(requireContext());
-            chip.setText(cat.getIcone() + "  " + cat.getNome());
-            chip.setCheckable(true);
-            chip.setTag(cat.getId());
+        layoutCategoriaLinhas.removeAllViews();
+        chipGroupsCategorias.clear();
+        if (cats == null || cats.isEmpty()) return;
 
-            // Cor dinâmica da categoria: fundo claro (alpha 30) → fundo sólido quando checked
-            try {
-                int corSolida = Color.parseColor(cat.getCor());
-                int corFundo = Color.argb(48, Color.red(corSolida), Color.green(corSolida), Color.blue(corSolida));
-                chip.setChipBackgroundColor(new ColorStateList(
-                        new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
-                        new int[]{corSolida, corFundo}
-                ));
-                chip.setTextColor(new ColorStateList(
-                        new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
-                        new int[]{Color.WHITE, corSolida}
-                ));
-                chip.setChipStrokeColor(ColorStateList.valueOf(corSolida));
-                chip.setChipStrokeWidth(getResources().getDimension(R.dimen.chip_stroke_width));
-            } catch (IllegalArgumentException ignored) { }
+        Map<String, List<Categoria>> porPai = new LinkedHashMap<>();
+        for (Categoria categoria : cats) {
+            String paiId = categoria.getPaiId() != null ? categoria.getPaiId() : categoria.getId();
+            porPai.computeIfAbsent(paiId, key -> new ArrayList<>()).add(categoria);
+        }
 
-            if (cat.getId().equals(categoriaIdSelecionada)) {
-                chip.setChecked(true);
+        for (Map.Entry<String, List<Categoria>> entry : porPai.entrySet()) {
+            HorizontalScrollView scroller = new HorizontalScrollView(requireContext());
+            LinearLayout.LayoutParams scrollerParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            scrollerParams.bottomMargin = (int) (getResources().getDisplayMetrics().density * 6);
+            scroller.setLayoutParams(scrollerParams);
+            scroller.setHorizontalScrollBarEnabled(false);
+            scroller.setFillViewport(true);
+
+            ChipGroup row = new ChipGroup(requireContext());
+            row.setSingleLine(true);
+            row.setSingleSelection(true);
+            row.setChipSpacingHorizontal((int) (getResources().getDisplayMetrics().density * 8));
+            chipGroupsCategorias.add(row);
+
+            for (Categoria cat : entry.getValue()) {
+                String icone = CategoriaVisualFallback.icone(cat, null);
+                String corHex = CategoriaVisualFallback.cor(cat, null);
+                Chip chip = new Chip(requireContext());
+                chip.setText(icone + "  " + cat.getNome());
+                chip.setCheckable(true);
+                chip.setTag(cat.getId());
+
+                // Cor dinâmica da categoria: fundo claro (alpha 30) → fundo sólido quando checked
+                try {
+                    int corSolida = Color.parseColor(corHex);
+                    int corFundo = Color.argb(48, Color.red(corSolida), Color.green(corSolida), Color.blue(corSolida));
+                    chip.setChipBackgroundColor(new ColorStateList(
+                            new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
+                            new int[]{corSolida, corFundo}
+                    ));
+                    chip.setTextColor(new ColorStateList(
+                            new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
+                            new int[]{Color.WHITE, corSolida}
+                    ));
+                    chip.setChipStrokeColor(ColorStateList.valueOf(corSolida));
+                    chip.setChipStrokeWidth(getResources().getDimension(R.dimen.chip_stroke_width));
+                } catch (Exception ignored) { }
+
+                if (cat.getId().equals(categoriaIdSelecionada)) {
+                    chip.setChecked(true);
+                }
+
+                chip.setOnClickListener(v -> {
+                    categoriaIdSelecionada = (String) chip.getTag();
+                    for (ChipGroup group : chipGroupsCategorias) {
+                        if (group != row) {
+                            group.clearCheck();
+                        }
+                    }
+                    chip.setChecked(true);
+                });
+
+                row.addView(chip);
             }
 
-            cgCategoria.addView(chip);
+            scroller.addView(row);
+            layoutCategoriaLinhas.addView(scroller);
+        }
+    }
+
+    private void aplicarEstiloTagChip(Chip chip, String corHex) {
+        try {
+            int corSolida = Color.parseColor(corHex);
+            int corFundo = Color.argb(40, Color.red(corSolida), Color.green(corSolida), Color.blue(corSolida));
+            chip.setChipBackgroundColor(new ColorStateList(
+                    new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
+                    new int[]{corSolida, corFundo}
+            ));
+            chip.setTextColor(new ColorStateList(
+                    new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
+                    new int[]{Color.WHITE, corSolida}
+            ));
+            chip.setChipStrokeColor(ColorStateList.valueOf(corSolida));
+            chip.setChipStrokeWidth(getResources().getDimension(R.dimen.chip_stroke_width));
+        } catch (Exception ignored) {
+            // Keep default style for invalid colors.
         }
     }
 
@@ -292,12 +372,6 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         TipoLancamento tipo = (toggleTipo.getCheckedButtonId() == R.id.btn_receita)
                 ? TipoLancamento.RECEITA : TipoLancamento.DESPESA;
 
-        // Categoria selecionada no ChipGroup
-        int checkedChipId = cgCategoria.getCheckedChipId();
-        if (checkedChipId != View.NO_ID) {
-            Chip chip = cgCategoria.findViewById(checkedChipId);
-            categoriaIdSelecionada = (String) chip.getTag();
-        }
         if (categoriaIdSelecionada == null) {
             Toast.makeText(requireContext(), getString(R.string.erro_categoria_obrigatoria), Toast.LENGTH_SHORT).show();
             return;

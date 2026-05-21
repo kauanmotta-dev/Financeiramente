@@ -1,6 +1,7 @@
 package com.financeiramente.android.ui.lancamentos;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
@@ -14,6 +15,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.financeiramente.android.R;
+import com.financeiramente.android.ui.common.CategoriaVisualFallback;
 import com.financeiramente.core.domain.entity.Categoria;
 import com.financeiramente.core.domain.entity.Lancamento;
 import com.financeiramente.core.domain.entity.Tag;
@@ -266,10 +268,15 @@ public class LancamentoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         Context ctx = h.itemView.getContext();
         Lancamento l = item.lancamento;
         Categoria cat = item.categoria;
+        String nomePai = null;
+        if (cat != null && cat.getPaiId() != null) {
+            Categoria pai = categoriaMap.get(cat.getPaiId());
+            nomePai = pai != null ? pai.getNome() : null;
+        }
 
         // Ícone circular com cor da categoria
-        String icone = cat != null && cat.getIcone() != null ? cat.getIcone() : "📦";
-        String hexCor = cat != null && cat.getCor() != null ? cat.getCor() : "#6366F1";
+        String icone = CategoriaVisualFallback.icone(cat, nomePai);
+        String hexCor = CategoriaVisualFallback.cor(cat, nomePai);
         h.tvIconeCategoria.setText(icone);
         applyCircleBackground(h.tvIconeCategoria, hexCor);
 
@@ -286,12 +293,13 @@ public class LancamentoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             h.cgpTags.setVisibility(View.VISIBLE);
             for (Tag tag : item.tags) {
                 Chip chip = new Chip(ctx);
-                chip.setText(tag.getNome());
+                chip.setText(tag.getEmoji() + " " + tag.getNome());
                 chip.setTextSize(10f);
                 float density = ctx.getResources().getDisplayMetrics().density;
                 chip.setChipMinHeight(24f * density);
                 chip.setClickable(false);
                 chip.setCheckable(false);
+                aplicarEstiloTagChip(chip, tag.getCor());
                 h.cgpTags.addView(chip);
             }
         } else {
@@ -341,6 +349,19 @@ public class LancamentoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             return date.getDayOfMonth() + "/" + date.getMonthValue() + "/" + date.getYear();
         } catch (Exception e) {
             return isoDate != null ? isoDate : "";
+        }
+    }
+
+    private void aplicarEstiloTagChip(Chip chip, String corHex) {
+        try {
+            int corSolida = Color.parseColor(corHex);
+            int corFundo = Color.argb(36, Color.red(corSolida), Color.green(corSolida), Color.blue(corSolida));
+            chip.setChipBackgroundColor(ColorStateList.valueOf(corFundo));
+            chip.setChipStrokeColor(ColorStateList.valueOf(corSolida));
+            chip.setChipStrokeWidth(1f * chip.getResources().getDisplayMetrics().density);
+            chip.setTextColor(corSolida);
+        } catch (Exception ignored) {
+            // Keep default style when color is invalid.
         }
     }
 

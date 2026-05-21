@@ -24,8 +24,7 @@ import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.MetasViewModel;
 import com.financeiramente.android.viewmodel.MetasViewModelFactory;
 import com.financeiramente.core.domain.entity.Meta;
-import com.google.android.material.chip.ChipGroup;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.time.LocalDate;
@@ -39,8 +38,7 @@ public class MetasFragment extends Fragment {
     // Filter constants
     private static final int FILTRO_TODAS = 0;
     private static final int FILTRO_EM_ANDAMENTO = 1;
-    private static final int FILTRO_PROXIMAS = 2;
-    private static final int FILTRO_CONCLUIDAS = 3;
+    private static final int FILTRO_CONCLUIDAS = 2;
 
     private MetasViewModel viewModel;
     private MetaAdapter adapter;
@@ -62,6 +60,12 @@ public class MetasFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        view.findViewById(R.id.btn_back_metas).setOnClickListener(v -> {
+            if (!Navigation.findNavController(view).navigateUp()) {
+                Navigation.findNavController(view).navigate(R.id.nav_dashboard);
+            }
+        });
 
         AppContext ctx = AppContext.get(requireContext());
         MetasViewModelFactory factory = new MetasViewModelFactory(
@@ -119,14 +123,12 @@ public class MetasFragment extends Fragment {
 
         rv.setAdapter(adapter);
 
-        // Filter chips
-        ChipGroup chipGroup = view.findViewById(R.id.chip_group_filtro);
-        chipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            if (checkedIds.isEmpty()) return;
-            int id = checkedIds.get(0);
+        MaterialButtonToggleGroup toggleGroup = view.findViewById(R.id.toggle_group_filtro);
+        toggleGroup.check(R.id.chip_todas);
+        toggleGroup.addOnButtonCheckedListener((group, id, isChecked) -> {
+            if (!isChecked) return;
             if (id == R.id.chip_todas) filtroAtual = FILTRO_TODAS;
             else if (id == R.id.chip_em_andamento) filtroAtual = FILTRO_EM_ANDAMENTO;
-            else if (id == R.id.chip_proximas) filtroAtual = FILTRO_PROXIMAS;
             else if (id == R.id.chip_concluidas) filtroAtual = FILTRO_CONCLUIDAS;
             aplicarFiltro();
         });
@@ -141,8 +143,7 @@ public class MetasFragment extends Fragment {
             if (msg != null) Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
         });
 
-        FloatingActionButton fab = view.findViewById(R.id.fab_nova_meta);
-        fab.setOnClickListener(v -> mostrarDialogoNovaMeta(view));
+        view.findViewById(R.id.btn_nova_meta).setOnClickListener(v -> mostrarDialogoNovaMeta(view));
     }
 
     private void aplicarFiltro() {
@@ -152,16 +153,6 @@ public class MetasFragment extends Fragment {
                 filtradas = todasMetas.stream()
                         .filter(m -> m.getValorAtual() < m.getValorObjetivo()
                                 && !estaAtrasada(m))
-                        .collect(Collectors.toList());
-                break;
-            case FILTRO_PROXIMAS:
-                // >= 75% complete but not yet reached
-                filtradas = todasMetas.stream()
-                        .filter(m -> {
-                            double pct = m.getValorObjetivo() > 0
-                                    ? (m.getValorAtual() / m.getValorObjetivo()) * 100.0 : 0;
-                            return pct >= 75.0 && pct < 100.0;
-                        })
                         .collect(Collectors.toList());
                 break;
             case FILTRO_CONCLUIDAS:

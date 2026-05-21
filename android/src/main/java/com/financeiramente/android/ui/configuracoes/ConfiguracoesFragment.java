@@ -30,5 +30,8 @@ public class ConfiguracoesFragment extends Fragment {
         view.findViewById(R.id.btn_recorrentes).setOnClickListener(v ->
                 Navigation.findNavController(v)
                         .navigate(R.id.action_configuracoesFragment_to_recorrentesFragment));
+        view.findViewById(R.id.btn_tags).setOnClickListener(v ->
+            Navigation.findNavController(v)
+                .navigate(R.id.action_configuracoesFragment_to_tagsFragment));
     }
 }

@@ -31,7 +31,7 @@ public class EditarCategoriaUseCase {
             tipo = pai.getTipo();
             if (limiteMensal != null && pai.getLimiteMensal() != null) {
                 double limiteUtilizado = categoriaRepository.listarFilhas(pai.getId()).stream()
-                        .mapToDouble(filha -> filha.getLimiteMensal() != null ? filha.getLimiteMensal() : 0.0)
+                        .mapToDouble(filha -> filha.getLimiteMensal() != null && !filha.getId().equals(categoria.getId()) ? filha.getLimiteMensal() : 0.0)
                         .sum();
                 if (limiteMensal + limiteUtilizado > pai.getLimiteMensal()) {
                     throw new DomainException(
