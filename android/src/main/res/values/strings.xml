@@ -11,7 +11,14 @@
     <string name="add_lancamento">Novo lançamento</string>
     <string name="categoria_nome">Nome</string>
     <string name="categoria_tipo">Tipo</string>
+    <string name="categoria_tipo_despesa">Despesa</string>
+    <string name="categoria_tipo_receita">Receita</string>
+    <string name="categoria_icone">Ícone</string>
+    <string name="categoria_cor">Cor</string>
     <string name="categoria_limite_mensal">Limite Mensal (R$) — opcional</string>
+    <string name="categorias_vazio">Nenhuma categoria cadastrada</string>
+    <string name="tab_despesas">Despesas</string>
+    <string name="tab_receitas">Receitas</string>
     <string name="opcional">Opcional</string>
     <string name="salvar">Salvar</string>
     <string name="em_construcao">Em construção</string>
@@ -19,6 +26,9 @@
     <string name="erro_limite_invalido">Valor de limite inválido</string>
     <string name="excluir_categoria">Excluir categoria</string>
     <string name="confirmar_exclusao_categoria">Deseja excluir "%s"?</string>
+    <string name="editar">Editar</string>
+    <string name="excluir">Excluir</string>
+    <string name="nova_subcategoria">Nova subcategoria</string>
     <string name="form_categoria">Categoria</string>
     <string name="gerenciar_categorias">Gerenciar Categorias</string>
     <!-- Lançamentos -->
@@ -37,7 +47,16 @@
     <string name="erro_valor_invalido">Valor deve ser maior que zero</string>
     <string name="erro_descricao_obrigatoria">Descrição é obrigatória</string>
     <string name="erro_categoria_obrigatoria">Selecione uma categoria</string>
+    <string name="editar_lancamento">Editar Lançamento</string>
     <string name="dashboard_titulo">Dashboard</string>
+    <!-- Lançamentos — Epic 7 -->
+    <string name="buscar_lancamentos">Buscar lançamentos…</string>
+    <string name="lancamento_excluido">Lançamento excluído</string>
+    <string name="lancamento_salvo">Lançamento salvo</string>
+    <string name="desfazer">Desfazer</string>
+    <string name="saldo_dia">Saldo: %s</string>
+    <string name="hoje">Hoje</string>
+    <string name="ontem">Ontem</string>
     <!-- Dashboard EP-06 -->
     <string name="dashboard_saldo_disponivel">Saldo Disponível</string>
     <string name="dashboard_progresso_global">Progresso global</string>
@@ -47,6 +66,14 @@
     <string name="dashboard_sem_planejamento">Nenhuma categoria com limite mensal definido. Configure os limites em Configurações → Categorias.</string>
     <string name="dashboard_alerta_limite">⚠ Categorias próximas do limite: %s</string>
     <string name="dashboard_alerta_estourado">⚠ Categorias estouradas: %s</string>
+    <!-- Dashboard Épico 2 — novos -->
+    <string name="dashboard_despesas">Despesas</string>
+    <string name="dashboard_receitas">Receitas</string>
+    <string name="dashboard_saldo_mini">Saldo</string>
+    <string name="dashboard_uso">Uso</string>
+    <string name="dashboard_gastos_categoria">Gastos por Categoria</string>
+    <string name="dashboard_sem_gastos_chart">Nenhum gasto registrado neste mês</string>
+    <string name="dashboard_registrar">Registrar</string>
     <!-- Lançamentos Recorrentes EP-08 -->
     <string name="nav_recorrentes">Recorrentes</string>
     <string name="gerenciar_recorrentes">Lançamentos Recorrentes</string>
@@ -80,10 +107,22 @@
     <string name="aporte_descricao">Descrição (opcional)</string>
     <string name="deletar_aporte">Excluir aporte</string>
     <string name="confirmar_deletar_aporte">Deseja excluir este aporte?</string>
+    <!-- Metas — Épico 6 -->
+    <string name="metas_resumo_vazio">Nenhuma meta cadastrada</string>
+    <string name="metas_data_alvo">Meta: %s</string>
+    <string name="metas_filtro_todas">Todas</string>
+    <string name="metas_filtro_em_andamento">Em andamento</string>
+    <string name="metas_filtro_proximas">Próximas da meta</string>
+    <string name="metas_filtro_concluidas">Concluídas</string>
+    <plurals name="metas_resumo_total">
+        <item quantity="one">%d meta ativa</item>
+        <item quantity="other">%d metas ativas</item>
+    </plurals>
     <!-- Relatórios EP-11 -->
     <string name="relatorio_periodo">Período</string>
     <string name="relatorio_semana">Semana</string>
     <string name="relatorio_mes">Mês</string>
+    <string name="relatorio_ano">Ano</string>
     <string name="relatorio_personalizado">Personalizado</string>
     <string name="relatorio_data_inicio">Data início</string>
     <string name="relatorio_data_fim">Data fim</string>
@@ -96,4 +135,27 @@
     <string name="relatorio_saldo">Saldo</string>
     <string name="relatorio_por_categoria">Total por categoria</string>
     <string name="relatorio_datas_obrigatorias">Informe as datas de início e fim</string>
+    <string name="relatorio_filtrar">Filtrar</string>
+    <string name="relatorio_filtros_titulo">Filtros Avançados</string>
+    <string name="relatorio_distribuicao">Distribuição de Gastos</string>
+    <string name="relatorio_chart_pizza">Pizza</string>
+    <string name="relatorio_chart_barras">Barras</string>
+
+    <!-- Épico 8 — Empty States -->
+    <string name="empty_lancamentos_title">Sem lançamentos aqui</string>
+    <string name="empty_lancamentos_subtitle">Registre suas receitas e despesas\npara acompanhar seus gastos.</string>
+    <string name="empty_lancamentos_cta">Registrar Lançamento</string>
+
+    <string name="empty_metas_title">Nenhuma meta criada</string>
+    <string name="empty_metas_subtitle">Defina objetivos financeiros\ne acompanhe seu progresso.</string>
+    <string name="empty_metas_cta">Criar Primeira Meta</string>
+
+    <string name="empty_relatorios_title">Sem dados no período</string>
+    <string name="empty_relatorios_subtitle">Registre alguns lançamentos\npara visualizar seus relatórios aqui.</string>
+    <string name="empty_relatorios_cta">Registrar Lançamento</string>
+
+    <string name="empty_categorias_title">Nenhuma categoria aqui</string>
+    <string name="empty_categorias_subtitle">Crie categorias para organizar\nsuas receitas e despesas.</string>
+    <string name="empty_categorias_cta">Criar Categoria</string>
+
 </resources>

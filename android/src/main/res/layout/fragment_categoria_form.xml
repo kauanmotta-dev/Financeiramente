@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -9,11 +10,58 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- Type selector — hidden for subcategories -->
+        <LinearLayout
+            android:id="@+id/ll_tipo_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/categoria_tipo"
+                android:textSize="12sp"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:layout_marginBottom="6dp" />
+
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tab_tipo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:tabMode="fixed"
+                app:tabGravity="fill"
+                app:tabIndicatorColor="?attr/colorPrimary"
+                app:tabSelectedTextColor="?attr/colorPrimary"
+                app:tabTextColor="?attr/colorOnSurfaceVariant"
+                style="@style/Widget.Material3.TabLayout.Secondary">
+
+                <com.google.android.material.tabs.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/categoria_tipo_despesa" />
+
+                <com.google.android.material.tabs.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/categoria_tipo_receita" />
+
+            </com.google.android.material.tabs.TabLayout>
+
+        </LinearLayout>
+
+        <!-- Name -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_nome"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/categoria_nome">
+            android:hint="@string/categoria_nome"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            app:boxCornerRadiusTopStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusBottomEnd="8dp">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_nome"
@@ -24,26 +72,50 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Icon selector -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="@string/categoria_tipo"
-            android:textSize="14sp"
-            android:textColor="?attr/colorOnSurface" />
+            android:layout_marginBottom="6dp"
+            android:text="@string/categoria_icone"
+            android:textSize="12sp"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-        <Spinner
-            android:id="@+id/sp_tipo"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_icones"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp" />
+            android:nestedScrollingEnabled="false" />
 
+        <!-- Color selector -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="6dp"
+            android:text="@string/categoria_cor"
+            android:textSize="12sp"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_cores"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false" />
+
+        <!-- Monthly limit -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_limite"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="@string/categoria_limite_mensal">
+            android:hint="@string/categoria_limite_mensal"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            app:boxCornerRadiusTopStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusBottomEnd="8dp">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_limite"

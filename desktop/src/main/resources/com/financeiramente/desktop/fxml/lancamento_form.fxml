@@ -19,8 +19,7 @@
       spacing="12"
       style="-fx-padding: 20;">
 
-    <Label fx:id="lblTitulo" text="Novo Lançamento"
-           style="-fx-font-size: 18; -fx-font-weight: bold;" />
+    <Label fx:id="lblTitulo" text="Novo Lançamento" styleClass="page-title" />
 
     <!-- Tipo -->
     <HBox spacing="20" alignment="CENTER_LEFT">
@@ -61,10 +60,9 @@
 
     <!-- Botões -->
     <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button text="Cancelar" onAction="#cancelar" />
+        <Button text="Cancelar" onAction="#cancelar" styleClass="btn-ghost" />
         <Button fx:id="btnSalvar" text="Salvar" onAction="#salvar"
-                defaultButton="true"
-                style="-fx-background-color: #1976D2; -fx-text-fill: white;" />
+                defaultButton="true" styleClass="btn-primary" />
     </HBox>
 
 </VBox>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Financeiramente" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- Cores primárias -->
+        <item name="colorPrimary">@color/dark_primary</item>
+        <item name="colorPrimaryContainer">@color/dark_primary_container</item>
+        <item name="colorOnPrimary">@color/dark_on_surface</item>
+        <item name="colorOnPrimaryContainer">@color/dark_primary</item>
+
+        <!-- Cores secundárias -->
+        <item name="colorSecondary">@color/verde_success</item>
+        <item name="colorSecondaryContainer">@color/dark_secondary_container</item>
+        <item name="colorOnSecondary">@color/dark_on_surface</item>
+
+        <!-- Cores de erro -->
+        <item name="colorError">@color/vermelho_error</item>
+        <item name="colorErrorContainer">@color/dark_error_container</item>
+
+        <!-- Superfícies -->
+        <item name="colorSurface">@color/dark_surface</item>
+        <item name="colorOnSurface">@color/dark_on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/dark_on_surface_variant</item>
+        <item name="android:colorBackground">@color/dark_background</item>
+
+        <!-- Barra de status e navegação -->
+        <item name="android:statusBarColor">@color/dark_background</item>
+        <item name="android:navigationBarColor">@color/dark_surface</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Splash screen (Android 12+) -->
+        <item name="android:windowSplashScreenBackground">@color/dark_background</item>
+    </style>
+</resources>

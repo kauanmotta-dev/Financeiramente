@@ -39,6 +39,7 @@ public class LancamentoFormViewModel extends ViewModel {
     private final MutableLiveData<List<Tag>> tags = new MutableLiveData<>(Collections.emptyList());
     private final MutableLiveData<Lancamento> lancamentoCarregado = new MutableLiveData<>();
     private final MutableLiveData<Boolean> sucesso = new MutableLiveData<>();
+    private final MutableLiveData<String> savedLancamentoId = new MutableLiveData<>();
     private final MutableLiveData<String> erro = new MutableLiveData<>();
 
     public LancamentoFormViewModel(RegistrarLancamentoUseCase registrar,
@@ -94,8 +95,11 @@ public class LancamentoFormViewModel extends ViewModel {
             try {
                 RegistrarLancamentoInput input = new RegistrarLancamentoInput(
                         valor, tipo, data, descricao, categoriaId, null, tagIds);
-                registrar.executar(input);
-                mainHandler.post(() -> sucesso.setValue(true));
+                Lancamento salvo = registrar.executar(input);
+                mainHandler.post(() -> {
+                    savedLancamentoId.setValue(salvo.getId());
+                    sucesso.setValue(true);
+                });
             } catch (Exception e) {
                 mainHandler.post(() -> erro.setValue(e.getMessage()));
             }
@@ -120,6 +124,7 @@ public class LancamentoFormViewModel extends ViewModel {
     public LiveData<List<Tag>> getTags() { return tags; }
     public LiveData<Lancamento> getLancamentoCarregado() { return lancamentoCarregado; }
     public LiveData<Boolean> getSucesso() { return sucesso; }
+    public LiveData<String> getSavedLancamentoId() { return savedLancamentoId; }
     public LiveData<String> getErro() { return erro; }
 
     @Override

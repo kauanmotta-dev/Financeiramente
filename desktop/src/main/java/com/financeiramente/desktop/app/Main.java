@@ -20,6 +20,10 @@ public class Main extends Application {
         BorderPane root = loader.load();
 
         Scene scene = new Scene(root, 1024, 768);
+        scene.getStylesheets().add(
+            getClass().getResource("/com/financeiramente/desktop/css/app.css")
+                      .toExternalForm()
+        );
         primaryStage.setTitle("Financeiramente");
         primaryStage.setScene(scene);
         primaryStage.show();

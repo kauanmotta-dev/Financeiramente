@@ -1,71 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<!-- BottomSheet layout: modo rápido (peek) mostra tipo+valor+categoria+salvar;
+     modo completo (expandido) revela também descrição, data e tags. -->
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content">
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="72dp">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:animateLayoutChanges="true">
 
+        <!-- Drag handle -->
+        <View
+            android:layout_width="32dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/shape_drag_handle" />
+
+        <!-- Título -->
+        <TextView
+            android:id="@+id/tv_titulo_form"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="4dp"
+            android:text="@string/add_lancamento"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+        <!-- ══════ SEÇÃO RÁPIDA (sempre visível) ══════ -->
+
+        <!-- Tipo: SegmentedButton M3 -->
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/toggle_tipo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="12dp"
+            app:singleSelection="true"
+            app:selectionRequired="true">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_despesa"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/lancamento_despesa"
+                android:checked="true" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_receita"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/lancamento_receita" />
+
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        <!-- Valor com prefixo R$ -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_valor"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="12dp"
+            android:hint="@string/lancamento_valor"
+            app:prefixText="R$ ">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_valor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"
+                android:maxLines="1" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Label categoria -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/lancamento_categoria"
+            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <!-- ChipGroup de categorias (grid colorido, seleção única) -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/cg_categoria"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="6dp"
+            app:singleSelection="true"
+            app:selectionRequired="false"
+            app:chipSpacingHorizontal="8dp"
+            app:chipSpacingVertical="6dp" />
+
+        <!-- ══════ SEÇÃO COMPLETA (visível apenas no modo expandido) ══════ -->
         <LinearLayout
+            android:id="@+id/layout_detalhes_completos"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
-
-            <!-- Tipo: RECEITA / DESPESA -->
-            <RadioGroup
-                android:id="@+id/rg_tipo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
-
-                <RadioButton
-                    android:id="@+id/rb_despesa"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/lancamento_despesa"
-                    android:checked="true" />
-
-                <RadioButton
-                    android:id="@+id/rb_receita"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/lancamento_receita" />
-
-            </RadioGroup>
-
-            <!-- Valor -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/til_valor"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/lancamento_valor"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_valor"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="numberDecimal"
-                    android:maxLines="1" />
-
-            </com.google.android.material.textfield.TextInputLayout>
+            android:visibility="gone">
 
             <!-- Descrição -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_descricao"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:layout_marginTop="12dp"
-                android:hint="@string/lancamento_descricao"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                android:hint="@string/lancamento_descricao">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_descricao"
@@ -76,29 +138,16 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Categoria -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/lancamento_categoria"
-                android:textSize="14sp"
-                android:textColor="?attr/colorOnSurface" />
-
-            <Spinner
-                android:id="@+id/sp_categoria"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp" />
-
             <!-- Data -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_data"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:layout_marginTop="12dp"
                 android:hint="@string/lancamento_data"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 app:endIconMode="custom"
                 app:endIconDrawable="@android:drawable/ic_menu_today">
 
@@ -112,33 +161,39 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Tags (chips) -->
+            <!-- Tags -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="16dp"
                 android:text="@string/lancamento_tags"
-                android:textSize="14sp"
-                android:textColor="?attr/colorOnSurface" />
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="?attr/colorOnSurfaceVariant" />
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/cg_tags"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="6dp"
                 app:singleSelection="false" />
 
         </LinearLayout>
 
-    </ScrollView>
+        <!-- Botão Salvar -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_salvar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="24dp"
+            android:text="@string/salvar" />
 
-    <!-- Botão Salvar sticky na parte inferior -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_salvar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_margin="16dp"
-        android:text="@string/salvar" />
+    </LinearLayout>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.core.widget.NestedScrollView>

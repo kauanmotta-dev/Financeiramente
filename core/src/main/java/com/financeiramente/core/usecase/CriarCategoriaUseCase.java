@@ -15,7 +15,8 @@ public class CriarCategoriaUseCase {
         this.categoriaRepository = categoriaRepository;
     }
 
-    public Categoria executar(String nome, TipoCategoria tipo, String paiId, Double limiteMensal) {
+    public Categoria executar(String nome, TipoCategoria tipo, String paiId, Double limiteMensal,
+                              String icone, String cor) {
         if (nome == null || nome.trim().isEmpty()) {
             throw new DomainException("Nome da categoria é obrigatório.");
         }
@@ -55,6 +56,8 @@ public class CriarCategoriaUseCase {
                 .limiteMensal(limiteMensal)
                 .ordem(ordem)
                 .criadoEm(System.currentTimeMillis())
+                .icone(icone != null ? icone : "\uD83D\uDCE6")
+                .cor(cor != null ? cor : "#6366F1")
                 .build();
 
         categoriaRepository.salvar(categoria);

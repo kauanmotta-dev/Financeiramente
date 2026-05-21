@@ -13,7 +13,8 @@ public class EditarCategoriaUseCase {
         this.categoriaRepository = categoriaRepository;
     }
 
-    public void executar(String id, String nome, TipoCategoria tipo, Double limiteMensal) {
+    public void executar(String id, String nome, TipoCategoria tipo, Double limiteMensal,
+                         String icone, String cor) {
         Categoria categoria = categoriaRepository.buscarPorId(id)
                 .orElseThrow(() -> new DomainException("Categoria não encontrada."));
 
@@ -54,6 +55,8 @@ public class EditarCategoriaUseCase {
         categoria.setNome(nome.trim());
         categoria.setTipo(tipo);
         categoria.setLimiteMensal(limiteMensal);
+        if (icone != null) categoria.setIcone(icone);
+        if (cor != null) categoria.setCor(cor);
 
         categoriaRepository.atualizar(categoria);
     }

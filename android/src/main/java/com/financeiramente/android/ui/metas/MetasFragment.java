@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,16 +23,34 @@ import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.MetasViewModel;
 import com.financeiramente.android.viewmodel.MetasViewModelFactory;
+import com.financeiramente.core.domain.entity.Meta;
+import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 public class MetasFragment extends Fragment {
 
+    // Filter constants
+    private static final int FILTRO_TODAS = 0;
+    private static final int FILTRO_EM_ANDAMENTO = 1;
+    private static final int FILTRO_PROXIMAS = 2;
+    private static final int FILTRO_CONCLUIDAS = 3;
+
     private MetasViewModel viewModel;
     private MetaAdapter adapter;
-    private TextView tvVazio;
+    private View emptyState;
+    private TextView tvTotalMetas;
+    private TextView tvProgressoMedio;
+    private LinearProgressIndicator pbProgressoMedio;
+
+    private int filtroAtual = FILTRO_TODAS;
+    private List<Meta> todasMetas = new ArrayList<>();
 
     @Nullable
     @Override
@@ -52,7 +71,24 @@ public class MetasFragment extends Fragment {
                 ctx.getMetaRepository());
         viewModel = new ViewModelProvider(this, factory).get(MetasViewModel.class);
 
-        tvVazio = view.findViewById(R.id.tv_vazio);
+        // Views
+        emptyState = view.findViewById(R.id.layout_empty_state);
+        ((ImageView) emptyState.findViewById(R.id.iv_empty_illustration))
+                .setImageResource(R.drawable.ic_empty_goals);
+        ((TextView) emptyState.findViewById(R.id.tv_empty_title))
+                .setText(R.string.empty_metas_title);
+        ((TextView) emptyState.findViewById(R.id.tv_empty_subtitle))
+                .setText(R.string.empty_metas_subtitle);
+        com.google.android.material.button.MaterialButton btnCta =
+                emptyState.findViewById(R.id.btn_empty_cta);
+        btnCta.setText(R.string.empty_metas_cta);
+        btnCta.setVisibility(View.VISIBLE);
+        btnCta.setOnClickListener(v -> mostrarDialogoNovaMeta(view));
+
+        tvTotalMetas = view.findViewById(R.id.tv_total_metas);
+        tvProgressoMedio = view.findViewById(R.id.tv_progresso_medio);
+        pbProgressoMedio = view.findViewById(R.id.pb_progresso_medio);
+
         RecyclerView rv = view.findViewById(R.id.rv_metas);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
 
@@ -73,18 +109,106 @@ public class MetasFragment extends Fragment {
                     return true;
                 }
         );
+
+        adapter.setOnAporteClickListener(meta -> {
+            Bundle args = new Bundle();
+            args.putString("metaId", meta.getId());
+            Navigation.findNavController(view)
+                    .navigate(R.id.action_metasFragment_to_metaDetalheFragment, args);
+        });
+
         rv.setAdapter(adapter);
 
-        viewModel.getMetas().observe(getViewLifecycleOwner(), lista -> {
-            adapter.setItems(lista);
-            tvVazio.setVisibility(lista == null || lista.isEmpty() ? View.VISIBLE : View.GONE);
+        // Filter chips
+        ChipGroup chipGroup = view.findViewById(R.id.chip_group_filtro);
+        chipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.isEmpty()) return;
+            int id = checkedIds.get(0);
+            if (id == R.id.chip_todas) filtroAtual = FILTRO_TODAS;
+            else if (id == R.id.chip_em_andamento) filtroAtual = FILTRO_EM_ANDAMENTO;
+            else if (id == R.id.chip_proximas) filtroAtual = FILTRO_PROXIMAS;
+            else if (id == R.id.chip_concluidas) filtroAtual = FILTRO_CONCLUIDAS;
+            aplicarFiltro();
         });
+
+        viewModel.getMetas().observe(getViewLifecycleOwner(), lista -> {
+            todasMetas = lista != null ? lista : new ArrayList<>();
+            atualizarResumo(todasMetas);
+            aplicarFiltro();
+        });
+
         viewModel.getErro().observe(getViewLifecycleOwner(), msg -> {
             if (msg != null) Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
         });
 
         FloatingActionButton fab = view.findViewById(R.id.fab_nova_meta);
         fab.setOnClickListener(v -> mostrarDialogoNovaMeta(view));
+    }
+
+    private void aplicarFiltro() {
+        List<Meta> filtradas;
+        switch (filtroAtual) {
+            case FILTRO_EM_ANDAMENTO:
+                filtradas = todasMetas.stream()
+                        .filter(m -> m.getValorAtual() < m.getValorObjetivo()
+                                && !estaAtrasada(m))
+                        .collect(Collectors.toList());
+                break;
+            case FILTRO_PROXIMAS:
+                // >= 75% complete but not yet reached
+                filtradas = todasMetas.stream()
+                        .filter(m -> {
+                            double pct = m.getValorObjetivo() > 0
+                                    ? (m.getValorAtual() / m.getValorObjetivo()) * 100.0 : 0;
+                            return pct >= 75.0 && pct < 100.0;
+                        })
+                        .collect(Collectors.toList());
+                break;
+            case FILTRO_CONCLUIDAS:
+                filtradas = todasMetas.stream()
+                        .filter(m -> m.getValorAtual() >= m.getValorObjetivo())
+                        .collect(Collectors.toList());
+                break;
+            default: // FILTRO_TODAS
+                filtradas = todasMetas;
+                break;
+        }
+
+        adapter.setItems(filtradas);
+        emptyState.setVisibility(filtradas.isEmpty() ? View.VISIBLE : View.GONE);
+    }
+
+    private void atualizarResumo(List<Meta> lista) {
+        int total = lista.size();
+        if (total == 0) {
+            tvTotalMetas.setText(getString(R.string.metas_resumo_vazio));
+            tvProgressoMedio.setText("");
+            pbProgressoMedio.setProgress(0);
+            return;
+        }
+
+        double somaProgresso = 0.0;
+        for (Meta m : lista) {
+            if (m.getValorObjetivo() > 0) {
+                somaProgresso += Math.min((m.getValorAtual() / m.getValorObjetivo()) * 100.0, 100.0);
+            }
+        }
+        int progressoMedio = (int) (somaProgresso / total);
+
+        tvTotalMetas.setText(getResources().getQuantityString(
+                R.plurals.metas_resumo_total, total, total));
+        tvProgressoMedio.setText(String.format(Locale.getDefault(), "%d%%", progressoMedio));
+        pbProgressoMedio.setProgressCompat(progressoMedio, true);
+    }
+
+    /** Returns true if the meta has a deadline that has already passed. */
+    private boolean estaAtrasada(Meta meta) {
+        if (meta.getDataAlvo() == null || meta.getDataAlvo().isEmpty()) return false;
+        try {
+            return LocalDate.parse(meta.getDataAlvo()).isBefore(LocalDate.now());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private void mostrarDialogoNovaMeta(View navView) {
@@ -136,3 +260,4 @@ public class MetasFragment extends Fragment {
         viewModel.carregar();
     }
 }
+

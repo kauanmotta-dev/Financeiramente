@@ -1,20 +1,20 @@
 package com.financeiramente.android.ui.lancamentos;
 
 import android.app.DatePickerDialog;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.RadioGroup;
-import android.widget.Spinner;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.Navigation;
 
 import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
@@ -23,6 +23,11 @@ import com.financeiramente.android.viewmodel.LancamentoFormViewModelFactory;
 import com.financeiramente.core.domain.entity.Categoria;
 import com.financeiramente.core.domain.entity.Tag;
 import com.financeiramente.core.domain.vo.TipoLancamento;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
@@ -34,21 +39,21 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-public class LancamentoFormFragment extends Fragment {
+public class LancamentoFormFragment extends BottomSheetDialogFragment {
 
     private LancamentoFormViewModel viewModel;
 
-    private RadioGroup rgTipo;
+    private MaterialButtonToggleGroup toggleTipo;
     private TextInputEditText etValor;
     private TextInputLayout tilValor;
     private TextInputEditText etDescricao;
-    private TextInputLayout tilDescricao;
-    private Spinner spCategoria;
     private TextInputEditText etData;
+    private ChipGroup cgCategoria;
     private ChipGroup cgTags;
+    private LinearLayout layoutDetalhesCompletos;
 
     private List<Categoria> listaCategorias = new ArrayList<>();
-    private List<Tag> listaTags = new ArrayList<>();
+    private String categoriaIdSelecionada = null;
 
     private String editandoId = null;
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -73,55 +78,118 @@ public class LancamentoFormFragment extends Fragment {
                 ctx.getLancamentoRepository());
         viewModel = new ViewModelProvider(this, factory).get(LancamentoFormViewModel.class);
 
-        rgTipo = view.findViewById(R.id.rg_tipo);
+        toggleTipo = view.findViewById(R.id.toggle_tipo);
         etValor = view.findViewById(R.id.et_valor);
         tilValor = view.findViewById(R.id.til_valor);
         etDescricao = view.findViewById(R.id.et_descricao);
-        tilDescricao = view.findViewById(R.id.til_descricao);
-        spCategoria = view.findViewById(R.id.sp_categoria);
         etData = view.findViewById(R.id.et_data);
+        cgCategoria = view.findViewById(R.id.cg_categoria);
         cgTags = view.findViewById(R.id.cg_tags);
+        layoutDetalhesCompletos = view.findViewById(R.id.layout_detalhes_completos);
 
         // Data padrão = hoje
         etData.setText(LocalDate.now().format(FORMATTER));
         etData.setOnClickListener(v -> abrirDatePicker());
 
-        // Focar no campo valor imediatamente
-        etValor.requestFocus();
+        // Seleção inicial = DESPESA
+        toggleTipo.check(R.id.btn_despesa);
+        atualizarEstiloToggle(TipoLancamento.DESPESA);
 
-        // Recarregar categorias quando o tipo de lançamento mudar
-        rgTipo.setOnCheckedChangeListener((group, checkedId) -> {
-            TipoLancamento tipoSelecionado = (checkedId == R.id.rb_receita)
-                    ? TipoLancamento.RECEITA : TipoLancamento.DESPESA;
-            viewModel.carregarCategoriasPorTipo(tipoSelecionado);
+        toggleTipo.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked) {
+                TipoLancamento tipo = (checkedId == R.id.btn_receita)
+                        ? TipoLancamento.RECEITA : TipoLancamento.DESPESA;
+                atualizarEstiloToggle(tipo);
+                categoriaIdSelecionada = null;
+                viewModel.carregarCategoriasPorTipo(tipo);
+            }
         });
 
-        view.findViewById(R.id.btn_salvar).setOnClickListener(v -> salvar(view));
+        configurarBottomSheet();
+
+        view.findViewById(R.id.btn_salvar).setOnClickListener(v -> salvar());
 
         // Verificar se é edição
         if (getArguments() != null) {
             editandoId = getArguments().getString("lancamentoId");
             if (editandoId != null) {
+                // Modo edição: exibir título correto e expandir campos completos
+                TextView tvTitulo = view.findViewById(R.id.tv_titulo_form);
+                tvTitulo.setText(R.string.editar_lancamento);
+                layoutDetalhesCompletos.setVisibility(View.VISIBLE);
                 viewModel.carregarLancamento(editandoId);
             }
         }
 
-        observarViewModel(view);
+        observarViewModel();
     }
 
-    private void observarViewModel(View view) {
+    /** Configura o BottomSheetBehavior: peek = modo rápido, expanded = modo completo. */
+    private void configurarBottomSheet() {
+        if (!(getDialog() instanceof BottomSheetDialog)) return;
+        BottomSheetDialog bsd = (BottomSheetDialog) getDialog();
+        bsd.setOnShowListener(d -> {
+            BottomSheetBehavior<FrameLayout> behavior = bsd.getBehavior();
+            // ~380dp — cobre drag handle + título + toggle + valor + categoria chips + botão salvar
+            int peekPx = (int) (getResources().getDisplayMetrics().density * 380);
+            behavior.setPeekHeight(peekPx);
+            behavior.setSkipCollapsed(false);
+            behavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+                @Override
+                public void onStateChanged(@NonNull View bottomSheet, int newState) { }
+
+                @Override
+                public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                    // Mostra seção completa ao passar de metade do caminho entre collapsed e expanded
+                    if (slideOffset > 0.4f) {
+                        if (layoutDetalhesCompletos.getVisibility() != View.VISIBLE) {
+                            layoutDetalhesCompletos.setVisibility(View.VISIBLE);
+                        }
+                    } else {
+                        if (layoutDetalhesCompletos.getVisibility() == View.VISIBLE
+                                && editandoId == null) {
+                            layoutDetalhesCompletos.setVisibility(View.GONE);
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    /**
+     * Aplica cor de fundo e texto nos botões do toggle de acordo com o tipo selecionado.
+     * Despesa → vermelho;  Receita → verde.
+     */
+    private void atualizarEstiloToggle(TipoLancamento tipo) {
+        MaterialButton btnDespesa = requireView().findViewById(R.id.btn_despesa);
+        MaterialButton btnReceita = requireView().findViewById(R.id.btn_receita);
+
+        int corNeutra = getResources().getColor(R.color.cinza_secondary, requireContext().getTheme());
+
+        if (tipo == TipoLancamento.DESPESA) {
+            btnDespesa.setBackgroundTintList(ColorStateList.valueOf(
+                    getResources().getColor(R.color.vermelho_error_container, requireContext().getTheme())));
+            btnDespesa.setTextColor(
+                    getResources().getColor(R.color.vermelho_error, requireContext().getTheme()));
+            btnReceita.setBackgroundTintList(ColorStateList.valueOf(Color.TRANSPARENT));
+            btnReceita.setTextColor(corNeutra);
+        } else {
+            btnReceita.setBackgroundTintList(ColorStateList.valueOf(
+                    getResources().getColor(R.color.verde_success_container, requireContext().getTheme())));
+            btnReceita.setTextColor(
+                    getResources().getColor(R.color.verde_success, requireContext().getTheme()));
+            btnDespesa.setBackgroundTintList(ColorStateList.valueOf(Color.TRANSPARENT));
+            btnDespesa.setTextColor(corNeutra);
+        }
+    }
+
+    private void observarViewModel() {
         viewModel.getCategorias().observe(getViewLifecycleOwner(), cats -> {
             listaCategorias = cats;
-            List<String> nomes = new ArrayList<>();
-            for (Categoria c : cats) nomes.add(c.getNome());
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
-                    android.R.layout.simple_spinner_item, nomes);
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spCategoria.setAdapter(adapter);
+            popularChipsCategoria(cats);
         });
 
         viewModel.getTags().observe(getViewLifecycleOwner(), tags -> {
-            listaTags = tags;
             cgTags.removeAllViews();
             for (Tag tag : tags) {
                 Chip chip = new Chip(requireContext());
@@ -137,24 +205,23 @@ public class LancamentoFormFragment extends Fragment {
             etValor.setText(String.valueOf(lancamento.getValor()));
             etDescricao.setText(lancamento.getDescricao());
             etData.setText(lancamento.getData());
-            if (lancamento.getTipo() == TipoLancamento.RECEITA) {
-                view.findViewById(R.id.rb_receita).setSelected(true);
-                rgTipo.check(R.id.rb_receita);
-            } else {
-                rgTipo.check(R.id.rb_despesa);
-            }
-            // Selecionar categoria
-            for (int i = 0; i < listaCategorias.size(); i++) {
-                if (listaCategorias.get(i).getId().equals(lancamento.getCategoriaId())) {
-                    spCategoria.setSelection(i);
-                    break;
-                }
-            }
+
+            TipoLancamento tipo = lancamento.getTipo();
+            toggleTipo.check(tipo == TipoLancamento.RECEITA ? R.id.btn_receita : R.id.btn_despesa);
+            atualizarEstiloToggle(tipo);
+
+            categoriaIdSelecionada = lancamento.getCategoriaId();
+            viewModel.carregarCategoriasPorTipo(tipo);
         });
 
         viewModel.getSucesso().observe(getViewLifecycleOwner(), ok -> {
             if (Boolean.TRUE.equals(ok)) {
-                Navigation.findNavController(requireView()).navigateUp();
+                String lancId = viewModel.getSavedLancamentoId().getValue();
+                android.os.Bundle result = new android.os.Bundle();
+                result.putBoolean("saved", true);
+                if (lancId != null) result.putString("lancamentoId", lancId);
+                getParentFragmentManager().setFragmentResult("lancamento_salvo", result);
+                dismiss();
             }
         });
 
@@ -163,19 +230,50 @@ public class LancamentoFormFragment extends Fragment {
         });
     }
 
-    private void salvar(View view) {
+    /** Popula o ChipGroup de categorias com chips coloridos (ícone + nome). */
+    private void popularChipsCategoria(List<Categoria> cats) {
+        cgCategoria.removeAllViews();
+        for (Categoria cat : cats) {
+            Chip chip = new Chip(requireContext());
+            chip.setText(cat.getIcone() + "  " + cat.getNome());
+            chip.setCheckable(true);
+            chip.setTag(cat.getId());
+
+            // Cor dinâmica da categoria: fundo claro (alpha 30) → fundo sólido quando checked
+            try {
+                int corSolida = Color.parseColor(cat.getCor());
+                int corFundo = Color.argb(48, Color.red(corSolida), Color.green(corSolida), Color.blue(corSolida));
+                chip.setChipBackgroundColor(new ColorStateList(
+                        new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
+                        new int[]{corSolida, corFundo}
+                ));
+                chip.setTextColor(new ColorStateList(
+                        new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
+                        new int[]{Color.WHITE, corSolida}
+                ));
+                chip.setChipStrokeColor(ColorStateList.valueOf(corSolida));
+                chip.setChipStrokeWidth(getResources().getDimension(R.dimen.chip_stroke_width));
+            } catch (IllegalArgumentException ignored) { }
+
+            if (cat.getId().equals(categoriaIdSelecionada)) {
+                chip.setChecked(true);
+            }
+
+            cgCategoria.addView(chip);
+        }
+    }
+
+    private void salvar() {
         tilValor.setError(null);
-        tilDescricao.setError(null);
 
         String valorStr = etValor.getText() != null ? etValor.getText().toString().trim() : "";
-        String descricao = etDescricao.getText() != null ? etDescricao.getText().toString().trim() : "";
-        String data = etData.getText() != null ? etData.getText().toString().trim() : "";
-
         boolean valido = true;
+
         if (valorStr.isEmpty()) {
             tilValor.setError(getString(R.string.erro_valor_obrigatorio));
             valido = false;
         }
+
         double valor = 0;
         if (valido) {
             try {
@@ -189,22 +287,32 @@ public class LancamentoFormFragment extends Fragment {
                 valido = false;
             }
         }
-        if (descricao.isEmpty()) {
-            tilDescricao.setError(getString(R.string.erro_descricao_obrigatoria));
-            valido = false;
-        }
         if (!valido) return;
 
-        TipoLancamento tipo = (rgTipo.getCheckedRadioButtonId() == R.id.rb_receita)
+        TipoLancamento tipo = (toggleTipo.getCheckedButtonId() == R.id.btn_receita)
                 ? TipoLancamento.RECEITA : TipoLancamento.DESPESA;
 
-        int catPos = spCategoria.getSelectedItemPosition();
-        if (listaCategorias.isEmpty() || catPos < 0) {
+        // Categoria selecionada no ChipGroup
+        int checkedChipId = cgCategoria.getCheckedChipId();
+        if (checkedChipId != View.NO_ID) {
+            Chip chip = cgCategoria.findViewById(checkedChipId);
+            categoriaIdSelecionada = (String) chip.getTag();
+        }
+        if (categoriaIdSelecionada == null) {
             Toast.makeText(requireContext(), getString(R.string.erro_categoria_obrigatoria), Toast.LENGTH_SHORT).show();
             return;
         }
-        String categoriaId = listaCategorias.get(catPos).getId();
 
+        // Descrição (opcional no modo rápido)
+        String descricao = (etDescricao.getText() != null)
+                ? etDescricao.getText().toString().trim() : "";
+
+        // Data
+        String data = (etData.getText() != null && !etData.getText().toString().isEmpty())
+                ? etData.getText().toString().trim()
+                : LocalDate.now().format(FORMATTER);
+
+        // Tags selecionadas
         List<String> tagIds = new ArrayList<>();
         for (int i = 0; i < cgTags.getChildCount(); i++) {
             Chip chip = (Chip) cgTags.getChildAt(i);
@@ -212,9 +320,9 @@ public class LancamentoFormFragment extends Fragment {
         }
 
         if (editandoId != null) {
-            viewModel.editar(editandoId, valor, tipo, data, descricao, categoriaId, tagIds);
+            viewModel.editar(editandoId, valor, tipo, data, descricao, categoriaIdSelecionada, tagIds);
         } else {
-            viewModel.salvar(valor, tipo, data, descricao, categoriaId, tagIds);
+            viewModel.salvar(valor, tipo, data, descricao, categoriaIdSelecionada, tagIds);
         }
     }
 
@@ -225,14 +333,12 @@ public class LancamentoFormFragment extends Fragment {
             try {
                 LocalDate ld = LocalDate.parse(dataAtual, FORMATTER);
                 cal.set(ld.getYear(), ld.getMonthValue() - 1, ld.getDayOfMonth());
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) { }
         }
-        DatePickerDialog dialog = new DatePickerDialog(requireContext(),
-                (picker, year, month, day) -> {
-                    String data = String.format("%04d-%02d-%02d", year, month + 1, day);
-                    etData.setText(data);
-                },
-                cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
-        dialog.show();
+        new DatePickerDialog(requireContext(),
+                (picker, year, month, day) ->
+                        etData.setText(String.format("%04d-%02d-%02d", year, month + 1, day)),
+                cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
+                .show();
     }
 }

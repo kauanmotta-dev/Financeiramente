@@ -12,6 +12,7 @@ import com.financeiramente.core.usecase.DeletarCategoriaUseCase;
 import com.financeiramente.core.usecase.EditarCategoriaUseCase;
 import com.financeiramente.core.usecase.ReordenarCategoriasUseCase;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CategoriasViewModel extends ViewModel {
@@ -23,6 +24,8 @@ public class CategoriasViewModel extends ViewModel {
     private final ReordenarCategoriasUseCase reordenarCategoriasUseCase;
 
     private final MutableLiveData<List<Categoria>> categoriasRaiz = new MutableLiveData<>();
+    private final MutableLiveData<List<Categoria>> categoriasDespesasRaiz = new MutableLiveData<>();
+    private final MutableLiveData<List<Categoria>> categoriasReceitasRaiz = new MutableLiveData<>();
     private final MutableLiveData<String> erro = new MutableLiveData<>();
 
     public CategoriasViewModel(CategoriaRepository categoriaRepository,
@@ -42,12 +45,33 @@ public class CategoriasViewModel extends ViewModel {
         return categoriasRaiz;
     }
 
+    public LiveData<List<Categoria>> getCategoriasDespesasRaiz() {
+        return categoriasDespesasRaiz;
+    }
+
+    public LiveData<List<Categoria>> getCategoriasReceitasRaiz() {
+        return categoriasReceitasRaiz;
+    }
+
     public LiveData<String> getErro() {
         return erro;
     }
 
     public void carregarCategorias() {
-        categoriasRaiz.setValue(categoriaRepository.listarRaizes());
+        List<Categoria> todas = categoriaRepository.listarRaizes();
+        categoriasRaiz.setValue(todas);
+
+        List<Categoria> despesas = new ArrayList<>();
+        List<Categoria> receitas = new ArrayList<>();
+        for (Categoria c : todas) {
+            if (c.getTipo() == TipoCategoria.RECEITA) {
+                receitas.add(c);
+            } else {
+                despesas.add(c);
+            }
+        }
+        categoriasDespesasRaiz.setValue(despesas);
+        categoriasReceitasRaiz.setValue(receitas);
     }
 
     public List<Categoria> listarFilhas(String paiId) {
@@ -56,7 +80,7 @@ public class CategoriasViewModel extends ViewModel {
 
     public void criarCategoria(String nome, TipoCategoria tipo, String paiId, Double limiteMensal) {
         try {
-            criarCategoriaUseCase.executar(nome, tipo, paiId, limiteMensal);
+            criarCategoriaUseCase.executar(nome, tipo, paiId, limiteMensal, null, null);
             carregarCategorias();
         } catch (Exception e) {
             erro.setValue(e.getMessage());
@@ -65,7 +89,7 @@ public class CategoriasViewModel extends ViewModel {
 
     public void editarCategoria(String id, String nome, TipoCategoria tipo, Double limiteMensal) {
         try {
-            editarCategoriaUseCase.executar(id, nome, tipo, limiteMensal);
+            editarCategoriaUseCase.executar(id, nome, tipo, limiteMensal, null, null);
             carregarCategorias();
         } catch (Exception e) {
             erro.setValue(e.getMessage());

@@ -72,9 +72,7 @@ public class CategoriaExpandableAdapter extends BaseExpandableListAdapter {
         }
         Categoria categoria = getGroup(groupPosition);
         TextView tvNome = convertView.findViewById(R.id.tv_categoria_nome);
-        TextView tvTipo = convertView.findViewById(R.id.tv_categoria_tipo);
         tvNome.setText(categoria.getNome());
-        tvTipo.setText(categoria.getTipo().name());
         return convertView;
     }
 

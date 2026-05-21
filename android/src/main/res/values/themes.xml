@@ -1,12 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Financeiramente" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
+    <style name="Theme.Financeiramente" parent="Theme.Material3.Light.NoActionBar">
+        <!-- Cores primárias -->
+        <item name="colorPrimary">@color/azul_primary</item>
+        <item name="colorPrimaryContainer">@color/azul_primary_container</item>
         <item name="colorOnPrimary">@color/white</item>
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_700</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="colorOnPrimaryContainer">@color/azul_primary_dark</item>
+
+        <!-- Cores secundárias -->
+        <item name="colorSecondary">@color/verde_success</item>
+        <item name="colorSecondaryContainer">@color/verde_success_container</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <!-- Cores de erro -->
+        <item name="colorError">@color/vermelho_error</item>
+        <item name="colorErrorContainer">@color/vermelho_error_container</item>
+
+        <!-- Superfícies -->
+        <item name="colorSurface">@color/cinza_surface</item>
+        <item name="colorOnSurface">@color/cinza_on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/cinza_secondary</item>
+        <item name="colorBackground">@color/cinza_background</item>
+        <item name="android:colorBackground">@color/cinza_background</item>
+
+        <!-- Barra de status e navegação -->
+        <item name="android:statusBarColor">@color/azul_primary</item>
+        <item name="android:navigationBarColor">@color/cinza_surface</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Splash screen (Android 12+) -->
+        <item name="android:windowSplashScreenBackground">@color/azul_primary</item>
     </style>
 </resources>

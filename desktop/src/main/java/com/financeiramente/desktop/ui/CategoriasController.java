@@ -166,9 +166,9 @@ public class CategoriasController {
 
         try {
             if (editandoId != null) {
-                editarCategoria.executar(editandoId, nome, tipo, limite);
+                editarCategoria.executar(editandoId, nome, tipo, limite, null, null);
             } else {
-                criarCategoria.executar(nome, tipo, paiIdSelecionado, limite);
+                criarCategoria.executar(nome, tipo, paiIdSelecionado, limite, null, null);
             }
             carregarCategorias();
             limparFormulario();
