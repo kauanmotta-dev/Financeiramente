@@ -24,14 +24,19 @@ public class ConfiguracoesFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        view.findViewById(R.id.btn_back_configuracoes).setOnClickListener(v -> {
+            if (!Navigation.findNavController(v).navigateUp()) {
+                Navigation.findNavController(v).navigate(R.id.nav_dashboard);
+            }
+        });
         view.findViewById(R.id.btn_categorias).setOnClickListener(v ->
                 Navigation.findNavController(v)
                         .navigate(R.id.action_configuracoesFragment_to_categoriasFragment));
-        view.findViewById(R.id.btn_recorrentes).setOnClickListener(v ->
-                Navigation.findNavController(v)
-                        .navigate(R.id.action_configuracoesFragment_to_recorrentesFragment));
         view.findViewById(R.id.btn_tags).setOnClickListener(v ->
             Navigation.findNavController(v)
                 .navigate(R.id.action_configuracoesFragment_to_tagsFragment));
+        view.findViewById(R.id.btn_cartoes).setOnClickListener(v ->
+                Navigation.findNavController(v)
+                        .navigate(R.id.action_configuracoesFragment_to_nav_cartoes));
     }
 }

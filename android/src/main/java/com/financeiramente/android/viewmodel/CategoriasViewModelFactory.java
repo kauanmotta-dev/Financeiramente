@@ -5,10 +5,10 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.financeiramente.core.repository.CategoriaRepository;
-import com.financeiramente.core.usecase.CriarCategoriaUseCase;
-import com.financeiramente.core.usecase.DeletarCategoriaUseCase;
-import com.financeiramente.core.usecase.EditarCategoriaUseCase;
-import com.financeiramente.core.usecase.ReordenarCategoriasUseCase;
+import com.financeiramente.core.usecase.categoria.CriarCategoriaUseCase;
+import com.financeiramente.core.usecase.categoria.DeletarCategoriaUseCase;
+import com.financeiramente.core.usecase.categoria.EditarCategoriaUseCase;
+import com.financeiramente.core.usecase.categoria.ReordenarCategoriasUseCase;
 
 public class CategoriasViewModelFactory implements ViewModelProvider.Factory {
 

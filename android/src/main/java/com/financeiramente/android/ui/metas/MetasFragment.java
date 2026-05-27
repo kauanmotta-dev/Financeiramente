@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +44,7 @@ public class MetasFragment extends Fragment {
     private MetasViewModel viewModel;
     private MetaAdapter adapter;
     private View emptyState;
+    private Button btnEmptyCta;
     private TextView tvTotalMetas;
     private TextView tvProgressoMedio;
     private LinearProgressIndicator pbProgressoMedio;
@@ -61,18 +63,12 @@ public class MetasFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        view.findViewById(R.id.btn_back_metas).setOnClickListener(v -> {
-            if (!Navigation.findNavController(view).navigateUp()) {
-                Navigation.findNavController(view).navigate(R.id.nav_dashboard);
-            }
-        });
-
         AppContext ctx = AppContext.get(requireContext());
         MetasViewModelFactory factory = new MetasViewModelFactory(
                 ctx.getCriarMetaUseCase(),
                 ctx.getEditarMetaUseCase(),
-                ctx.getDesativarMetaUseCase(),
-                ctx.getMetaRepository());
+                ctx.getDeletarMetaUseCase(),
+                ctx.getCoreServices().getMetaRepository());
         viewModel = new ViewModelProvider(this, factory).get(MetasViewModel.class);
 
         // Views
@@ -83,11 +79,10 @@ public class MetasFragment extends Fragment {
                 .setText(R.string.empty_metas_title);
         ((TextView) emptyState.findViewById(R.id.tv_empty_subtitle))
                 .setText(R.string.empty_metas_subtitle);
-        com.google.android.material.button.MaterialButton btnCta =
-                emptyState.findViewById(R.id.btn_empty_cta);
-        btnCta.setText(R.string.empty_metas_cta);
-        btnCta.setVisibility(View.VISIBLE);
-        btnCta.setOnClickListener(v -> mostrarDialogoNovaMeta(view));
+        btnEmptyCta = emptyState.findViewById(R.id.btn_empty_cta);
+        btnEmptyCta.setText(R.string.empty_metas_cta);
+        btnEmptyCta.setVisibility(View.VISIBLE);
+        btnEmptyCta.setOnClickListener(v -> mostrarDialogoNovaMeta(view));
 
         tvTotalMetas = view.findViewById(R.id.tv_total_metas);
         tvProgressoMedio = view.findViewById(R.id.tv_progresso_medio);
@@ -105,12 +100,11 @@ public class MetasFragment extends Fragment {
                 },
                 meta -> {
                     new AlertDialog.Builder(requireContext())
-                            .setTitle(R.string.desativar_meta)
-                            .setMessage(getString(R.string.confirmar_desativar_meta, meta.getNome()))
-                            .setPositiveButton(android.R.string.ok, (d, w) -> viewModel.desativar(meta.getId()))
+                        .setTitle(R.string.excluir_meta)
+                        .setMessage(getString(R.string.confirmar_excluir_meta, meta.getNome()))
+                        .setPositiveButton(R.string.excluir, (d, w) -> viewModel.excluir(meta.getId()))
                             .setNegativeButton(android.R.string.cancel, null)
                             .show();
-                    return true;
                 }
         );
 
@@ -151,13 +145,13 @@ public class MetasFragment extends Fragment {
         switch (filtroAtual) {
             case FILTRO_EM_ANDAMENTO:
                 filtradas = todasMetas.stream()
-                        .filter(m -> m.getValorAtual() < m.getValorObjetivo()
+                        .filter(m -> (m.getValorAtual() + m.getValorInicial()) < m.getValorObjetivo()
                                 && !estaAtrasada(m))
                         .collect(Collectors.toList());
                 break;
             case FILTRO_CONCLUIDAS:
                 filtradas = todasMetas.stream()
-                        .filter(m -> m.getValorAtual() >= m.getValorObjetivo())
+                        .filter(m -> (m.getValorAtual() + m.getValorInicial()) >= m.getValorObjetivo())
                         .collect(Collectors.toList());
                 break;
             default: // FILTRO_TODAS
@@ -167,6 +161,11 @@ public class MetasFragment extends Fragment {
 
         adapter.setItems(filtradas);
         emptyState.setVisibility(filtradas.isEmpty() ? View.VISIBLE : View.GONE);
+        if (filtroAtual == FILTRO_CONCLUIDAS) {
+            btnEmptyCta.setVisibility(View.GONE);
+        } else {
+            btnEmptyCta.setVisibility(filtradas.isEmpty() ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void atualizarResumo(List<Meta> lista) {
@@ -181,7 +180,8 @@ public class MetasFragment extends Fragment {
         double somaProgresso = 0.0;
         for (Meta m : lista) {
             if (m.getValorObjetivo() > 0) {
-                somaProgresso += Math.min((m.getValorAtual() / m.getValorObjetivo()) * 100.0, 100.0);
+                double totalSalvo = m.getValorAtual() + m.getValorInicial();
+                somaProgresso += Math.min((totalSalvo / m.getValorObjetivo()) * 100.0, 100.0);
             }
         }
         int progressoMedio = (int) (somaProgresso / total);
@@ -207,6 +207,7 @@ public class MetasFragment extends Fragment {
                 .inflate(R.layout.fragment_meta_form, null);
         EditText etNome = dialogView.findViewById(R.id.et_meta_nome);
         EditText etValorObjetivo = dialogView.findViewById(R.id.et_meta_valor_objetivo);
+        EditText etValorInicial = dialogView.findViewById(R.id.et_meta_valor_inicial);
         EditText etDataAlvo = dialogView.findViewById(R.id.et_meta_data_alvo);
         EditText etDescricao = dialogView.findViewById(R.id.et_meta_descricao);
 
@@ -232,9 +233,14 @@ public class MetasFragment extends Fragment {
                     }
                     try {
                         double valor = Double.parseDouble(valorStr.replace(',', '.'));
+                        String valorInicialStr = etValorInicial.getText() != null ? etValorInicial.getText().toString().trim() : "";
+                        double valorInicial = 0.0;
+                        if (!valorInicialStr.isEmpty()) {
+                            try { valorInicial = Double.parseDouble(valorInicialStr.replace(',', '.')); } catch (NumberFormatException ignored) { }
+                        }
                         String dataAlvo = etDataAlvo.getText().toString().trim();
                         String descricao = etDescricao.getText().toString().trim();
-                        viewModel.criar(nome, valor,
+                        viewModel.criar(nome, valor, valorInicial,
                                 dataAlvo.isEmpty() ? null : dataAlvo,
                                 descricao.isEmpty() ? null : descricao);
                     } catch (NumberFormatException e) {

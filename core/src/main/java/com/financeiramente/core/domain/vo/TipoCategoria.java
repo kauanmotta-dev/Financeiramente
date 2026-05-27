@@ -3,13 +3,12 @@ package com.financeiramente.core.domain.vo;
 public enum TipoCategoria {
     ESSENCIAL,
     NAO_ESSENCIAL,
-    RECEITA;
+    RECEITA,
+    SEM_TIPO;
 
-    public boolean isCompativelCom(TipoLancamento tipoLancamento) {
-        switch (tipoLancamento) {
-            case RECEITA: return this == RECEITA;
-            case DESPESA: return this == ESSENCIAL || this == NAO_ESSENCIAL;
-            default:      return false;
-        }
+    public boolean isCompativelCom(TipoLancamento tipo) {
+        if (this == SEM_TIPO) return true;
+        if (this == RECEITA) return tipo == TipoLancamento.RECEITA;
+        return tipo == TipoLancamento.DESPESA;
     }
 }

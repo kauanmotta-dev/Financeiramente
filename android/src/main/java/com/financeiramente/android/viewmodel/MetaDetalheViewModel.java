@@ -11,9 +11,9 @@ import com.financeiramente.core.domain.entity.AporteMeta;
 import com.financeiramente.core.domain.entity.Meta;
 import com.financeiramente.core.repository.AporteMetaRepository;
 import com.financeiramente.core.repository.MetaRepository;
-import com.financeiramente.core.usecase.CalcularProjecaoMetaUseCase;
-import com.financeiramente.core.usecase.DeletarAporteMetaUseCase;
-import com.financeiramente.core.usecase.RegistrarAporteMetaUseCase;
+import com.financeiramente.core.usecase.meta.CalcularProjecaoMetaUseCase;
+import com.financeiramente.core.usecase.meta.DeletarAporteMetaUseCase;
+import com.financeiramente.core.usecase.meta.RegistrarAporteMetaUseCase;
 
 import java.time.LocalDate;
 import java.util.List;

@@ -19,14 +19,14 @@ public class MetaDao implements MetaRepository {
     @Override
     public void salvar(Meta meta) {
         db.execute(
-            "INSERT INTO meta(id, nome, valor_objetivo, valor_atual, data_alvo, descricao, ativo, criado_em) VALUES (?,?,?,?,?,?,?,?)",
+            "INSERT INTO meta(id, nome, valor_objetivo, valor_atual, valor_inicial, data_alvo, descricao, criado_em) VALUES (?,?,?,?,?,?,?,?)",
             meta.getId(),
             meta.getNome(),
             meta.getValorObjetivo(),
             meta.getValorAtual(),
+            meta.getValorInicial(),
             meta.getDataAlvo(),
             meta.getDescricao(),
-            meta.isAtivo() ? 1 : 0,
             meta.getCriadoEm()
         );
     }
@@ -34,20 +34,20 @@ public class MetaDao implements MetaRepository {
     @Override
     public void atualizar(Meta meta) {
         db.execute(
-            "UPDATE meta SET nome=?, valor_objetivo=?, valor_atual=?, data_alvo=?, descricao=?, ativo=? WHERE id=?",
+            "UPDATE meta SET nome=?, valor_objetivo=?, valor_atual=?, valor_inicial=?, data_alvo=?, descricao=? WHERE id=?",
             meta.getNome(),
             meta.getValorObjetivo(),
             meta.getValorAtual(),
+            meta.getValorInicial(),
             meta.getDataAlvo(),
             meta.getDescricao(),
-            meta.isAtivo() ? 1 : 0,
             meta.getId()
         );
     }
 
     @Override
-    public void desativar(String id) {
-        db.execute("UPDATE meta SET ativo=0 WHERE id=?", id);
+    public void deletar(String id) {
+        db.execute("DELETE FROM meta WHERE id=?", id);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class MetaDao implements MetaRepository {
 
     @Override
     public List<Meta> listarAtivas() {
-        return db.query("SELECT * FROM meta WHERE ativo=1 ORDER BY nome", MAPPER);
+        return db.query("SELECT * FROM meta ORDER BY nome", MAPPER);
     }
 
     // ─── RowMapper ────────────────────────────────────────────────────────────
@@ -67,9 +67,9 @@ public class MetaDao implements MetaRepository {
         row.getString("nome"),
         row.getDouble("valor_objetivo"),
         row.getDouble("valor_atual"),
+        row.isNull("valor_inicial") ? 0.0 : row.getDouble("valor_inicial"),
         row.isNull("data_alvo") ? null : row.getString("data_alvo"),
         row.isNull("descricao") ? null : row.getString("descricao"),
-        row.getInt("ativo") == 1,
         row.getLong("criado_em")
     );
 }

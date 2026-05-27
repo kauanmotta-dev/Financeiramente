@@ -1,5 +1,6 @@
 package com.financeiramente.android.ui.lancamentos;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -17,13 +18,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.view.MotionEvent;
+
 import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.ui.common.CategoriaVisualFallback;
 import com.financeiramente.android.viewmodel.LancamentoFormViewModel;
 import com.financeiramente.android.viewmodel.LancamentoFormViewModelFactory;
+import com.financeiramente.core.domain.entity.CartaoCredito;
 import com.financeiramente.core.domain.entity.Categoria;
 import com.financeiramente.core.domain.entity.Tag;
+import com.financeiramente.core.domain.vo.TipoCategoria;
 import com.financeiramente.core.domain.vo.TipoLancamento;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -52,15 +57,33 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
     private TextInputLayout tilValor;
     private TextInputEditText etDescricao;
     private TextInputEditText etData;
+    private MaterialButton btnToggleCategorias;
+    private MaterialButton btnToggleTags;
+    private MaterialButton btnToggleCartoes;
+    private LinearLayout layoutSecaoCategorias;
+    private LinearLayout layoutSecaoTags;
+    private LinearLayout layoutSecaoCartoes;
     private LinearLayout layoutCategoriaLinhas;
     private ChipGroup cgTags;
+    private ChipGroup cgCartoes;
     private LinearLayout layoutDetalhesCompletos;
+    private MaterialButtonToggleGroup toggleParcelamento;
+    private TextInputLayout tilParcelas;
+    private TextInputEditText etParcelas;
+    private TextInputLayout tilValorParcela;
+    private TextInputEditText etValorParcela;
     private final List<ChipGroup> chipGroupsCategorias = new ArrayList<>();
 
     private List<Categoria> listaCategorias = new ArrayList<>();
     private String categoriaIdSelecionada = null;
+    private boolean valorAutoPreenchido = false;
+    private boolean categoriasExpandidas = false;
+    private boolean tagsExpandidas = false;
+    private boolean cartoesExpandidos = false;
 
     private String editandoId = null;
+    private List<CartaoCredito> cartoesAtivos = new ArrayList<>();
+    private String cartaoIdSelecionado = null;
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Nullable
@@ -78,9 +101,9 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         LancamentoFormViewModelFactory factory = new LancamentoFormViewModelFactory(
                 ctx.getRegistrarLancamentoUseCase(),
                 ctx.getEditarLancamentoUseCase(),
-                ctx.getCategoriaRepository(),
-                ctx.getTagRepository(),
-                ctx.getLancamentoRepository());
+                ctx.getCoreServices().getCategoriaRepository(),
+                ctx.getCoreServices().getTagRepository(),
+                ctx.getCoreServices().getLancamentoRepository());
         viewModel = new ViewModelProvider(this, factory).get(LancamentoFormViewModel.class);
 
         toggleTipo = view.findViewById(R.id.toggle_tipo);
@@ -88,14 +111,35 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         tilValor = view.findViewById(R.id.til_valor);
         etDescricao = view.findViewById(R.id.et_descricao);
         etData = view.findViewById(R.id.et_data);
+        btnToggleCategorias = view.findViewById(R.id.btn_toggle_categorias);
+        btnToggleTags = view.findViewById(R.id.btn_toggle_tags);
+        btnToggleCartoes = view.findViewById(R.id.btn_toggle_cartoes);
+        layoutSecaoCategorias = view.findViewById(R.id.layout_secao_categorias);
+        layoutSecaoTags = view.findViewById(R.id.layout_secao_tags);
+        layoutSecaoCartoes = view.findViewById(R.id.layout_secao_cartoes);
         layoutCategoriaLinhas = view.findViewById(R.id.layout_categoria_linhas);
         cgTags = view.findViewById(R.id.cg_tags);
+        cgCartoes = view.findViewById(R.id.cg_cartoes);
         layoutDetalhesCompletos = view.findViewById(R.id.layout_detalhes_completos);
+        toggleParcelamento = view.findViewById(R.id.toggle_parcelamento);
+        tilParcelas = view.findViewById(R.id.til_parcelas);
+        etParcelas = view.findViewById(R.id.et_parcelas);
+        tilValorParcela = view.findViewById(R.id.til_valor_parcela);
+        etValorParcela = view.findViewById(R.id.et_valor_parcela);
         view.findViewById(R.id.btn_fechar_form).setOnClickListener(v -> dismiss());
 
         // Data padrão = hoje
         etData.setText(LocalDate.now().format(FORMATTER));
         etData.setOnClickListener(v -> abrirDatePicker());
+
+        // Limpar auto-preenchimento ao tocar no campo de valor
+        etValor.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN && valorAutoPreenchido) {
+                etValor.setText("");
+                valorAutoPreenchido = false;
+            }
+            return false;
+        });
 
         // Seleção inicial = DESPESA
         toggleTipo.check(R.id.btn_despesa);
@@ -108,8 +152,49 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
                 atualizarEstiloToggle(tipo);
                 categoriaIdSelecionada = null;
                 viewModel.carregarCategoriasPorTipo(tipo);
+                if (tipo != TipoLancamento.DESPESA) {
+                    cartaoIdSelecionado = null;
+                }
+                atualizarEstadoSecoesRapidas();
             }
         });
+
+        btnToggleCategorias.setOnClickListener(v -> {
+            categoriasExpandidas = !categoriasExpandidas;
+            atualizarEstadoSecoesRapidas();
+        });
+        btnToggleTags.setOnClickListener(v -> {
+            tagsExpandidas = !tagsExpandidas;
+            atualizarEstadoSecoesRapidas();
+        });
+        btnToggleCartoes.setOnClickListener(v -> {
+            cartoesExpandidos = !cartoesExpandidos;
+            atualizarEstadoSecoesRapidas();
+        });
+        atualizarEstadoSecoesRapidas();
+
+        if (toggleParcelamento != null) {
+            toggleParcelamento.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+                if (isChecked) {
+                    boolean parcelado = checkedId == R.id.btn_parcelado;
+                    tilParcelas.setVisibility(parcelado ? View.VISIBLE : View.GONE);
+                    tilValorParcela.setVisibility(parcelado ? View.VISIBLE : View.GONE);
+                    if (!parcelado) etValorParcela.setText("");
+                    else atualizarValorParcela();
+                }
+            });
+            // Check initial state
+            toggleParcelamento.check(R.id.btn_a_vista);
+        }
+
+        // Atualizar valor por parcela quando número de parcelas ou valor total mudam
+        android.text.TextWatcher parcelaWatcher = new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(android.text.Editable s) { atualizarValorParcela(); }
+        };
+        etParcelas.addTextChangedListener(parcelaWatcher);
+        etValor.addTextChangedListener(parcelaWatcher);
 
         configurarBottomSheet();
 
@@ -128,6 +213,28 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         }
 
         observarViewModel();
+
+        AppContext ctx2 = AppContext.get(requireContext());
+        viewModel.setCartaoSupport(
+            ctx2.getRegistrarCompraCartaoUseCase(),
+                ctx2.getCoreServices().getCartaoRepository());
+    }
+
+    private void atualizarEstadoSecoesRapidas() {
+        boolean tipoDespesa = toggleTipo.getCheckedButtonId() != R.id.btn_receita;
+        layoutSecaoCategorias.setVisibility(categoriasExpandidas ? View.VISIBLE : View.GONE);
+        layoutSecaoTags.setVisibility(tagsExpandidas ? View.VISIBLE : View.GONE);
+        btnToggleCartoes.setVisibility(tipoDespesa ? View.VISIBLE : View.GONE);
+        layoutSecaoCartoes.setVisibility(tipoDespesa && cartoesExpandidos ? View.VISIBLE : View.GONE);
+        btnToggleCategorias.setText(getString(categoriasExpandidas
+            ? R.string.lancamento_secao_categorias_aberta
+            : R.string.lancamento_secao_categorias_fechada));
+        btnToggleTags.setText(getString(tagsExpandidas
+            ? R.string.lancamento_secao_tags_aberta
+            : R.string.lancamento_secao_tags_fechada));
+        btnToggleCartoes.setText(getString(cartoesExpandidos
+                ? R.string.lancamento_secao_cartoes_aberta
+                : R.string.lancamento_secao_cartoes_fechada));
     }
 
     /** Configura o BottomSheetBehavior: peek = modo rápido, expanded = modo completo. */
@@ -247,18 +354,113 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         viewModel.getErro().observe(getViewLifecycleOwner(), msg -> {
             if (msg != null) Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
         });
+
+        viewModel.getCartoesAtivos().observe(getViewLifecycleOwner(), cartoes -> {
+            if (cgCartoes == null) return;
+            cgCartoes.removeAllViews();
+            if (cartoes == null) return;
+            cartoesAtivos = cartoes;
+
+            Chip chipSemCartao = new Chip(requireContext());
+            chipSemCartao.setText(getString(R.string.lancamento_cartao_sem));
+            chipSemCartao.setCheckable(true);
+            chipSemCartao.setChecked(cartaoIdSelecionado == null);
+            chipSemCartao.setOnClickListener(v -> {
+                cartaoIdSelecionado = null;
+                chipSemCartao.setChecked(true);
+                toggleParcelamento.setVisibility(View.GONE);
+                tilParcelas.setVisibility(View.GONE);
+            });
+            cgCartoes.addView(chipSemCartao);
+
+            for (CartaoCredito cartao : cartoesAtivos) {
+                Chip chip = new Chip(requireContext());
+                String icone = cartao.getIcone() == null || cartao.getIcone().trim().isEmpty()
+                        ? "💳"
+                        : cartao.getIcone();
+                chip.setText(icone + " " + cartao.getNome());
+                chip.setCheckable(true);
+                chip.setTag(cartao.getId());
+                aplicarEstiloTagChip(chip, cartao.getCor());
+
+                if (cartao.getId().equals(cartaoIdSelecionado)) {
+                    chip.setChecked(true);
+                }
+
+                chip.setOnClickListener(v -> cartaoIdSelecionado = (String) chip.getTag());
+                chip.setOnCheckedChangeListener((cb, checked) -> {
+                    if (checked) {
+                        cartaoIdSelecionado = (String) chip.getTag();
+                        toggleParcelamento.setVisibility(View.VISIBLE);
+                    } else {
+                        if (cartaoIdSelecionado != null && cartaoIdSelecionado.equals(chip.getTag())) {
+                            toggleParcelamento.setVisibility(View.GONE);
+                            tilParcelas.setVisibility(View.GONE);
+                        }
+                    }
+                });
+                cgCartoes.addView(chip);
+            }
+        });
     }
 
-    /** Popula o ChipGroup de categorias com chips coloridos (ícone + nome). */
+    /** Popula o ChipGroup de categorias com chips coloridos (ícone + nome), separados por seção. */
     private void popularChipsCategoria(List<Categoria> cats) {
         layoutCategoriaLinhas.removeAllViews();
         chipGroupsCategorias.clear();
         if (cats == null || cats.isEmpty()) return;
 
+        List<Categoria> essenciais = new ArrayList<>();
+        List<Categoria> naoEssenciais = new ArrayList<>();
+        List<Categoria> outras = new ArrayList<>();
+
+        for (Categoria cat : cats) {
+            if (cat.getTipo() == TipoCategoria.ESSENCIAL) {
+                essenciais.add(cat);
+            } else if (cat.getTipo() == TipoCategoria.NAO_ESSENCIAL) {
+                naoEssenciais.add(cat);
+            } else {
+                outras.add(cat);
+            }
+        }
+
+        boolean temSecoes = !essenciais.isEmpty() && !naoEssenciais.isEmpty();
+
+        if (temSecoes) {
+            adicionarLabelSecaoCategoria(getString(R.string.categorias_secao_essenciais));
+            adicionarChipsCategoriasPorPai(essenciais);
+            adicionarLabelSecaoCategoria(getString(R.string.categorias_secao_nao_essenciais));
+            adicionarChipsCategoriasPorPai(naoEssenciais);
+        } else {
+            List<Categoria> todos = new ArrayList<>();
+            todos.addAll(essenciais);
+            todos.addAll(naoEssenciais);
+            todos.addAll(outras);
+            adicionarChipsCategoriasPorPai(todos);
+        }
+    }
+
+    private void adicionarLabelSecaoCategoria(String titulo) {
+        TextView tv = new TextView(requireContext());
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.topMargin = (int) (getResources().getDisplayMetrics().density * 8);
+        params.bottomMargin = (int) (getResources().getDisplayMetrics().density * 2);
+        params.setMarginStart((int) (getResources().getDisplayMetrics().density * 4));
+        tv.setLayoutParams(params);
+        tv.setText(titulo.toUpperCase());
+        tv.setTextSize(10f);
+        tv.setTextColor(getResources().getColor(R.color.cinza_secondary, requireContext().getTheme()));
+        tv.setLetterSpacing(0.08f);
+        layoutCategoriaLinhas.addView(tv);
+    }
+
+    private void adicionarChipsCategoriasPorPai(List<Categoria> cats) {
         Map<String, List<Categoria>> porPai = new LinkedHashMap<>();
-        for (Categoria categoria : cats) {
-            String paiId = categoria.getPaiId() != null ? categoria.getPaiId() : categoria.getId();
-            porPai.computeIfAbsent(paiId, key -> new ArrayList<>()).add(categoria);
+        for (Categoria cat : cats) {
+            String pId = cat.getPaiId() != null ? cat.getPaiId() : cat.getId();
+            porPai.computeIfAbsent(pId, key -> new ArrayList<>()).add(cat);
         }
 
         for (Map.Entry<String, List<Categoria>> entry : porPai.entrySet()) {
@@ -286,7 +488,6 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
                 chip.setCheckable(true);
                 chip.setTag(cat.getId());
 
-                // Cor dinâmica da categoria: fundo claro (alpha 30) → fundo sólido quando checked
                 try {
                     int corSolida = Color.parseColor(corHex);
                     int corFundo = Color.argb(48, Color.red(corSolida), Color.green(corSolida), Color.blue(corSolida));
@@ -314,6 +515,13 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
                         }
                     }
                     chip.setChecked(true);
+                    // Auto-preencher valor para categorias essenciais com limite definido
+                    if (cat.getTipo() == TipoCategoria.ESSENCIAL && cat.getLimiteMensal() != null) {
+                        etValor.setText(String.valueOf(cat.getLimiteMensal()));
+                        valorAutoPreenchido = true;
+                    } else {
+                        valorAutoPreenchido = false;
+                    }
                 });
 
                 row.addView(chip);
@@ -372,11 +580,7 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         TipoLancamento tipo = (toggleTipo.getCheckedButtonId() == R.id.btn_receita)
                 ? TipoLancamento.RECEITA : TipoLancamento.DESPESA;
 
-        if (categoriaIdSelecionada == null) {
-            Toast.makeText(requireContext(), getString(R.string.erro_categoria_obrigatoria), Toast.LENGTH_SHORT).show();
-            return;
-        }
-
+        // Categoria — null auto-resolved to SemCategoria by use case
         // Descrição (opcional no modo rápido)
         String descricao = (etDescricao.getText() != null)
                 ? etDescricao.getText().toString().trim() : "";
@@ -393,11 +597,147 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
             if (chip.isChecked()) tagIds.add((String) chip.getTag());
         }
 
+        // Parcelamento
+        boolean parcelado = toggleParcelamento.getVisibility() == View.VISIBLE
+                && toggleParcelamento.getCheckedButtonId() == R.id.btn_parcelado;
+        int numeroParcelas = 1;
+        if (parcelado) {
+            String parcStr = etParcelas.getText() != null ? etParcelas.getText().toString().trim() : "";
+            if (!parcStr.isEmpty()) {
+                try { numeroParcelas = Integer.parseInt(parcStr); } catch (NumberFormatException ignored) { }
+            }
+            if (numeroParcelas < 1) numeroParcelas = 1;
+        }
+
+        mostrarDialogoConfirmacao(valor, tipo, data, descricao, tagIds, parcelado, numeroParcelas);
+    }
+
+    private void mostrarDialogoConfirmacao(
+            double valor,
+            TipoLancamento tipo,
+            String data,
+            String descricao,
+            List<String> tagIds,
+            boolean parcelado,
+            int numeroParcelas) {
+
+        View confView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_lancamento_confirmacao, null);
+
+        android.widget.TextView tvValor = confView.findViewById(R.id.tv_conf_valor);
+        android.widget.TextView tvTipo = confView.findViewById(R.id.tv_conf_tipo);
+        android.widget.TextView tvData = confView.findViewById(R.id.tv_conf_data);
+        android.widget.TextView tvCategoria = confView.findViewById(R.id.tv_conf_categoria);
+        android.widget.TextView tvTags = confView.findViewById(R.id.tv_conf_tags);
+        android.widget.TextView tvCartao = confView.findViewById(R.id.tv_conf_cartao);
+        android.widget.TextView tvParcelas = confView.findViewById(R.id.tv_conf_parcelas);
+        android.widget.TextView tvDescricao = confView.findViewById(R.id.tv_conf_descricao);
+
+        // Valor
+        tvValor.setText(String.format("R$ %.2f", valor));
+        confView.findViewById(R.id.row_conf_tipo).setVisibility(View.VISIBLE);
+        tvTipo.setText(tipo == TipoLancamento.RECEITA ? "Receita" : "Despesa");
+
+        // Data
+        confView.findViewById(R.id.row_conf_data).setVisibility(View.VISIBLE);
+        tvData.setText(data);
+
+        // Categoria
+        String catNome = null;
+        if (categoriaIdSelecionada != null) {
+            for (Categoria cat : listaCategorias) {
+                if (cat.getId().equals(categoriaIdSelecionada)) { catNome = cat.getNome(); break; }
+            }
+        }
+        if (catNome != null) {
+            confView.findViewById(R.id.row_conf_categoria).setVisibility(View.VISIBLE);
+            tvCategoria.setText(catNome);
+        }
+
+        // Tags
+        if (!tagIds.isEmpty() && viewModel.getTags().getValue() != null) {
+            List<String> tagNomes = new ArrayList<>();
+            for (Tag t : viewModel.getTags().getValue()) {
+                if (tagIds.contains(t.getId())) tagNomes.add(t.getNome());
+            }
+            if (!tagNomes.isEmpty()) {
+                confView.findViewById(R.id.row_conf_tags).setVisibility(View.VISIBLE);
+                tvTags.setText(android.text.TextUtils.join(", ", tagNomes));
+            }
+        }
+
+        // Cartão
+        if (cartaoIdSelecionado != null) {
+            for (CartaoCredito c : cartoesAtivos) {
+                if (c.getId().equals(cartaoIdSelecionado)) {
+                    confView.findViewById(R.id.row_conf_cartao).setVisibility(View.VISIBLE);
+                    tvCartao.setText(c.getNome());
+                    break;
+                }
+            }
+        }
+
+        // Parcelas
+        if (parcelado && cartaoIdSelecionado != null && numeroParcelas > 1) {
+            confView.findViewById(R.id.row_conf_parcelas).setVisibility(View.VISIBLE);
+            tvParcelas.setText(numeroParcelas + "x de " + String.format("R$ %.2f", valor));
+        }
+
+        // Descrição
+        if (descricao != null && !descricao.isEmpty()) {
+            confView.findViewById(R.id.row_conf_descricao).setVisibility(View.VISIBLE);
+            tvDescricao.setText(descricao);
+        }
+
+        final int finalNumeroParcelas = numeroParcelas;
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.lancamento_confirmar_titulo)
+                .setView(confView)
+                .setPositiveButton(R.string.confirmar, (dlg, w) ->
+                        executarSalvamento(valor, tipo, data, descricao, tagIds, parcelado, finalNumeroParcelas))
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void executarSalvamento(
+            double valor,
+            TipoLancamento tipo,
+            String data,
+            String descricao,
+            List<String> tagIds,
+            boolean parcelado,
+            int numeroParcelas) {
+
         if (editandoId != null) {
             viewModel.editar(editandoId, valor, tipo, data, descricao, categoriaIdSelecionada, tagIds);
+        } else if (tipo == TipoLancamento.DESPESA && cartaoIdSelecionado != null) {
+            if (parcelado && numeroParcelas > 1) {
+                viewModel.salvarParceladoComCartao(valor, tipo, data, descricao,
+                        categoriaIdSelecionada, tagIds, cartaoIdSelecionado, numeroParcelas);
+            } else {
+                viewModel.salvarComCartao(valor, tipo, data, descricao,
+                        categoriaIdSelecionada, tagIds, cartaoIdSelecionado);
+            }
         } else {
             viewModel.salvar(valor, tipo, data, descricao, categoriaIdSelecionada, tagIds);
         }
+    }
+
+    private void atualizarValorParcela() {
+        if (etValorParcela == null) return;
+        try {
+            String valorStr = etValor.getText() != null ? etValor.getText().toString().trim() : "";
+            String parcStr = etParcelas.getText() != null ? etParcelas.getText().toString().trim() : "";
+            if (!valorStr.isEmpty() && !parcStr.isEmpty()) {
+                double valor = Double.parseDouble(valorStr);
+                int n = Integer.parseInt(parcStr);
+                if (n > 0 && valor > 0) {
+                    etValorParcela.setText(String.format(java.util.Locale.getDefault(), "R$ %.2f", valor / n));
+                    return;
+                }
+            }
+        } catch (NumberFormatException ignored) { }
+        etValorParcela.setText("");
     }
 
     private void abrirDatePicker() {

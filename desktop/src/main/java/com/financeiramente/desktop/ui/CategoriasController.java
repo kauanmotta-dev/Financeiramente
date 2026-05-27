@@ -2,10 +2,10 @@ package com.financeiramente.desktop.ui;
 
 import com.financeiramente.core.domain.entity.Categoria;
 import com.financeiramente.core.domain.vo.TipoCategoria;
-import com.financeiramente.core.usecase.CriarCategoriaUseCase;
-import com.financeiramente.core.usecase.DeletarCategoriaUseCase;
-import com.financeiramente.core.usecase.EditarCategoriaUseCase;
-import com.financeiramente.core.usecase.ReordenarCategoriasUseCase;
+import com.financeiramente.core.usecase.categoria.CriarCategoriaUseCase;
+import com.financeiramente.core.usecase.categoria.DeletarCategoriaUseCase;
+import com.financeiramente.core.usecase.categoria.EditarCategoriaUseCase;
+import com.financeiramente.core.usecase.categoria.ReordenarCategoriasUseCase;
 import com.financeiramente.core.util.DomainException;
 import com.financeiramente.desktop.app.AppContext;
 
@@ -102,11 +102,11 @@ public class CategoriasController {
         AppContext ctx = AppContext.get();
         TreeItem<Categoria> raiz = new TreeItem<>();
 
-        List<Categoria> raizes = ctx.getCategoriaRepository().listarRaizes();
+        List<Categoria> raizes = ctx.getCoreServices().getCategoriaRepository().listarRaizes();
         for (Categoria cat : raizes) {
             TreeItem<Categoria> grupoItem = new TreeItem<>(cat);
             grupoItem.setExpanded(true);
-            for (Categoria filha : ctx.getCategoriaRepository().listarFilhas(cat.getId())) {
+            for (Categoria filha : ctx.getCoreServices().getCategoriaRepository().listarFilhas(cat.getId())) {
                 grupoItem.getChildren().add(new TreeItem<>(filha));
             }
             raiz.getChildren().add(grupoItem);

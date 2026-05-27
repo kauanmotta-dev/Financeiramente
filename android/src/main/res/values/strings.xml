@@ -20,8 +20,9 @@
     <string name="categoria_tipo_nao_essencial">Não essencial</string>
     <string name="categoria_icone">Ícone</string>
     <string name="categoria_cor">Cor</string>
-    <string name="subcategoria_cor_herdada">Subcategorias usam automaticamente a cor da categoria-mãe.</string>
+    <string name="subcategoria_cor_herdada">Emoji e cor herdados automaticamente da categoria-mãe.</string>
     <string name="categoria_limite_mensal">Limite Mensal (R$) — opcional</string>
+    <string name="categoria_previsao_receita">Previsão de Receita (R$) — opcional</string>
     <string name="categorias_vazio">Nenhuma categoria cadastrada</string>
     <string name="tab_despesas">Despesas</string>
     <string name="tab_receitas">Receitas</string>
@@ -44,6 +45,7 @@
     <string name="form_categoria">Categoria</string>
     <string name="gerenciar_categorias">Gerenciar Categorias</string>
     <string name="gerenciar_tags">Gerenciar Tags</string>
+    <string name="gerenciar_cartoes">Gerenciar Cartões</string>
     <string name="nav_tags">Tags</string>
     <string name="tag_nome">Nome da tag</string>
     <string name="tag_emoji">Emoji</string>
@@ -52,6 +54,12 @@
     <string name="tag_erro_nome">Informe o nome da tag</string>
     <string name="tag_erro_existente">Essa tag já existe</string>
     <string name="tag_criada">Tag criada</string>
+    <string name="tag_atualizada">Tag atualizada</string>
+    <string name="tag_excluida">Tag excluída</string>
+    <string name="tag_editar">Editar tag</string>
+    <string name="tag_excluir">Excluir tag</string>
+    <string name="tag_confirmar_excluir">Deseja excluir a tag "%s"?</string>
+    <string name="tag_modo_edicao">Editando tag</string>
     <string name="tags_vazio">Nenhuma tag criada ainda</string>
     <!-- Lançamentos -->
     <string name="form_lancamento">Lançamento</string>
@@ -60,11 +68,19 @@
     <string name="lancamento_categoria">Categoria</string>
     <string name="lancamento_data">Data</string>
     <string name="lancamento_tags">Tags (opcional)</string>
+    <string name="lancamento_secao_categorias_aberta">Categorias ▾</string>
+    <string name="lancamento_secao_categorias_fechada">Categorias ▸</string>
+    <string name="lancamento_secao_tags_aberta">Tags ▾</string>
+    <string name="lancamento_secao_tags_fechada">Tags ▸</string>
+    <string name="lancamento_secao_cartoes_aberta">Cartão de crédito ▾</string>
+    <string name="lancamento_secao_cartoes_fechada">Cartão de crédito ▸</string>
+    <string name="lancamento_cartao_sem">Sem cartão</string>
     <string name="lancamento_receita">Receita</string>
     <string name="lancamento_despesa">Despesa</string>
     <string name="lancamentos_vazio">Nenhum lançamento no mês</string>
     <string name="excluir_lancamento">Excluir lançamento</string>
     <string name="confirmar_exclusao_lancamento">Deseja excluir "%s"?</string>
+    <string name="confirmar_exclusao_lancamento_generico">Deseja excluir este lançamento?</string>
     <string name="erro_valor_obrigatorio">Valor é obrigatório</string>
     <string name="erro_valor_invalido">Valor deve ser maior que zero</string>
     <string name="erro_descricao_obrigatoria">Descrição é obrigatória</string>
@@ -82,6 +98,9 @@
     <!-- Dashboard EP-06 -->
     <string name="dashboard_saldo_disponivel">Saldo Disponível</string>
     <string name="dashboard_saldo_real">Saldo Real</string>
+    <string name="dashboard_saldo_conta">Saldo em Conta</string>
+    <string name="dashboard_saldo_essenciais">Saldo Essenciais</string>
+    <string name="dashboard_saldo_nao_essenciais">Saldo Não Essenciais</string>
     <string name="dashboard_progresso_global">Progresso global</string>
     <string name="dashboard_gasto">Gasto</string>
     <string name="dashboard_receita">Receita</string>
@@ -105,6 +124,10 @@
     <string name="dashboard_registrar">Registrar</string>
     <string name="dashboard_registrar_lancamento">Registrar lançamento</string>
     <string name="dashboard_abrir_configuracoes">Ajustar preferências</string>
+    <string name="dashboard_cartoes_limites_titulo">Limites dos cartões</string>
+    <string name="dashboard_cartoes_limites_vazio">Sem cartões com limite configurado</string>
+    <string name="dashboard_cartoes_limites_resumo">%1$s de %2$s</string>
+    <string name="dashboard_cartoes_limites_sem_limite">Sem limite</string>
     <string name="dashboard_aviso_essenciais_titulo">Essenciais previstos: %s da receita</string>
     <string name="dashboard_aviso_essenciais_desc">Limites essenciais: %1$s em cima de uma receita de %2$s.</string>
     <string name="dashboard_aviso_essenciais_sem_limite_titulo">Essenciais sem planejamento</string>
@@ -118,31 +141,12 @@
     <string name="dashboard_aviso_ritmo_sem_receita_titulo">Ritmo de gasto sem base de receita</string>
     <string name="dashboard_aviso_ritmo_sem_receita_desc">Registre receitas para comparar o ritmo de gasto com o avanço do mês.</string>
     <string name="dashboard_aviso_unico_desc">Caixa: %1$s da receita. Uso atual: %2$s. Ritmo esperado: %3$s.</string>
-    <!-- Lançamentos Recorrentes EP-08 -->
-    <string name="nav_recorrentes">Recorrentes</string>
-    <string name="gerenciar_recorrentes">Lançamentos Recorrentes</string>
-    <string name="form_recorrente">Lançamento Recorrente</string>
-    <string name="recorrente_descricao">Descrição</string>
-    <string name="recorrente_valor">Valor (R$)</string>
-    <string name="recorrente_tipo">Tipo</string>
-    <string name="recorrente_recorrencia">Recorrência</string>
-    <string name="recorrente_dia">Dia do mês (opcional)</string>
-    <string name="recorrente_selecionar_subcategoria">Selecionar subcategoria</string>
-    <string name="recorrente_subcategoria_nao_selecionada">Nenhuma subcategoria selecionada</string>
-    <string name="recorrente_sem_categorias">Cadastre categorias primeiro</string>
-    <string name="recorrente_selecione_categoria_mae">Selecione a categoria</string>
-    <string name="recorrente_categoria_sem_subcategorias">Essa categoria não possui subcategorias</string>
-    <string name="recorrente_selecione_subcategoria">Subcategorias de %s</string>
-    <string name="recorrentes_vazio">Nenhum lançamento recorrente ativo</string>
-    <string name="add_recorrente">Novo recorrente</string>
-    <string name="desativar_recorrente">Desativar recorrente</string>
-    <string name="confirmar_desativar_recorrente">Desativar "%s"?</string>
     <!-- Metas EP-10 -->
     <string name="meta_detalhe">Detalhe da Meta</string>
     <string name="add_meta">Nova meta</string>
-    <string name="metas_vazio">Nenhuma meta ativa</string>
-    <string name="desativar_meta">Desativar meta</string>
-    <string name="confirmar_desativar_meta">Desativar "%s"?</string>
+    <string name="metas_vazio">Nenhuma meta cadastrada</string>
+    <string name="excluir_meta">Excluir meta</string>
+    <string name="confirmar_excluir_meta">Deseja excluir "%s"?</string>
     <string name="meta_nome">Nome</string>
     <string name="meta_valor_objetivo">Valor Objetivo (R$)</string>
     <string name="meta_data_alvo">Data Alvo (opcional)</string>
@@ -168,8 +172,8 @@
     <string name="meta_status_concluida">Concluída</string>
     <string name="meta_status_em_risco">Em risco</string>
     <plurals name="metas_resumo_total">
-        <item quantity="one">%d meta ativa</item>
-        <item quantity="other">%d metas ativas</item>
+        <item quantity="one">%d meta</item>
+        <item quantity="other">%d metas</item>
     </plurals>
     <!-- Relatórios EP-11 -->
     <string name="relatorio_periodo">Período</string>
@@ -197,6 +201,9 @@
     <string name="relatorio_distribuicao">Distribuição de Gastos</string>
     <string name="relatorio_chart_pizza">Pizza</string>
     <string name="relatorio_chart_barras">Barras</string>
+    <string name="relatorio_resumo_recebido">Recebido %s</string>
+    <string name="relatorio_resumo_gastos">Gastos %s</string>
+    <string name="relatorio_resumo_percentual">%d%%</string>
 
     <string name="gastos_secao_essenciais">Despesas Essenciais</string>
     <string name="gastos_secao_nao_essenciais">Despesas Não Essenciais</string>
@@ -208,6 +215,7 @@
     <string name="gastos_total">Total da categoria</string>
     <string name="gastos_total_recebido">Total recebido</string>
     <string name="gastos_total_gasto">Total gasto</string>
+    <string name="gastos_total_previsto">Total previsto</string>
     <string name="gastos_modo_gastos">Gastos</string>
     <string name="gastos_modo_recebido">Recebido</string>
     <string name="gastos_abrir_relatorios">Ver relatórios</string>
@@ -227,7 +235,7 @@
 
     <string name="empty_metas_title">Nenhuma meta criada</string>
     <string name="empty_metas_subtitle">Defina objetivos financeiros\ne acompanhe seu progresso.</string>
-    <string name="empty_metas_cta">Criar Primeira Meta</string>
+    <string name="empty_metas_cta">Criar Meta</string>
 
     <string name="empty_relatorios_title">Sem dados no período</string>
     <string name="empty_relatorios_subtitle">Registre alguns lançamentos\npara visualizar seus relatórios aqui.</string>
@@ -244,5 +252,85 @@
         <item quantity="one">%d subcategoria</item>
         <item quantity="other">%d subcategorias</item>
     </plurals>
+
+    <!-- Cartão de crédito -->
+    <string name="nav_cartoes">Cartões</string>
+    <string name="add_cartao">Novo cartão</string>
+    <string name="cartoes_vazio">Nenhum cartão cadastrado</string>
+    <string name="cartao_nome">Nome do cartão</string>
+    <string name="cartao_bandeira">Bandeira</string>
+    <string name="cartao_dia_vencimento">Dia de vencimento (1–28)</string>
+    <string name="cartao_dias_fechamento">Dias antes do vencimento para fechamento</string>
+    <string name="cartao_limite">Limite (R$) — opcional</string>
+    <string name="cartao_preview_fechamento">Fechamento: %s</string>
+    <string name="cartao_preview_vencimento">Vencimento: %s</string>
+    <string name="cartao_desativar">Desativar cartão</string>
+    <string name="cartao_confirmar_desativar">Desativar \"%s\"?</string>
+    <string name="cartao_editar">Editar cartão</string>
+    <string name="cartao_erro_dia_invalido">Dia inválido (1–28)</string>
+    <string name="form_cartao">Cartão</string>
+    <string name="confirmar">Confirmar</string>
+    <string name="cancelar">Cancelar</string>
+    <!-- Fatura -->
+    <string name="faturas_titulo">Faturas</string>
+    <string name="faturas_vazio">Nenhuma fatura encontrada</string>
+    <string name="fatura_status_aberto">Aberta</string>
+    <string name="fatura_status_fechado">Fechada</string>
+    <string name="fatura_status_pago">Paga</string>
+    <string name="fatura_status_pago_parcial">Pag. Parcial</string>
+    <string name="fatura_pagar">Pagar Fatura</string>
+    <string name="fatura_vence_em">Vencimento: %s</string>
+    <string name="fatura_fecha_em">Fechamento: %s</string>
+    <string name="fatura_total">Total</string>
+    <string name="fatura_lancamentos">Lançamentos</string>
+    <string name="fatura_sem_lancamentos">Nenhum lançamento nesta fatura</string>
+    <string name="fatura_detalhe_titulo">Fatura %s</string>
+    <string name="fatura_detalhe">Detalhe da fatura</string>
+    <string name="fatura_paga_total">Fatura paga com sucesso!</string>
+    <string name="fatura_paga_parcial">Pagamento registrado. Saldo devedor: %s</string>
+    <!-- Pagamento de fatura -->
+    <string name="pagar_fatura_valor_extrato">Valor do extrato (R$)</string>
+    <string name="pagar_fatura_valor_pago">Valor pago (R$)</string>
+    <string name="pagar_fatura_preview">Se pagar R$%1$.2f: %2$s</string>
+    <string name="pagar_fatura_saldo_devedor">Saldo devedor: R$%.2f</string>
+    <!-- Lançamento com cartão -->
+    <string name="lancamento_pagar_cartao">Pagar com cartão</string>
+    <string name="lancamento_selecionar_cartao">Selecionar cartão</string>
+    <!-- Dashboard extras -->
+    <string name="dashboard_proximas_faturas">Próximas faturas</string>
+    <!-- Geral -->
+    <string name="erro_campo_obrigatorio">Campo obrigatório</string>
+
+    <!-- Parcelamento / confirmação de lançamento -->
+    <string name="lancamento_parcelado">Parcelado</string>
+    <string name="lancamento_a_vista">À vista</string>
+    <string name="lancamento_qtd_parcelas">Quantidade de parcelas</string>
+    <string name="lancamento_valor_parcela">Valor da parcela</string>
+    <string name="lancamento_confirmar_titulo">Confirmar lançamento</string>
+    <string name="lancamento_conf_label_valor">Valor:</string>
+    <string name="lancamento_conf_label_tipo">Tipo:</string>
+    <string name="lancamento_conf_label_data">Data:</string>
+    <string name="lancamento_conf_label_categoria">Categoria:</string>
+    <string name="lancamento_conf_label_tags">Tags:</string>
+    <string name="lancamento_conf_label_cartao">Cartão:</string>
+    <string name="lancamento_conf_label_parcelas">Parcelas:</string>
+    <string name="lancamento_conf_label_descricao">Descrição:</string>
+    <!-- Sem Categoria -->
+    <string name="sem_categoria">Sem Categoria</string>
+    <!-- Metas: valor inicial -->
+    <string name="meta_valor_inicial">Valor inicial (R$) — opcional</string>
+    <string name="meta_valor_inicial_hint">Montante já disponível antes dos aportes</string>
+    <!-- Lançamentos: seção cartões -->
+    <string name="lancamentos_cartoes_titulo">Cartões</string>
+    <string name="recorrencias_cartao_titulo">Cobranças recorrentes</string>
+    <string name="recorrencias_cartao_vazio">Nenhuma cobrança recorrente ativa neste cartão.</string>
+    <string name="recorrencia_cartao_detalhes">Dia %1$d • %2$s</string>
+    <string name="cancelar_recorrencia_cartao_titulo">Cancelar recorrência</string>
+    <string name="cancelar_recorrencia_cartao_mensagem">Deseja cancelar "%s"? As cobranças futuras serão interrompidas.</string>
+    <string name="excluir_compra_cartao_titulo">Excluir compra no cartão</string>
+    <string name="excluir_compra_cartao_mensagem">Escolha se deseja excluir apenas esta cobrança ou toda a compra parcelada/recorrente.</string>
+    <string name="excluir_esta_parcela">Excluir só esta cobrança</string>
+    <string name="excluir_todas_parcelas">Excluir compra inteira</string>
+    <string name="compra_cartao_excluida">Compra no cartão excluída</string>
 
 </resources>

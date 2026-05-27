@@ -9,6 +9,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <TextView
@@ -23,9 +24,24 @@
             android:id="@+id/tv_aporte_valor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:maxEms="11"
+            android:maxLines="1"
+            android:ellipsize="end"
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="?attr/colorPrimary" />
+
+        <ImageButton
+            android:id="@+id/btn_aporte_excluir"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/deletar_aporte"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_delete"
+            android:tint="@color/vermelho_error" />
 
     </LinearLayout>
 

@@ -24,7 +24,6 @@
 
             <Label text="CONFIGURAÇÕES" styleClass="nav-section-label" />
             <Button fx:id="btnCategorias"  text="  Categorias"  onAction="#abrirCategorias"  styleClass="nav-button" />
-            <Button fx:id="btnRecorrentes" text="  Recorrentes" onAction="#abrirRecorrentes" styleClass="nav-button" />
         </VBox>
     </left>
 

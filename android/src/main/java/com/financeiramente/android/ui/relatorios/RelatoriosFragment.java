@@ -13,6 +13,7 @@ import android.widget.Toast;
 import com.github.mikephil.charting.charts.HorizontalBarChart;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,13 +21,10 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.ui.common.CategoriaVisualFallback;
-import com.financeiramente.android.ui.lancamentos.LancamentoAdapter;
 import com.financeiramente.android.viewmodel.RelatoriosViewModel;
 import com.financeiramente.android.viewmodel.RelatoriosViewModelFactory;
 import com.financeiramente.core.domain.entity.Categoria;
@@ -34,8 +32,9 @@ import com.financeiramente.core.domain.entity.Lancamento;
 import com.financeiramente.core.domain.entity.Tag;
 import com.financeiramente.core.domain.vo.TipoCategoria;
 import com.financeiramente.core.domain.vo.TipoLancamento;
-import com.financeiramente.core.usecase.FiltroRelatorio;
-import com.financeiramente.core.usecase.RelatorioResult;
+import com.financeiramente.core.usecase.relatorio.FiltroRelatorio;
+import com.financeiramente.core.usecase.relatorio.RelatorioResult;
+import com.financeiramente.core.util.FinanceCalculator;
 import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
@@ -80,8 +79,6 @@ public class RelatoriosFragment extends Fragment {
     };
 
     private RelatoriosViewModel viewModel;
-    private LancamentoAdapter lancamentoAdapter;
-
     private ChipGroup chipGroupPeriodo;
     private View layoutDatasCustom;
     private TextInputEditText etDataInicio, etDataFim;
@@ -91,8 +88,8 @@ public class RelatoriosFragment extends Fragment {
     private final Set<String> filtrosTagsSelecionadas = new LinkedHashSet<>();
     private final Set<TipoCategoria> filtrosTiposCategoriaSelecionados = new LinkedHashSet<>();
 
-    private TextView tvTotalReceitas, tvTotalDespesas, tvSaldo;
-    private View emptyState;
+    private TextView tvTotalReceitas, tvTotalDespesas, tvSaldo, tvResumoPercentual;
+    private LinearProgressIndicator pbResumoPercentual;
     private LinearLayout layoutCategorias;
 
     private PieChart pieChart;
@@ -125,9 +122,9 @@ public class RelatoriosFragment extends Fragment {
         AppContext ctx = AppContext.get(requireContext());
         RelatoriosViewModelFactory factory = new RelatoriosViewModelFactory(
                 ctx.getGerarRelatorioUseCase(),
-                ctx.getCategoriaRepository(),
-                ctx.getTagRepository(),
-                ctx.getLancamentoRepository());
+                ctx.getCoreServices().getCategoriaRepository(),
+                ctx.getCoreServices().getTagRepository(),
+                ctx.getCoreServices().getLancamentoRepository());
         viewModel = new ViewModelProvider(this, factory).get(RelatoriosViewModel.class);
 
         bindViews(view);
@@ -136,10 +133,8 @@ public class RelatoriosFragment extends Fragment {
                 Navigation.findNavController(view).navigate(R.id.nav_dashboard);
             }
         });
-        configurarEmptyState();
         configurarChipsPeriodo();
         configurarBotaoFiltrar(view);
-        configurarRecyclerLancamentos(view);
         setupPieChart();
         setupHorizontalBarChart();
         setupBarChart();
@@ -156,7 +151,8 @@ public class RelatoriosFragment extends Fragment {
         tvTotalReceitas      = view.findViewById(R.id.tv_total_receitas);
         tvTotalDespesas      = view.findViewById(R.id.tv_total_despesas);
         tvSaldo              = view.findViewById(R.id.tv_saldo);
-        emptyState           = view.findViewById(R.id.layout_empty_state);
+        tvResumoPercentual   = view.findViewById(R.id.tv_resumo_percentual);
+        pbResumoPercentual   = view.findViewById(R.id.pb_resumo_percentual);
         layoutCategorias     = view.findViewById(R.id.layout_categorias);
         pieChart             = view.findViewById(R.id.pie_chart);
         horizontalBarChart   = view.findViewById(R.id.horizontal_bar_chart);
@@ -164,25 +160,6 @@ public class RelatoriosFragment extends Fragment {
         lineChart            = view.findViewById(R.id.line_chart);
         layoutPieLegenda     = view.findViewById(R.id.layout_pie_legenda);
         toggleChartTipo      = view.findViewById(R.id.toggle_chart_tipo);
-    }
-
-    private void configurarEmptyState() {
-        ((android.widget.ImageView) emptyState.findViewById(R.id.iv_empty_illustration))
-                .setImageResource(R.drawable.ic_empty_reports);
-        ((android.widget.TextView) emptyState.findViewById(R.id.tv_empty_title))
-                .setText(R.string.empty_relatorios_title);
-        ((android.widget.TextView) emptyState.findViewById(R.id.tv_empty_subtitle))
-                .setText(R.string.empty_relatorios_subtitle);
-        com.google.android.material.button.MaterialButton btnCta =
-                emptyState.findViewById(R.id.btn_empty_cta);
-        btnCta.setText(R.string.empty_relatorios_cta);
-        btnCta.setVisibility(View.VISIBLE);
-        btnCta.setOnClickListener(v -> {
-            try {
-                androidx.navigation.Navigation.findNavController(requireView())
-                        .navigate(R.id.lancamentosListFragment);
-            } catch (Exception ignored) {}
-        });
     }
 
     private void configurarChipsPeriodo() {
@@ -316,14 +293,6 @@ public class RelatoriosFragment extends Fragment {
         });
 
         sheet.show();
-    }
-
-    private void configurarRecyclerLancamentos(View view) {
-        RecyclerView rv = view.findViewById(R.id.rv_lancamentos);
-        rv.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rv.setNestedScrollingEnabled(false);
-        lancamentoAdapter = new LancamentoAdapter(l -> {});
-        rv.setAdapter(lancamentoAdapter);
     }
 
     // ─── Chart Setup ─────────────────────────────────────────────────────────
@@ -617,10 +586,18 @@ public class RelatoriosFragment extends Fragment {
     private void atualizarUI(RelatorioResult res) {
         if (res == null) return;
 
-        tvTotalReceitas.setText(String.format(Locale.getDefault(),
-                "R$ %.2f", res.getTotalReceitas()));
-        tvTotalDespesas.setText(String.format(Locale.getDefault(),
-                "R$ %.2f", res.getTotalDespesas()));
+        double totalReceitas = res.getTotalReceitas();
+        double totalDespesas = res.getTotalDespesas();
+
+        tvTotalReceitas.setText(getString(R.string.relatorio_resumo_recebido,
+            String.format(Locale.getDefault(), "R$ %.2f", totalReceitas)));
+        tvTotalDespesas.setText(getString(R.string.relatorio_resumo_gastos,
+            String.format(Locale.getDefault(), "R$ %.2f", totalDespesas)));
+
+        int percentual = FinanceCalculator.calcularPercentualLimitado(totalDespesas, totalReceitas);
+        tvResumoPercentual.setText(getString(R.string.relatorio_resumo_percentual, percentual));
+        pbResumoPercentual.setProgressCompat(percentual, true);
+
         double saldo = res.getSaldo();
         tvSaldo.setText(String.format(Locale.getDefault(), "R$ %.2f", saldo));
         tvSaldo.setTextColor(saldo >= 0 ? 0xFF2E7D32 : 0xFFC62828);
@@ -652,8 +629,6 @@ public class RelatoriosFragment extends Fragment {
             layoutCategorias.addView(row);
         }
 
-        lancamentoAdapter.setData(res.getLancamentos(), categoriaPorId, tagsPorLancamento);
-        emptyState.setVisibility(res.getLancamentos().isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     private void renderResultadoFiltrado() {

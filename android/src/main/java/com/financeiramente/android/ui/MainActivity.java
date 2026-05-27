@@ -2,6 +2,7 @@ package com.financeiramente.android.ui;
 
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -9,6 +10,7 @@ import android.widget.EditText;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.navigation.NavController;
@@ -20,30 +22,36 @@ import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import java.time.LocalDate;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = "MainActivity";
 
     private NavController navController;
     private BottomNavigationView bottomNav;
+    private View navHostContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        AppContext.get(this); // initialize singleton and run migrations
+        AppContext appContext = AppContext.get(this); // initialize singleton and run migrations
         setContentView(R.layout.activity_main);
+
+        new Thread(() -> {
+            try {
+                appContext.getGerarCobrancasRecorrentesCartaoUseCase().executar();
+            } catch (Exception e) {
+                Log.w(TAG, "Falha ao gerar cobrancas recorrentes de cartao no startup", e);
+            }
+        }).start();
 
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.nav_host_fragment);
         navController = navHostFragment.getNavController();
+        navHostContainer = findViewById(R.id.nav_host_fragment);
 
         bottomNav = findViewById(R.id.bottom_nav);
         configurarBottomNavigation(bottomNav);
-        configurarComportamentoTeclado();
-
-        gerarLancamentosRecorrentesDoMes();
+        configurarInsetsEComportamentoTeclado();
     }
 
     @Override
@@ -90,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
-            int selectedItemId = resolverAbaSelecionada(destination);
+            int selectedItemId = resolverAbaSelecionada(destination, arguments);
             if (selectedItemId == 0) {
                 return;
             }
@@ -101,13 +109,32 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void configurarComportamentoTeclado() {
-        View root = findViewById(android.R.id.content);
+    private void configurarInsetsEComportamentoTeclado() {
+        View root = findViewById(R.id.activity_main_root);
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            if (navHostContainer != null) {
+                navHostContainer.setPadding(
+                        systemBars.left,
+                        systemBars.top,
+                        systemBars.right,
+                        0);
+            }
+
+            if (bottomNav != null) {
+                bottomNav.setPadding(
+                        systemBars.left,
+                        0,
+                        systemBars.right,
+                        systemBars.bottom);
+            }
+
             boolean tecladoAberto = insets.isVisible(WindowInsetsCompat.Type.ime());
             setBottomNavVisible(!tecladoAberto);
             return insets;
         });
+        ViewCompat.requestApplyInsets(root);
     }
 
     private void setBottomNavVisible(boolean visible) {
@@ -120,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private int resolverAbaSelecionada(NavDestination destination) {
+    private int resolverAbaSelecionada(NavDestination destination, Bundle arguments) {
         int destinationId = destination.getId();
         if (destinationId == R.id.metaDetalheFragment) {
             return R.id.nav_metas;
@@ -128,20 +155,26 @@ public class MainActivity extends AppCompatActivity {
 
         if (destinationId == R.id.categoriasFragment
                 || destinationId == R.id.categoriaFormFragment
-                || destinationId == R.id.recorrentesFragment
-                || destinationId == R.id.recorrenteFormFragment
-                || destinationId == R.id.tagsFragment) {
+                || destinationId == R.id.tagsFragment
+                || destinationId == R.id.nav_cartoes
+                || destinationId == R.id.cartaoFormFragment
+                || destinationId == R.id.faturaListFragment
+                || destinationId == R.id.faturaDetalheFragment) {
             return R.id.nav_dashboard;
         }
 
         if (destinationId == R.id.lancamentosListFragment
                 || destinationId == R.id.lancamentoFormFragment) {
-            return R.id.nav_dashboard;
+            int sourceTab = arguments != null ? arguments.getInt("sourceTab", 0) : 0;
+            return sourceTab == R.id.nav_gastos ? R.id.nav_gastos : R.id.nav_dashboard;
         }
 
-        if (destinationId == R.id.nav_relatorios
-                || destinationId == R.id.nav_configuracoes) {
+        if (destinationId == R.id.nav_relatorios) {
             return R.id.nav_gastos;
+        }
+
+        if (destinationId == R.id.nav_configuracoes) {
+            return R.id.nav_dashboard;
         }
 
         if (destinationId == R.id.nav_dashboard
@@ -153,23 +186,4 @@ public class MainActivity extends AppCompatActivity {
         return 0;
     }
 
-    /**
-     * Gera automaticamente os lançamentos recorrentes do mês atual (EP-08).
-     * A operação é idempotente — executar mais de uma vez no mesmo mês não duplica lançamentos.
-     */
-    private void gerarLancamentosRecorrentesDoMes() {
-        LocalDate hoje = LocalDate.now();
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
-            try {
-                AppContext.get(this)
-                        .getGerarLancamentosRecorrentesUseCase()
-                        .executar(hoje.getYear(), hoje.getMonthValue());
-            } catch (Exception ignored) {
-                // Não bloqueia o usuário em caso de falha
-            } finally {
-                executor.shutdown();
-            }
-        });
-    }
 }

@@ -9,9 +9,9 @@ import androidx.lifecycle.ViewModel;
 
 import com.financeiramente.core.domain.entity.Meta;
 import com.financeiramente.core.repository.MetaRepository;
-import com.financeiramente.core.usecase.CriarMetaUseCase;
-import com.financeiramente.core.usecase.DesativarMetaUseCase;
-import com.financeiramente.core.usecase.EditarMetaUseCase;
+import com.financeiramente.core.usecase.meta.CriarMetaUseCase;
+import com.financeiramente.core.usecase.meta.DeletarMetaUseCase;
+import com.financeiramente.core.usecase.meta.EditarMetaUseCase;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -21,7 +21,7 @@ public class MetasViewModel extends ViewModel {
 
     private final CriarMetaUseCase criarMeta;
     private final EditarMetaUseCase editarMeta;
-    private final DesativarMetaUseCase desativarMeta;
+    private final DeletarMetaUseCase deletarMeta;
     private final MetaRepository repository;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -33,11 +33,11 @@ public class MetasViewModel extends ViewModel {
 
     public MetasViewModel(CriarMetaUseCase criarMeta,
                           EditarMetaUseCase editarMeta,
-                          DesativarMetaUseCase desativarMeta,
+                          DeletarMetaUseCase deletarMeta,
                           MetaRepository repository) {
         this.criarMeta = criarMeta;
         this.editarMeta = editarMeta;
-        this.desativarMeta = desativarMeta;
+        this.deletarMeta = deletarMeta;
         this.repository = repository;
         carregar();
     }
@@ -53,10 +53,10 @@ public class MetasViewModel extends ViewModel {
         });
     }
 
-    public void criar(String nome, double valorObjetivo, String dataAlvo, String descricao) {
+    public void criar(String nome, double valorObjetivo, double valorInicial, String dataAlvo, String descricao) {
         executor.execute(() -> {
             try {
-                criarMeta.executar(nome, valorObjetivo, dataAlvo, descricao);
+                criarMeta.executar(nome, valorObjetivo, valorInicial, dataAlvo, descricao);
                 List<Meta> lista = repository.listarAtivas();
                 mainHandler.post(() -> {
                     metas.setValue(lista);
@@ -68,10 +68,10 @@ public class MetasViewModel extends ViewModel {
         });
     }
 
-    public void editar(String id, String nome, double valorObjetivo, String dataAlvo, String descricao) {
+    public void editar(String id, String nome, double valorObjetivo, double valorInicial, String dataAlvo, String descricao) {
         executor.execute(() -> {
             try {
-                editarMeta.executar(id, nome, valorObjetivo, dataAlvo, descricao);
+                editarMeta.executar(id, nome, valorObjetivo, valorInicial, dataAlvo, descricao);
                 List<Meta> lista = repository.listarAtivas();
                 mainHandler.post(() -> {
                     metas.setValue(lista);
@@ -83,10 +83,10 @@ public class MetasViewModel extends ViewModel {
         });
     }
 
-    public void desativar(String id) {
+    public void excluir(String id) {
         executor.execute(() -> {
             try {
-                desativarMeta.executar(id);
+                deletarMeta.executar(id);
                 List<Meta> lista = repository.listarAtivas();
                 mainHandler.post(() -> metas.setValue(lista));
             } catch (Exception e) {

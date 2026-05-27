@@ -1,8 +1,7 @@
 package com.financeiramente.desktop.ui;
 
-import com.financeiramente.core.usecase.CalcularSaldoMensalUseCase;
-import com.financeiramente.core.usecase.SaldoCategoria;
-import com.financeiramente.core.usecase.SaldoMensalResult;
+import com.financeiramente.core.usecase.saldo.CalcularSaldoDashboardUseCase;
+import com.financeiramente.core.usecase.saldo.SaldoDashboardResult;
 import com.financeiramente.desktop.app.AppContext;
 
 import javafx.beans.property.SimpleStringProperty;
@@ -15,9 +14,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableView;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 public class DashboardController {
 
@@ -38,11 +35,11 @@ public class DashboardController {
         int ano = hoje.getYear();
         int mes = hoje.getMonthValue();
 
-        CalcularSaldoMensalUseCase uc = AppContext.get().getCalcularSaldoMensalUseCase();
+        CalcularSaldoDashboardUseCase uc = AppContext.get().getCalcularSaldoDashboardUseCase();
 
-        Task<SaldoMensalResult> task = new Task<>() {
+        Task<SaldoDashboardResult> task = new Task<>() {
             @Override
-            protected SaldoMensalResult call() {
+            protected SaldoDashboardResult call() {
                 return uc.executar(ano, mes);
             }
         };
@@ -55,48 +52,46 @@ public class DashboardController {
         t.start();
     }
 
-    private void atualizarUI(SaldoMensalResult r) {
+    private void atualizarUI(SaldoDashboardResult r) {
         // Saldo disponível
-        lblSaldoDisponivel.setText(moeda(r.getSaldoDisponivel()));
-        String corSaldo = r.getSaldoDisponivel() >= 0 ? "#2196F3" : "#F44336";
+        lblSaldoDisponivel.setText(moeda(r.getSaldoConta()));
+        String corSaldo = r.getSaldoConta() >= 0 ? "#2196F3" : "#F44336";
         lblSaldoDisponivel.setStyle("-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: " + corSaldo + ";");
 
-        lblReceita.setText(moeda(r.getReceitaRealizada()));
-        lblGasto.setText(moeda(r.getTotalGasto()));
+        lblReceita.setText(moeda(r.getTotalReceita()));
+        lblGasto.setText(moeda(r.getTotalGastoConta()));
 
         // Barra de progresso global
-        double receita = r.getReceitaRealizada();
-        double progresso = receita > 0 ? Math.min(1.0, r.getTotalGasto() / receita) : 0.0;
+        double receita = r.getTotalReceita();
+        double progresso = receita > 0 ? Math.min(1.0, r.getTotalGastoConta() / receita) : 0.0;
         pbGlobal.setProgress(progresso);
 
-        // Tabela de categorias
-        List<SaldoCategoriaRow> rows = r.getSaldosPorCategoria().stream()
-                .map(SaldoCategoriaRow::new)
-                .collect(Collectors.toList());
-        ObservableList<SaldoCategoriaRow> obsRows = FXCollections.observableArrayList(rows);
+        // Tabela de resumo por blocos para reaproveitar o saldo consolidado.
+        ObservableList<SaldoCategoriaRow> obsRows = FXCollections.observableArrayList(
+                SaldoCategoriaRow.from("Conta", r.getTotalReceita(), r.getTotalGastoConta()),
+                SaldoCategoriaRow.from("Essenciais", r.getLimiteEssenciais(), r.getGastoEssenciais()),
+                SaldoCategoriaRow.from("Não essenciais", r.getLimiteNaoEssenciais(), r.getGastoNaoEssenciais())
+        );
         tblCategorias.setItems(obsRows);
 
         // Alerta
-        List<SaldoCategoria> emAlerta = r.getSaldosPorCategoria().stream()
-                .filter(s -> s.getLimite() > 0 && s.getGastoRealizado() / s.getLimite() >= 0.75)
-                .collect(Collectors.toList());
-
-        if (emAlerta.isEmpty()) {
+        double limiteEssenciais = r.getLimiteEssenciais();
+        double gastoEssenciais = r.getGastoEssenciais();
+        if (limiteEssenciais <= 0) {
             lblAlerta.setVisible(false);
             lblAlerta.setManaged(false);
         } else {
-            boolean temEstourada = emAlerta.stream()
-                    .anyMatch(s -> s.getGastoRealizado() > s.getLimite());
-            String nomes = emAlerta.stream()
-                    .map(SaldoCategoria::getCategoriaNome)
-                    .collect(Collectors.joining(", "));
-            if (temEstourada) {
-                lblAlerta.setText("⚠ Categoria(s) estourada(s): " + nomes);
+            double pctEssenciais = gastoEssenciais / limiteEssenciais;
+            if (pctEssenciais > 1.0) {
+                lblAlerta.setText("⚠ Essenciais estouraram o limite planejado.");
+            } else if (pctEssenciais >= 0.75) {
+                lblAlerta.setText("⚠ Essenciais próximos do limite planejado.");
             } else {
-                lblAlerta.setText("⚠ Categoria(s) próximas do limite: " + nomes);
+                lblAlerta.setText("");
             }
-            lblAlerta.setVisible(true);
-            lblAlerta.setManaged(true);
+            boolean mostrar = !lblAlerta.getText().isBlank();
+            lblAlerta.setVisible(mostrar);
+            lblAlerta.setManaged(mostrar);
         }
     }
 
@@ -115,14 +110,18 @@ public class DashboardController {
         private final SimpleStringProperty saldoStr;
         private final SimpleStringProperty progressoStr;
 
-        public SaldoCategoriaRow(SaldoCategoria sc) {
-            this.statusIcon     = new SimpleStringProperty(resolverIcone(sc.getLimite(), sc.getGastoRealizado()));
-            this.categoriaNome  = new SimpleStringProperty(sc.getCategoriaNome());
-            this.limiteStr      = new SimpleStringProperty(String.format(Locale.getDefault(), "%.2f", sc.getLimite()));
-            this.gastoStr       = new SimpleStringProperty(String.format(Locale.getDefault(), "%.2f", sc.getGastoRealizado()));
-            this.saldoStr       = new SimpleStringProperty(String.format(Locale.getDefault(), "%.2f", sc.getSaldo()));
-            double pct = sc.getLimite() > 0 ? Math.min(100.0, (sc.getGastoRealizado() / sc.getLimite()) * 100.0) : 0.0;
+        private SaldoCategoriaRow(String nome, double limite, double gasto) {
+            this.statusIcon     = new SimpleStringProperty(resolverIcone(limite, gasto));
+            this.categoriaNome  = new SimpleStringProperty(nome);
+            this.limiteStr      = new SimpleStringProperty(String.format(Locale.getDefault(), "%.2f", limite));
+            this.gastoStr       = new SimpleStringProperty(String.format(Locale.getDefault(), "%.2f", gasto));
+            this.saldoStr       = new SimpleStringProperty(String.format(Locale.getDefault(), "%.2f", limite - gasto));
+            double pct = limite > 0 ? Math.min(100.0, (gasto / limite) * 100.0) : 0.0;
             this.progressoStr   = new SimpleStringProperty(String.format(Locale.getDefault(), "%.0f%%", pct));
+        }
+
+        public static SaldoCategoriaRow from(String nome, double limite, double gasto) {
+            return new SaldoCategoriaRow(nome, limite, gasto);
         }
 
         /** Ícone visual baseado na proporção gasto/limite — sem exibir nome da cor. */

@@ -1,8 +1,7 @@
 package com.financeiramente.desktop.ui;
 
-import com.financeiramente.core.usecase.CalcularSaldoMensalUseCase;
-import com.financeiramente.core.usecase.GerarLancamentosRecorrentesUseCase;
-import com.financeiramente.core.usecase.SaldoMensalResult;
+import com.financeiramente.core.usecase.saldo.CalcularSaldoDashboardUseCase;
+import com.financeiramente.core.usecase.saldo.SaldoDashboardResult;
 import com.financeiramente.desktop.app.AppContext;
 
 import javafx.concurrent.Task;
@@ -28,43 +27,22 @@ public class MainController {
     @FXML private Button btnMetas;
     @FXML private Button btnRelatorios;
     @FXML private Button btnCategorias;
-    @FXML private Button btnRecorrentes;
 
     @FXML
     public void initialize() {
-        gerarLancamentosRecorrentesDoMes();
         abrirDashboard();
         setActiveNav(btnDashboard);
     }
 
     private void setActiveNav(Button activeButton) {
         List.of(btnDashboard, btnLancamentos, btnMetas,
-                btnRelatorios, btnCategorias, btnRecorrentes).forEach(b -> {
+                btnRelatorios, btnCategorias).forEach(b -> {
             b.getStyleClass().removeAll("nav-button-active");
             if (!b.getStyleClass().contains("nav-button"))
                 b.getStyleClass().add("nav-button");
         });
         activeButton.getStyleClass().remove("nav-button");
         activeButton.getStyleClass().add("nav-button-active");
-    }
-
-    /**
-     * Gera automaticamente os lançamentos recorrentes do mês atual (EP-08).
-     * Idempotente: não duplica lançamentos já gerados no mesmo mês.
-     */
-    private void gerarLancamentosRecorrentesDoMes() {
-        GerarLancamentosRecorrentesUseCase uc = AppContext.get().getGerarLancamentosRecorrentesUseCase();
-        LocalDate hoje = LocalDate.now();
-        Task<Void> task = new Task<>() {
-            @Override
-            protected Void call() {
-                uc.executar(hoje.getYear(), hoje.getMonthValue());
-                return null;
-            }
-        };
-        Thread t = new Thread(task);
-        t.setDaemon(true);
-        t.start();
     }
 
     @FXML
@@ -107,19 +85,6 @@ public class MainController {
     }
 
     @FXML
-    private void abrirRecorrentes() {
-        setActiveNav(btnRecorrentes);
-        try {
-            Parent view = FXMLLoader.load(
-                    getClass().getResource("/com/financeiramente/desktop/fxml/recorrentes.fxml"));
-            contentPane.getChildren().setAll(view);
-            statusLabel.setText("Lançamentos Recorrentes");
-        } catch (IOException e) {
-            statusLabel.setText("Erro ao abrir Recorrentes: " + e.getMessage());
-        }
-    }
-
-    @FXML
     private void abrirMetas() {
         setActiveNav(btnMetas);
         try {
@@ -147,21 +112,21 @@ public class MainController {
 
     /** Atualiza a barra de status com o saldo disponível do mês atual. */
     private void atualizarStatusSaldo() {
-        CalcularSaldoMensalUseCase uc = AppContext.get().getCalcularSaldoMensalUseCase();
+        CalcularSaldoDashboardUseCase uc = AppContext.get().getCalcularSaldoDashboardUseCase();
         LocalDate hoje = LocalDate.now();
 
-        Task<SaldoMensalResult> task = new Task<>() {
+        Task<SaldoDashboardResult> task = new Task<>() {
             @Override
-            protected SaldoMensalResult call() {
+            protected SaldoDashboardResult call() {
                 return uc.executar(hoje.getYear(), hoje.getMonthValue());
             }
         };
 
         task.setOnSucceeded(e -> {
-            SaldoMensalResult r = task.getValue();
-            String corSaldo = r.getSaldoDisponivel() >= 0 ? "#2196F3" : "#F44336";
+            SaldoDashboardResult r = task.getValue();
+            String corSaldo = r.getSaldoConta() >= 0 ? "#2196F3" : "#F44336";
             statusLabel.setText(String.format(Locale.getDefault(),
-                    "Dashboard — Saldo disponível: R$ %.2f", r.getSaldoDisponivel()));
+                    "Dashboard — Saldo disponível: R$ %.2f", r.getSaldoConta()));
             statusLabel.setStyle("-fx-padding: 4 8; -fx-background-color: #f0f0f0; " +
                     "-fx-font-size: 12; -fx-text-fill: " + corSaldo + ";");
         });

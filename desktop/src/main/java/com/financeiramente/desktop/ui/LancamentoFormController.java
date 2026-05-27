@@ -4,9 +4,9 @@ import com.financeiramente.core.domain.entity.Categoria;
 import com.financeiramente.core.domain.entity.Lancamento;
 import com.financeiramente.core.domain.vo.TipoLancamento;
 import com.financeiramente.core.repository.CategoriaRepository;
-import com.financeiramente.core.usecase.EditarLancamentoUseCase;
-import com.financeiramente.core.usecase.RegistrarLancamentoInput;
-import com.financeiramente.core.usecase.RegistrarLancamentoUseCase;
+import com.financeiramente.core.usecase.lancamento.EditarLancamentoUseCase;
+import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoInput;
+import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoUseCase;
 import com.financeiramente.desktop.app.AppContext;
 
 import javafx.application.Platform;
@@ -91,7 +91,7 @@ public class LancamentoFormController {
     }
 
     private List<Categoria> subcategoriasPorTipo(TipoLancamento tipo) {
-        return AppContext.get().getCategoriaRepository().listarTodas().stream()
+        return AppContext.get().getCoreServices().getCategoriaRepository().listarTodas().stream()
                 .filter(c -> c.getPaiId() != null)
                 .filter(c -> c.getTipo().isCompativelCom(tipo))
                 .collect(Collectors.toList());

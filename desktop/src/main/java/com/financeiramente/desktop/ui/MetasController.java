@@ -4,12 +4,12 @@ import com.financeiramente.core.domain.entity.AporteMeta;
 import com.financeiramente.core.domain.entity.Meta;
 import com.financeiramente.core.repository.AporteMetaRepository;
 import com.financeiramente.core.repository.MetaRepository;
-import com.financeiramente.core.usecase.CalcularProjecaoMetaUseCase;
-import com.financeiramente.core.usecase.CriarMetaUseCase;
-import com.financeiramente.core.usecase.DeletarAporteMetaUseCase;
-import com.financeiramente.core.usecase.DesativarMetaUseCase;
-import com.financeiramente.core.usecase.EditarMetaUseCase;
-import com.financeiramente.core.usecase.RegistrarAporteMetaUseCase;
+import com.financeiramente.core.usecase.meta.CalcularProjecaoMetaUseCase;
+import com.financeiramente.core.usecase.meta.CriarMetaUseCase;
+import com.financeiramente.core.usecase.meta.DeletarAporteMetaUseCase;
+import com.financeiramente.core.usecase.meta.DeletarMetaUseCase;
+import com.financeiramente.core.usecase.meta.EditarMetaUseCase;
+import com.financeiramente.core.usecase.meta.RegistrarAporteMetaUseCase;
 import com.financeiramente.desktop.app.AppContext;
 
 import javafx.collections.FXCollections;
@@ -33,7 +33,7 @@ public class MetasController {
     // Lista
     @FXML private ListView<Meta> lvMetas;
     @FXML private javafx.scene.control.Button btnEditar;
-    @FXML private javafx.scene.control.Button btnDesativar;
+    @FXML private javafx.scene.control.Button btnExcluir;
 
     // Formulário meta
     @FXML private Label lblTituloForm;
@@ -59,7 +59,7 @@ public class MetasController {
 
     private final CriarMetaUseCase criarMeta;
     private final EditarMetaUseCase editarMeta;
-    private final DesativarMetaUseCase desativarMeta;
+    private final DeletarMetaUseCase deletarMeta;
     private final RegistrarAporteMetaUseCase registrarAporte;
     private final DeletarAporteMetaUseCase deletarAporte;
     private final CalcularProjecaoMetaUseCase calcularProjecao;
@@ -73,12 +73,12 @@ public class MetasController {
         AppContext ctx = AppContext.get();
         this.criarMeta        = ctx.getCriarMetaUseCase();
         this.editarMeta       = ctx.getEditarMetaUseCase();
-        this.desativarMeta    = ctx.getDesativarMetaUseCase();
+        this.deletarMeta      = ctx.getDeletarMetaUseCase();
         this.registrarAporte  = ctx.getRegistrarAporteMetaUseCase();
         this.deletarAporte    = ctx.getDeletarAporteMetaUseCase();
         this.calcularProjecao = ctx.getCalcularProjecaoMetaUseCase();
-        this.metaRepository   = ctx.getMetaRepository();
-        this.aporteRepository = ctx.getAporteMetaRepository();
+        this.metaRepository   = ctx.getCoreServices().getMetaRepository();
+        this.aporteRepository = ctx.getCoreServices().getAporteMetaRepository();
     }
 
     @FXML
@@ -92,7 +92,7 @@ public class MetasController {
         lvMetas.getSelectionModel().selectedItemProperty().addListener((obs, old, sel) -> {
             boolean tem = sel != null;
             btnEditar.setDisable(!tem);
-            btnDesativar.setDisable(!tem);
+            btnExcluir.setDisable(!tem);
             metaSelecionada = sel;
             if (tem) carregarDetalhe(sel);
         });
@@ -186,18 +186,18 @@ public class MetasController {
     }
 
     @FXML
-    private void desativarSelecionado() {
+    private void excluirSelecionado() {
         Meta sel = lvMetas.getSelectionModel().getSelectedItem();
         if (sel == null) return;
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setHeaderText("Desativar \"" + sel.getNome() + "\"?");
+        confirm.setHeaderText("Excluir \"" + sel.getNome() + "\"?");
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == javafx.scene.control.ButtonType.OK) {
                 Task<Void> task = new Task<>() {
-                    @Override protected Void call() { desativarMeta.executar(sel.getId()); return null; }
+                    @Override protected Void call() { deletarMeta.executar(sel.getId()); return null; }
                 };
-                task.setOnSucceeded(e -> { carregarMetas(); limparFormularioMeta(); lblStatus.setText("Meta desativada."); });
-                task.setOnFailed(e -> lblStatus.setText("Erro ao desativar."));
+                task.setOnSucceeded(e -> { carregarMetas(); limparFormularioMeta(); lblStatus.setText("Meta excluída."); });
+                task.setOnFailed(e -> lblStatus.setText("Erro ao excluir."));
                 Thread t = new Thread(task); t.setDaemon(true); t.start();
             }
         });
@@ -221,8 +221,8 @@ public class MetasController {
         Task<Meta> task = new Task<>() {
             @Override
             protected Meta call() {
-                if (idEdicao == null) return criarMeta.executar(nome, valorObjetivo, dataAlvo, descricao);
-                else return editarMeta.executar(idEdicao, nome, valorObjetivo, dataAlvo, descricao);
+                if (idEdicao == null) return criarMeta.executar(nome, valorObjetivo, 0.0, dataAlvo, descricao);
+                else return editarMeta.executar(idEdicao, nome, valorObjetivo, 0.0, dataAlvo, descricao);
             }
         };
         task.setOnSucceeded(e -> { carregarMetas(); limparFormularioMeta(); lblStatus.setText("Meta salva."); });
@@ -308,7 +308,7 @@ public class MetasController {
         lblTituloForm.setText("Nova Meta");
         tfNome.clear(); tfValorObjetivo.clear(); tfDataAlvo.clear(); tfDescricao.clear();
         lblErroMeta.setVisible(false);
-        btnEditar.setDisable(true); btnDesativar.setDisable(true);
+        btnEditar.setDisable(true); btnExcluir.setDisable(true);
         lvMetas.getSelectionModel().clearSelection();
         lblDetalheNome.setText("Selecione uma meta");
         pbProgresso.setProgress(0);

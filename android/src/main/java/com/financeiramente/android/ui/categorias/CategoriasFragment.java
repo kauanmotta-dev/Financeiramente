@@ -40,7 +40,7 @@ public class CategoriasFragment extends Fragment {
 
         AppContext ctx = AppContext.get(requireContext());
         CategoriasViewModelFactory factory = new CategoriasViewModelFactory(
-                ctx.getCategoriaRepository(),
+                ctx.getCoreServices().getCategoriaRepository(),
                 ctx.getCriarCategoriaUseCase(),
                 ctx.getEditarCategoriaUseCase(),
                 ctx.getDeletarCategoriaUseCase(),

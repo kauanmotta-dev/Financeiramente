@@ -60,8 +60,8 @@ public class MetaDetalheFragment extends Fragment {
 
         AppContext ctx = AppContext.get(requireContext());
         MetaDetalheViewModelFactory factory = new MetaDetalheViewModelFactory(
-                ctx.getMetaRepository(),
-                ctx.getAporteMetaRepository(),
+                ctx.getCoreServices().getMetaRepository(),
+                ctx.getCoreServices().getAporteMetaRepository(),
                 ctx.getRegistrarAporteMetaUseCase(),
                 ctx.getDeletarAporteMetaUseCase(),
                 ctx.getCalcularProjecaoMetaUseCase());
@@ -84,19 +84,19 @@ public class MetaDetalheFragment extends Fragment {
                             (d, w) -> viewModel.deletarAporte(aporte.getId(), metaId))
                     .setNegativeButton(android.R.string.cancel, null)
                     .show();
-            return true;
         });
         rvAportes.setAdapter(aporteAdapter);
 
         viewModel.getMeta().observe(getViewLifecycleOwner(), meta -> {
             if (meta == null) return;
+            double totalSalvo = meta.getValorAtual() + meta.getValorInicial();
             double pct = meta.getValorObjetivo() > 0
-                    ? (meta.getValorAtual() / meta.getValorObjetivo()) * 100 : 0;
+                    ? (totalSalvo / meta.getValorObjetivo()) * 100 : 0;
             progressBar.setMax(100);
             progressBar.setProgress((int) Math.min(pct, 100));
             tvPercentual.setText(String.format(Locale.getDefault(), "%.1f%%", Math.min(pct, 100)));
             tvValores.setText(String.format(Locale.getDefault(),
-                    "R$ %.2f / R$ %.2f", meta.getValorAtual(), meta.getValorObjetivo()));
+                    "R$ %.2f / R$ %.2f", totalSalvo, meta.getValorObjetivo()));
                 tvTituloMeta.setText(meta.getNome());
         });
 

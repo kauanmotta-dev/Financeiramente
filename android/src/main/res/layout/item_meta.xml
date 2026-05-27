@@ -38,6 +38,22 @@
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_excluir_meta"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="0dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="@string/excluir"
+                android:textColor="@color/vermelho_error" />
+
         </LinearLayout>
 
         <!-- Row: circular progress + text info -->

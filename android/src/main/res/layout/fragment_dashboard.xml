@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -6,11 +6,17 @@
     android:layout_height="match_parent"
     android:background="?attr/colorBackground">
 
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:fillViewport="true"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
 
         <TextView
             android:layout_width="match_parent"
@@ -63,12 +69,12 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/dashboard_saldo_real"
+                    android:text="@string/dashboard_saldo_conta"
                     android:textAppearance="@style/TextAppearance.Financeiramente.Caption"
                     android:layout_marginTop="12dp" />
 
                 <TextView
-                    android:id="@+id/tv_saldo_real"
+                    android:id="@+id/tv_saldo_conta"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="R$ --"
@@ -76,30 +82,14 @@
                     android:textColor="?attr/colorOnSurface"
                     android:layout_marginTop="2dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/dashboard_saldo_disponivel"
-                    android:textAppearance="@style/TextAppearance.Financeiramente.Caption"
-                    android:layout_marginTop="10dp" />
-
-                <TextView
-                    android:id="@+id/tv_saldo_disponivel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="R$ --"
-                    android:textAppearance="@style/TextAppearance.Financeiramente.Amount"
-                    android:textColor="?attr/colorOnSurface"
-                    android:layout_marginTop="2dp" />
-
                 <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/pb_global"
+                    android:id="@+id/pb_saldo_conta"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    app:trackCornerRadius="4dp"
+                    android:layout_marginTop="10dp"
+                    app:indicatorColor="@color/vermelho_error"
                     app:trackColor="?attr/colorOnSurfaceVariant"
-                    app:indicatorColor="?attr/colorPrimary" />
+                    app:trackCornerRadius="4dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -108,7 +98,7 @@
                     android:layout_marginTop="6dp">
 
                     <TextView
-                        android:id="@+id/tv_gasto_total"
+                        android:id="@+id/tv_gasto_conta"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -117,7 +107,7 @@
                         android:textColor="@color/vermelho_error" />
 
                     <TextView
-                        android:id="@+id/tv_receita_total"
+                        android:id="@+id/tv_receita_conta"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -125,6 +115,75 @@
                         android:text="@string/dashboard_receita"
                         android:textAppearance="@style/TextAppearance.Financeiramente.Caption"
                         android:textColor="@color/verde_success" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@color/cinza_divider"
+                    android:alpha="0.45" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="4dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/dashboard_saldo_essenciais"
+                            android:textAppearance="@style/TextAppearance.Financeiramente.Caption" />
+
+                        <TextView
+                            android:id="@+id/tv_saldo_essenciais"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="R$ --"
+                            android:textAppearance="@style/TextAppearance.Financeiramente.Amount"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginHorizontal="12dp"
+                        android:background="@color/cinza_divider"
+                        android:alpha="0.45" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/dashboard_saldo_nao_essenciais"
+                            android:textAppearance="@style/TextAppearance.Financeiramente.Caption" />
+
+                        <TextView
+                            android:id="@+id/tv_saldo_nao_essenciais"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="R$ --"
+                            android:textAppearance="@style/TextAppearance.Financeiramente.Amount"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
@@ -201,6 +260,29 @@
 
         </com.google.android.material.card.MaterialCardView>
 
+        <TextView
+            android:id="@+id/tv_cartoes_limites_titulo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="6dp"
+            android:text="@string/dashboard_cartoes_limites_titulo"
+            android:textAppearance="@style/TextAppearance.Financeiramente.Caption" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/layout_cartoes_limites"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+
+        </HorizontalScrollView>
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_registrar_lancamento"
             android:layout_width="match_parent"
@@ -217,6 +299,8 @@
             android:text="@string/dashboard_abrir_configuracoes"
             app:icon="@android:drawable/ic_menu_manage" />
 
-    </LinearLayout>
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

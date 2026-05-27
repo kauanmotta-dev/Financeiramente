@@ -7,10 +7,10 @@ import androidx.lifecycle.ViewModel;
 import com.financeiramente.core.domain.entity.Categoria;
 import com.financeiramente.core.domain.vo.TipoCategoria;
 import com.financeiramente.core.repository.CategoriaRepository;
-import com.financeiramente.core.usecase.CriarCategoriaUseCase;
-import com.financeiramente.core.usecase.DeletarCategoriaUseCase;
-import com.financeiramente.core.usecase.EditarCategoriaUseCase;
-import com.financeiramente.core.usecase.ReordenarCategoriasUseCase;
+import com.financeiramente.core.usecase.categoria.CriarCategoriaUseCase;
+import com.financeiramente.core.usecase.categoria.DeletarCategoriaUseCase;
+import com.financeiramente.core.usecase.categoria.EditarCategoriaUseCase;
+import com.financeiramente.core.usecase.categoria.ReordenarCategoriasUseCase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +58,12 @@ public class CategoriasViewModel extends ViewModel {
     }
 
     public void carregarCategorias() {
-        List<Categoria> todas = categoriaRepository.listarRaizes();
+        List<Categoria> todasRaw = categoriaRepository.listarRaizes();
+        // Excluir "Sem Categoria" da tela de configurações
+        List<Categoria> todas = new ArrayList<>();
+        for (Categoria c : todasRaw) {
+            if (!"Sem Categoria".equals(c.getNome())) todas.add(c);
+        }
         categoriasRaiz.setValue(todas);
 
         List<Categoria> despesas = new ArrayList<>();

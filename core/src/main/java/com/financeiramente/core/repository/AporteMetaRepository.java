@@ -8,4 +8,5 @@ public interface AporteMetaRepository {
     void deletar(String id);
     List<AporteMeta> listarPorMeta(String metaId);
     double somarPorMeta(String metaId);
+    double somarPorMesEAno(int mes, int ano);
 }

@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
@@ -21,11 +22,12 @@ import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.LancamentosListViewModel;
 import com.financeiramente.android.viewmodel.LancamentosListViewModelFactory;
+import com.financeiramente.core.domain.entity.CartaoCredito;
 import com.financeiramente.core.domain.entity.Lancamento;
 import com.financeiramente.core.domain.vo.TipoLancamento;
+import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
-import com.google.android.material.search.SearchBar;
-import com.google.android.material.search.SearchView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -33,10 +35,13 @@ import java.util.List;
 
 public class LancamentosListFragment extends Fragment {
 
+    private static final String ARG_SOURCE_TAB = "sourceTab";
+
     private LancamentosListViewModel viewModel;
     private LancamentoAdapter adapter;
     private View emptyState;
     private TipoLancamento filtroTipoAtual = null;
+    private int sourceTab = 0;
 
     @Nullable
     @Override
@@ -49,9 +54,13 @@ public class LancamentosListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        Bundle args = getArguments();
+        sourceTab = args != null ? args.getInt(ARG_SOURCE_TAB, 0) : 0;
+
         view.findViewById(R.id.btn_back_lancamentos).setOnClickListener(v -> {
             if (!Navigation.findNavController(view).navigateUp()) {
-                Navigation.findNavController(view).navigate(R.id.nav_dashboard);
+                Navigation.findNavController(view).navigate(
+                        sourceTab == R.id.nav_gastos ? R.id.nav_gastos : R.id.nav_dashboard);
             }
         });
 
@@ -59,8 +68,8 @@ public class LancamentosListFragment extends Fragment {
         LancamentosListViewModelFactory factory = new LancamentosListViewModelFactory(
                 ctx.getListarLancamentosUseCase(),
                 ctx.getDeletarLancamentoUseCase(),
-                ctx.getCategoriaRepository(),
-                ctx.getTagRepository());
+                ctx.getCoreServices().getCategoriaRepository(),
+                ctx.getCoreServices().getTagRepository());
         viewModel = new ViewModelProvider(this, factory).get(LancamentosListViewModel.class);
 
         // ── Empty state — Épico 8 ─────────────────────────────────────────
@@ -77,16 +86,16 @@ public class LancamentosListFragment extends Fragment {
         btnCta.setVisibility(View.VISIBLE);
         btnCta.setOnClickListener(v ->
                 Navigation.findNavController(view)
-                        .navigate(R.id.action_lancamentosListFragment_to_lancamentoFormFragment));
+                .navigate(R.id.action_lancamentosListFragment_to_lancamentoFormFragment,
+                    criarArgsLancamento(null)));
 
         // ── Adapter ──────────────────────────────────────────────────────────
-        adapter = new LancamentoAdapter(lancamento -> {
-            // Tap → editar
-            Bundle args = new Bundle();
-            args.putString("lancamentoId", lancamento.getId());
-            Navigation.findNavController(view)
-                    .navigate(R.id.action_lancamentosListFragment_to_lancamentoFormFragment, args);
-        });
+        adapter = new LancamentoAdapter(
+            lancamento -> navegarParaEdicao(view, lancamento),
+            lancamento -> {
+                mostrarOpcoesLancamento(view, lancamento);
+                return true;
+            });
 
         // ── RecyclerView ─────────────────────────────────────────────────────
         RecyclerView rv = view.findViewById(R.id.rv_lancamentos);
@@ -105,16 +114,7 @@ public class LancamentosListFragment extends Fragment {
                             adapter.notifyItemChanged(position);
                             return;
                         }
-                        viewModel.deletarLancamento(l.getId());
-
-                        Snackbar.make(view, R.string.lancamento_excluido, Snackbar.LENGTH_LONG)
-                                .setAction(R.string.desfazer, v -> {
-                                    // Undo: reload without deleting
-                                    // (deletion is already fired; show message only)
-                                    Toast.makeText(requireContext(),
-                                            R.string.lancamento_excluido, Toast.LENGTH_SHORT).show();
-                                })
-                                .show();
+                        confirmarExclusaoLancamento(view, l.getId(), l.getDescricao(), position);
                     }
 
                     @Override
@@ -126,35 +126,25 @@ public class LancamentosListFragment extends Fragment {
                         }
                         // Restore item visually before navigating
                         adapter.notifyItemChanged(position);
-                        Bundle args = new Bundle();
-                        args.putString("lancamentoId", l.getId());
-                        Navigation.findNavController(view)
-                                .navigate(R.id.action_lancamentosListFragment_to_lancamentoFormFragment, args);
+                        navegarParaEdicao(view, l);
                     }
                 });
 
         new ItemTouchHelper(swipeCallback).attachToRecyclerView(rv);
 
         // ── SearchBar / SearchView ────────────────────────────────────────────
-        SearchBar searchBar  = view.findViewById(R.id.search_bar);
-        SearchView searchView = view.findViewById(R.id.search_view);
-        searchView.setupWithSearchBar(searchBar);
-
-        searchView.addTransitionListener((sv, previousState, newState) -> {
-            if (newState == SearchView.TransitionState.HIDING
-                    || newState == SearchView.TransitionState.HIDDEN) {
-                // Clear filter when search is closed
-                adapter.filter("");
-                searchBar.setText("");
-            }
-        });
-
-        searchView.getEditText().addTextChangedListener(new android.text.TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void afterTextChanged(android.text.Editable s) {}
+        SearchView searchView = view.findViewById(R.id.search_view_inline);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                adapter.filter(s != null ? s.toString() : "");
+            public boolean onQueryTextSubmit(String query) {
+                adapter.filter(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                adapter.filter(newText);
+                return true;
             }
         });
 
@@ -187,6 +177,9 @@ public class LancamentosListFragment extends Fragment {
             if (msg != null) Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
         });
 
+        // Seção de cartões
+        carregarCartoesAtivos(view);
+
         // Snackbar "Lançamento salvo" com ação Desfazer (disparado pelo formulário)
         getParentFragmentManager().setFragmentResultListener(
                 "lancamento_salvo", getViewLifecycleOwner(),
@@ -195,9 +188,8 @@ public class LancamentosListFragment extends Fragment {
                     Snackbar snackbar = Snackbar.make(view,
                             R.string.lancamento_salvo, Snackbar.LENGTH_LONG);
                     if (lancId != null) {
-                        snackbar.setAction(R.string.desfazer, v -> {
-                            viewModel.deletarLancamento(lancId);
-                        });
+                        snackbar.setAction(R.string.desfazer,
+                                v -> confirmarExclusaoLancamento(view, lancId, null, null));
                     }
                     snackbar.show();
                 });
@@ -209,11 +201,48 @@ public class LancamentosListFragment extends Fragment {
         viewModel.carregarLancamentos();
     }
 
+    private void carregarCartoesAtivos(View rootView) {
+        AppContext ctx = AppContext.get(requireContext());
+        new Thread(() -> {
+            java.util.List<CartaoCredito> cartoes = ctx.getCoreServices().getCartaoRepository().listarAtivos();
+            if (getActivity() == null) return;
+            getActivity().runOnUiThread(() -> {
+                if (cartoes == null || cartoes.isEmpty()) return;
+
+                View tvTitulo = rootView.findViewById(R.id.tv_cartoes_titulo);
+                View hsv = rootView.findViewById(R.id.hsv_cartoes);
+                ChipGroup cg = rootView.findViewById(R.id.cg_lancamentos_cartoes);
+
+                tvTitulo.setVisibility(View.VISIBLE);
+                hsv.setVisibility(View.VISIBLE);
+
+                for (CartaoCredito cartao : cartoes) {
+                    Chip chip = new Chip(requireContext());
+                    String icone = cartao.getIcone() == null || cartao.getIcone().trim().isEmpty() ? "💳" : cartao.getIcone();
+                    chip.setText(icone + " " + cartao.getNome());
+                    chip.setCheckable(true);
+                    chip.setOnCheckedChangeListener((cb, checked) -> {
+                        if (checked) {
+                            android.os.Bundle args = new android.os.Bundle();
+                            args.putString("cartaoId", cartao.getId());
+                            Navigation.findNavController(rootView)
+                                    .navigate(R.id.action_lancamentosListFragment_to_faturaListFragment, args);
+                            cb.setChecked(false);
+                        }
+                    });
+                    cg.addView(chip);
+                }
+            });
+        }).start();
+    }
+
     private void renderLista() {
         List<Lancamento> base = viewModel.getLancamentos().getValue();
         List<Lancamento> filtrada = new ArrayList<>();
         if (base != null) {
             for (Lancamento lancamento : base) {
+                // Ocultar lançamentos vinculados a fatura de cartão
+                if (lancamento.getFaturaId() != null) continue;
                 if (filtroTipoAtual == null || filtroTipoAtual == lancamento.getTipo()) {
                     filtrada.add(lancamento);
                 }
@@ -223,6 +252,78 @@ public class LancamentosListFragment extends Fragment {
                 viewModel.getCategorias().getValue(),
                 viewModel.getTagsMap().getValue());
         emptyState.setVisibility(filtrada.isEmpty() ? View.VISIBLE : View.GONE);
+    }
+
+    private void mostrarOpcoesLancamento(View rootView, Lancamento lancamento) {
+        CharSequence[] opcoes = new CharSequence[] {
+                getString(R.string.editar),
+                getString(R.string.excluir)
+        };
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(lancamento.getDescricao())
+                .setItems(opcoes, (dialog, which) -> {
+                    if (which == 0) {
+                        navegarParaEdicao(rootView, lancamento);
+                    } else if (which == 1) {
+                        confirmarExclusaoLancamento(
+                                rootView,
+                                lancamento.getId(),
+                                lancamento.getDescricao(),
+                                null);
+                    }
+                })
+                .show();
+    }
+
+    private void navegarParaEdicao(View rootView, Lancamento lancamento) {
+        Bundle args = criarArgsLancamento(lancamento.getId());
+        Navigation.findNavController(rootView)
+                .navigate(R.id.action_lancamentosListFragment_to_lancamentoFormFragment, args);
+    }
+
+    private Bundle criarArgsLancamento(@Nullable String lancamentoId) {
+        Bundle args = new Bundle();
+        args.putInt(ARG_SOURCE_TAB, sourceTab);
+        if (lancamentoId != null) {
+            args.putString("lancamentoId", lancamentoId);
+        }
+        return args;
+    }
+
+    private void confirmarExclusaoLancamento(View rootView,
+                                             String lancamentoId,
+                                             @Nullable String descricao,
+                                             @Nullable Integer swipePosition) {
+        String mensagem = descricao != null && !descricao.trim().isEmpty()
+                ? getString(R.string.confirmar_exclusao_lancamento, descricao)
+                : getString(R.string.confirmar_exclusao_lancamento_generico);
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.excluir_lancamento)
+                .setMessage(mensagem)
+                .setPositiveButton(R.string.excluir,
+                        (dialog, which) -> excluirLancamento(rootView, lancamentoId))
+                .setNegativeButton(android.R.string.cancel, (dialog, which) -> {
+                    if (swipePosition != null) {
+                        adapter.notifyItemChanged(swipePosition);
+                    }
+                })
+                .setOnCancelListener(dialog -> {
+                    if (swipePosition != null) {
+                        adapter.notifyItemChanged(swipePosition);
+                    }
+                })
+                .show();
+    }
+
+    private void excluirLancamento(View rootView, String lancamentoId) {
+        viewModel.deletarLancamento(lancamentoId);
+        Snackbar.make(rootView, R.string.lancamento_excluido, Snackbar.LENGTH_LONG)
+                .setAction(R.string.desfazer, v -> {
+                    Toast.makeText(requireContext(),
+                            R.string.lancamento_excluido, Toast.LENGTH_SHORT).show();
+                })
+                .show();
     }
 }
 
