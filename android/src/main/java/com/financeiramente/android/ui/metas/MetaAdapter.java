@@ -26,8 +26,8 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
         void onClick(Meta meta);
     }
 
-    public interface OnMetaLongClickListener {
-        boolean onLongClick(Meta meta);
+    public interface OnMetaDeleteClickListener {
+        void onDeleteClick(Meta meta);
     }
 
     public interface OnAporteClickListener {
@@ -41,12 +41,12 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
 
     private List<Meta> items = new ArrayList<>();
     private final OnMetaClickListener onClick;
-    private final OnMetaLongClickListener onLongClick;
+    private final OnMetaDeleteClickListener onDeleteClick;
     private OnAporteClickListener onAporteClick;
 
-    public MetaAdapter(OnMetaClickListener onClick, OnMetaLongClickListener onLongClick) {
+    public MetaAdapter(OnMetaClickListener onClick, OnMetaDeleteClickListener onDeleteClick) {
         this.onClick = onClick;
-        this.onLongClick = onLongClick;
+        this.onDeleteClick = onDeleteClick;
     }
 
     public void setOnAporteClickListener(OnAporteClickListener listener) {
@@ -71,13 +71,14 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
         Meta meta = items.get(position);
         h.tvNome.setText(meta.getNome());
 
+        double totalSalvo = meta.getValorAtual() + meta.getValorInicial();
         double percentual = meta.getValorObjetivo() > 0
-                ? (meta.getValorAtual() / meta.getValorObjetivo()) * 100.0
+                ? (totalSalvo / meta.getValorObjetivo()) * 100.0
                 : 0.0;
         h.cpvProgresso.setProgress((float) Math.min(percentual, 100.0));
 
         h.tvValores.setText(String.format(Locale.getDefault(),
-                "R$ %.2f / R$ %.2f", meta.getValorAtual(), meta.getValorObjetivo()));
+                "R$ %.2f / R$ %.2f", totalSalvo, meta.getValorObjetivo()));
 
         if (meta.getDescricao() != null && !meta.getDescricao().trim().isEmpty()) {
             h.tvDescricao.setText(meta.getDescricao().trim());
@@ -87,7 +88,7 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
         }
 
         int statusColor;
-        if (percentual >= 100.0) {
+        if (totalSalvo >= meta.getValorObjetivo()) {
             h.tvStatus.setText(R.string.meta_status_concluida);
             statusColor = ContextCompat.getColor(h.itemView.getContext(), R.color.verde_success);
         } else if (estaAtrasada(meta)) {
@@ -123,7 +124,7 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
         }
 
         h.itemView.setOnClickListener(v -> onClick.onClick(meta));
-        h.itemView.setOnLongClickListener(v -> onLongClick.onLongClick(meta));
+        h.btnExcluir.setOnClickListener(v -> onDeleteClick.onDeleteClick(meta));
 
         h.btnAporte.setOnClickListener(v -> {
             if (onAporteClick != null) onAporteClick.onAporteClick(meta);
@@ -150,7 +151,7 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
      * Returns null when there is insufficient data (no progress, or already completed).
      */
     private String calcularProjecao(Meta meta) {
-        double restante = meta.getValorObjetivo() - meta.getValorAtual();
+        double restante = meta.getValorEfetivo() - meta.getValorAtual();
         if (restante <= 0) {
             return null; // already met
         }
@@ -186,6 +187,7 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
         TextView tvDescricao;
         TextView tvDataAlvo;
         TextView tvProjecao;
+        MaterialButton btnExcluir;
         MaterialButton btnAporte;
 
         ViewHolder(@NonNull View itemView) {
@@ -197,6 +199,7 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
             tvDescricao = itemView.findViewById(R.id.tv_meta_descricao);
             tvDataAlvo = itemView.findViewById(R.id.tv_meta_data_alvo);
             tvProjecao = itemView.findViewById(R.id.tv_meta_projecao);
+            btnExcluir = itemView.findViewById(R.id.btn_excluir_meta);
             btnAporte = itemView.findViewById(R.id.btn_registrar_aporte);
         }
     }

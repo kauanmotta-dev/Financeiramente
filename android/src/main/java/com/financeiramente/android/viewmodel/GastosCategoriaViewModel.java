@@ -153,6 +153,7 @@ public class GastosCategoriaViewModel extends ViewModel {
     private final MutableLiveData<String> competenciaLabel = new MutableLiveData<>();
     private final MutableLiveData<Double> totalRecebido = new MutableLiveData<>(0d);
     private final MutableLiveData<Double> totalGasto = new MutableLiveData<>(0d);
+    private final MutableLiveData<Double> totalPrevistoGasto = new MutableLiveData<>(0d);
     private final MutableLiveData<String> erro = new MutableLiveData<>();
 
     private final List<SecaoTipoCategoria> secoesCalculadas = new ArrayList<>();
@@ -186,6 +187,10 @@ public class GastosCategoriaViewModel extends ViewModel {
 
     public LiveData<Double> getTotalGasto() {
         return totalGasto;
+    }
+
+    public LiveData<Double> getTotalPrevistoGasto() {
+        return totalPrevistoGasto;
     }
 
     public LiveData<String> getErro() {
@@ -300,12 +305,14 @@ public class GastosCategoriaViewModel extends ViewModel {
                         TipoLancamento.RECEITA, ano, mes);
                 double gastoMes = lancamentoRepository.somarPorTipoEMes(
                         TipoLancamento.DESPESA, ano, mes);
+                double totalPrevistoMes = limiteEssenciais + limiteNaoEssenciais;
 
                 mainHandler.post(() -> {
                     secoesCalculadas.clear();
                     secoesCalculadas.addAll(secoesLocal);
                     totalRecebido.setValue(recebidoMes);
                     totalGasto.setValue(gastoMes);
+                    totalPrevistoGasto.setValue(totalPrevistoMes);
                     publicarSecoesPorModo();
                 });
             } catch (Exception e) {
@@ -335,15 +342,20 @@ public class GastosCategoriaViewModel extends ViewModel {
         List<Categoria> filhas = filhasPorPai.getOrDefault(categoria.getId(), Collections.emptyList());
         List<GastoCategoriaNode> filhasNo = new ArrayList<>();
 
-        double totalAgregado = categoria.getLimiteMensal() != null ? categoria.getLimiteMensal() : 0d;
+        double limiteProprio = categoria.getLimiteMensal() != null ? categoria.getLimiteMensal() : 0d;
+        double somaLimitesFilhas = 0d;
         double utilizadoAgregado = utilizadoPorCategoria.getOrDefault(categoria.getId(), 0d);
 
         for (Categoria filha : filhas) {
             NodeTotals filhaTotals = construirNo(filha, filhasPorPai, utilizadoPorCategoria, categoria.getNome());
             filhasNo.add(filhaTotals.node);
-            totalAgregado += filhaTotals.total;
+            somaLimitesFilhas += filhaTotals.total;
             utilizadoAgregado += filhaTotals.utilizado;
         }
+
+        // Regra de negócio: limite efetivo é o limite da própria categoria,
+        // ou (se não existir) a soma dos limites das subcategorias.
+        double totalAgregado = limiteProprio > 0d ? limiteProprio : somaLimitesFilhas;
 
         GastoCategoriaNode node = new GastoCategoriaNode(
                 categoria.getId(),
@@ -361,10 +373,13 @@ public class GastosCategoriaViewModel extends ViewModel {
     private void atualizarCompetenciaLabel() {
         Month month = Month.of(mes);
         Locale localePtBr = Locale.forLanguageTag("pt-BR");
-        String nomeMes = month.getDisplayName(TextStyle.FULL, localePtBr);
-        String mesFormatado = nomeMes.substring(0, 1).toUpperCase(localePtBr)
-            + nomeMes.substring(1);
-        competenciaLabel.setValue(mesFormatado + " " + ano);
+        String nomeMes = month.getDisplayName(TextStyle.SHORT, localePtBr);
+        String mesFormatado = nomeMes.replace(".", "").toUpperCase(localePtBr);
+        if (mesFormatado.length() > 3) {
+            mesFormatado = mesFormatado.substring(0, 3);
+        }
+        int anoCurto = ano % 100;
+        competenciaLabel.setValue(String.format(localePtBr, "%s %02d", mesFormatado, anoCurto));
     }
 
     @Override

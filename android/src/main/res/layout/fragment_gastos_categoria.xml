@@ -164,6 +164,7 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
+                        android:id="@+id/layout_total_primario"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -171,6 +172,7 @@
                         android:orientation="horizontal">
 
                         <TextView
+                            android:id="@+id/tv_total_primario_label"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/gastos_total_recebido"
@@ -189,6 +191,7 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/layout_total_secundario"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -196,6 +199,7 @@
                         android:orientation="horizontal">
 
                         <TextView
+                            android:id="@+id/tv_total_secundario_label"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/gastos_total_gasto"

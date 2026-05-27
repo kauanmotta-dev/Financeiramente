@@ -34,4 +34,11 @@
     <!-- gradient_end: Blue 800 -->
     <color name="dark_gradient_end">#1D4ED8</color>
 
+    <!-- Dashboard - card de avisos -->
+    <color name="dashboard_aviso_card_bg">@color/dark_surface</color>
+    <color name="dashboard_aviso_card_stroke">@color/dark_divider</color>
+    <color name="dashboard_aviso_text">@color/dark_on_surface_variant</color>
+    <color name="dashboard_aviso_dot_preto">@color/dark_on_surface</color>
+    <color name="dashboard_aviso_dot_cinza">@color/dark_on_surface_variant</color>
+
 </resources>

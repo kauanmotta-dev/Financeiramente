@@ -55,11 +55,13 @@ public class CategoriaFormFragment extends Fragment {
         tabTipo  = view.findViewById(R.id.tab_tipo);
         tabDespesaClassificacao = view.findViewById(R.id.tab_despesa_classificacao);
         etLimite = view.findViewById(R.id.et_limite);
+        com.google.android.material.textfield.TextInputLayout tilLimite = view.findViewById(R.id.til_limite);
         MaterialButton btnSalvar = view.findViewById(R.id.btn_salvar);
         MaterialButton btnExcluirSubcategoria = view.findViewById(R.id.btn_excluir_subcategoria);
         View llTipoContainer = view.findViewById(R.id.ll_tipo_container);
         View llDespesaClassificacao = view.findViewById(R.id.ll_despesa_classificacao);
         View tvLabelCor = view.findViewById(R.id.tv_label_cor);
+        View tvLabelIcone = view.findViewById(R.id.tv_label_icone);
         View tvSubcategoriaCorHint = view.findViewById(R.id.tv_subcategoria_cor_hint);
         RecyclerView rvIcones = view.findViewById(R.id.rv_icones);
         RecyclerView rvCores  = view.findViewById(R.id.rv_cores);
@@ -74,6 +76,8 @@ public class CategoriaFormFragment extends Fragment {
             llDespesaClassificacao.setVisibility(View.GONE);
             rvCores.setVisibility(View.GONE);
             tvLabelCor.setVisibility(View.GONE);
+            rvIcones.setVisibility(View.GONE);
+            if (tvLabelIcone != null) tvLabelIcone.setVisibility(View.GONE);
             tvSubcategoriaCorHint.setVisibility(View.VISIBLE);
         } else {
             llDespesaClassificacao.setVisibility(View.VISIBLE);
@@ -87,7 +91,7 @@ public class CategoriaFormFragment extends Fragment {
         // Load existing values if editing
         AppContext ctx = AppContext.get(requireContext());
         if (categoriaId != null) {
-            Optional<Categoria> opt = ctx.getCategoriaRepository().buscarPorId(categoriaId);
+            Optional<Categoria> opt = ctx.getCoreServices().getCategoriaRepository().buscarPorId(categoriaId);
             if (opt.isPresent()) {
                 Categoria categoria = opt.get();
                 etNome.setText(categoria.getNome());
@@ -117,6 +121,9 @@ public class CategoriaFormFragment extends Fragment {
                 if (!isSubcategoria) {
                     llDespesaClassificacao.setVisibility(despesaSelecionada ? View.VISIBLE : View.GONE);
                 }
+                tilLimite.setHint(getString(despesaSelecionada
+                        ? R.string.categoria_limite_mensal
+                        : R.string.categoria_previsao_receita));
             }
 
             @Override
@@ -131,6 +138,10 @@ public class CategoriaFormFragment extends Fragment {
             llDespesaClassificacao.setVisibility(
                     tabTipo.getSelectedTabPosition() == 0 ? View.VISIBLE : View.GONE);
         }
+        // Set initial hint if the tab listener hasn't fired (default state)
+        tilLimite.setHint(getString(tabTipo.getSelectedTabPosition() == 1
+                ? R.string.categoria_previsao_receita
+                : R.string.categoria_limite_mensal));
 
         // Icon grid
         iconeSelectorAdapter = new IconeSelectorAdapter(
@@ -205,7 +216,9 @@ public class CategoriaFormFragment extends Fragment {
             }
         }
 
-        String icone = iconeSelectorAdapter.getSelectedIcone();
+        String icone = paiId != null
+                ? buscarIconeCategoriaPai(ctx, paiId, iconeSelectorAdapter.getSelectedIcone())
+                : iconeSelectorAdapter.getSelectedIcone();
         String cor = paiId != null
                 ? buscarCorCategoriaPai(ctx, paiId, corSelectorAdapter.getSelectedCor())
                 : corSelectorAdapter.getSelectedCor();
@@ -229,8 +242,15 @@ public class CategoriaFormFragment extends Fragment {
         }
     }
 
+    private String buscarIconeCategoriaPai(AppContext ctx, String paiId, String fallbackIcone) {
+        return ctx.getCoreServices().getCategoriaRepository()
+                .buscarPorId(paiId)
+                .map(Categoria::getIcone)
+                .orElse(fallbackIcone);
+    }
+
     private String buscarCorCategoriaPai(AppContext ctx, String paiId, String fallbackCor) {
-        return ctx.getCategoriaRepository()
+        return ctx.getCoreServices().getCategoriaRepository()
                 .buscarPorId(paiId)
                 .map(Categoria::getCor)
                 .orElse(fallbackCor);

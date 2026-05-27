@@ -1,10 +1,10 @@
 package com.financeiramente.desktop.ui;
 
 import com.financeiramente.core.domain.entity.Lancamento;
-import com.financeiramente.core.usecase.DeletarLancamentoUseCase;
-import com.financeiramente.core.usecase.EditarLancamentoUseCase;
-import com.financeiramente.core.usecase.ListarLancamentosUseCase;
-import com.financeiramente.core.usecase.RegistrarLancamentoUseCase;
+import com.financeiramente.core.usecase.lancamento.DeletarLancamentoUseCase;
+import com.financeiramente.core.usecase.lancamento.EditarLancamentoUseCase;
+import com.financeiramente.core.usecase.lancamento.ListarLancamentosUseCase;
+import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoUseCase;
 import com.financeiramente.desktop.app.AppContext;
 
 import javafx.application.Platform;

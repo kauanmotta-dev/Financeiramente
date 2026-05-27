@@ -56,11 +56,11 @@
             android:id="@+id/action_configuracoesFragment_to_categoriasFragment"
             app:destination="@id/categoriasFragment" />
         <action
-            android:id="@+id/action_configuracoesFragment_to_recorrentesFragment"
-            app:destination="@id/recorrentesFragment" />
-        <action
             android:id="@+id/action_configuracoesFragment_to_tagsFragment"
             app:destination="@id/tagsFragment" />
+        <action
+            android:id="@+id/action_configuracoesFragment_to_nav_cartoes"
+            app:destination="@id/nav_cartoes" />
     </fragment>
 
     <fragment
@@ -74,9 +74,16 @@
         android:id="@+id/lancamentosListFragment"
         android:name="com.financeiramente.android.ui.lancamentos.LancamentosListFragment"
         android:label="@string/nav_lancamentos">
+        <argument
+            android:name="sourceTab"
+            app:argType="integer"
+            android:defaultValue="0" />
         <action
             android:id="@+id/action_lancamentosListFragment_to_lancamentoFormFragment"
             app:destination="@id/lancamentoFormFragment" />
+        <action
+            android:id="@+id/action_lancamentosListFragment_to_faturaListFragment"
+            app:destination="@id/faturaListFragment" />
     </fragment>
 
     <!-- BottomSheetDialogFragment — deve ser declarado como <dialog> no Navigation Component -->
@@ -85,11 +92,61 @@
         android:name="com.financeiramente.android.ui.lancamentos.LancamentoFormFragment"
         android:label="@string/form_lancamento">
         <argument
+            android:name="sourceTab"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <argument
             android:name="lancamentoId"
             app:argType="string"
             app:nullable="true"
             android:defaultValue="@null" />
     </dialog>
+
+    <!-- ── Categorias ── -->
+
+    <fragment
+        android:id="@+id/nav_cartoes"
+        android:name="com.financeiramente.android.ui.cartao.CartaoListFragment"
+        android:label="@string/nav_cartoes">
+        <action
+            android:id="@+id/action_cartaoListFragment_to_faturaListFragment"
+            app:destination="@id/faturaListFragment" />
+        <action
+            android:id="@+id/action_cartaoListFragment_to_cartaoFormFragment"
+            app:destination="@id/cartaoFormFragment" />
+    </fragment>
+
+    <dialog
+        android:id="@+id/cartaoFormFragment"
+        android:name="com.financeiramente.android.ui.cartao.CartaoFormFragment"
+        android:label="@string/form_cartao">
+        <argument
+            android:name="cartaoId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </dialog>
+
+    <fragment
+        android:id="@+id/faturaListFragment"
+        android:name="com.financeiramente.android.ui.cartao.FaturaListFragment"
+        android:label="@string/faturas_titulo">
+        <argument
+            android:name="cartaoId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_faturaListFragment_to_faturaDetalheFragment"
+            app:destination="@id/faturaDetalheFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/faturaDetalheFragment"
+        android:name="com.financeiramente.android.ui.cartao.FaturaDetalheFragment"
+        android:label="@string/fatura_detalhe">
+        <argument
+            android:name="faturaId"
+            app:argType="string" />
+    </fragment>
 
     <!-- ── Categorias ── -->
 
@@ -102,28 +159,6 @@
             app:destination="@id/categoriaFormFragment" />
     </fragment>
 
-
-    <!-- ── Lançamentos Recorrentes (EP-08) ── -->
-
-    <fragment
-        android:id="@+id/recorrentesFragment"
-        android:name="com.financeiramente.android.ui.recorrentes.RecorrentesFragment"
-        android:label="@string/nav_recorrentes">
-        <action
-            android:id="@+id/action_recorrentesFragment_to_recorrenteFormFragment"
-            app:destination="@id/recorrenteFormFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/recorrenteFormFragment"
-        android:name="com.financeiramente.android.ui.recorrentes.RecorrenteFormFragment"
-        android:label="@string/form_recorrente">
-        <argument
-            android:name="recorrenteId"
-            app:argType="string"
-            app:nullable="true"
-            android:defaultValue="@null" />
-    </fragment>
 
     <fragment
         android:id="@+id/categoriaFormFragment"

@@ -5,24 +5,24 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.financeiramente.core.repository.MetaRepository;
-import com.financeiramente.core.usecase.CriarMetaUseCase;
-import com.financeiramente.core.usecase.DesativarMetaUseCase;
-import com.financeiramente.core.usecase.EditarMetaUseCase;
+import com.financeiramente.core.usecase.meta.CriarMetaUseCase;
+import com.financeiramente.core.usecase.meta.DeletarMetaUseCase;
+import com.financeiramente.core.usecase.meta.EditarMetaUseCase;
 
 public class MetasViewModelFactory implements ViewModelProvider.Factory {
 
     private final CriarMetaUseCase criarMeta;
     private final EditarMetaUseCase editarMeta;
-    private final DesativarMetaUseCase desativarMeta;
+    private final DeletarMetaUseCase deletarMeta;
     private final MetaRepository repository;
 
     public MetasViewModelFactory(CriarMetaUseCase criarMeta,
                                   EditarMetaUseCase editarMeta,
-                                  DesativarMetaUseCase desativarMeta,
+                                  DeletarMetaUseCase deletarMeta,
                                   MetaRepository repository) {
         this.criarMeta = criarMeta;
         this.editarMeta = editarMeta;
-        this.desativarMeta = desativarMeta;
+        this.deletarMeta = deletarMeta;
         this.repository = repository;
     }
 
@@ -30,6 +30,6 @@ public class MetasViewModelFactory implements ViewModelProvider.Factory {
     @Override
     @SuppressWarnings("unchecked")
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-        return (T) new MetasViewModel(criarMeta, editarMeta, desativarMeta, repository);
+        return (T) new MetasViewModel(criarMeta, editarMeta, deletarMeta, repository);
     }
 }

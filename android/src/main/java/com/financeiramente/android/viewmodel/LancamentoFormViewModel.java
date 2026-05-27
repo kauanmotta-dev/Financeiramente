@@ -14,9 +14,14 @@ import com.financeiramente.core.domain.vo.TipoLancamento;
 import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
 import com.financeiramente.core.repository.TagRepository;
-import com.financeiramente.core.usecase.EditarLancamentoUseCase;
-import com.financeiramente.core.usecase.RegistrarLancamentoInput;
-import com.financeiramente.core.usecase.RegistrarLancamentoUseCase;
+import com.financeiramente.core.domain.entity.CartaoCredito;
+import com.financeiramente.core.domain.vo.TipoCompraCartao;
+import com.financeiramente.core.repository.CartaoCreditoRepository;
+import com.financeiramente.core.usecase.lancamento.EditarLancamentoUseCase;
+import com.financeiramente.core.usecase.lancamento.RegistrarCompraCartaoInput;
+import com.financeiramente.core.usecase.lancamento.RegistrarCompraCartaoUseCase;
+import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoInput;
+import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoUseCase;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +36,8 @@ public class LancamentoFormViewModel extends ViewModel {
     private final CategoriaRepository categoriaRepository;
     private final TagRepository tagRepository;
     private final LancamentoRepository lancamentoRepository;
+    private RegistrarCompraCartaoUseCase registrarCompraCartaoUseCase;
+    private CartaoCreditoRepository cartaoRepository;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -41,6 +48,7 @@ public class LancamentoFormViewModel extends ViewModel {
     private final MutableLiveData<Boolean> sucesso = new MutableLiveData<>();
     private final MutableLiveData<String> savedLancamentoId = new MutableLiveData<>();
     private final MutableLiveData<String> erro = new MutableLiveData<>();
+    private final MutableLiveData<List<CartaoCredito>> cartoesAtivos = new MutableLiveData<>(Collections.emptyList());
 
     public LancamentoFormViewModel(RegistrarLancamentoUseCase registrar,
                                    EditarLancamentoUseCase editar,
@@ -80,6 +88,7 @@ public class LancamentoFormViewModel extends ViewModel {
                 .filter(c -> c.getPaiId() != null)
                 .filter(c -> c.getTipo() != null)
                 .filter(c -> c.getTipo().isCompativelCom(tipo))
+                .filter(c -> !"Sem Categoria".equals(c.getNome()))
                 .collect(Collectors.toList());
     }
 
@@ -87,6 +96,72 @@ public class LancamentoFormViewModel extends ViewModel {
         executor.execute(() -> {
             lancamentoRepository.buscarPorId(id).ifPresent(l ->
                     mainHandler.post(() -> lancamentoCarregado.setValue(l)));
+        });
+    }
+
+    public void setCartaoSupport(RegistrarCompraCartaoUseCase registrarCompraCartaoUseCase,
+                                   CartaoCreditoRepository cartaoRepository) {
+        this.registrarCompraCartaoUseCase = registrarCompraCartaoUseCase;
+        this.cartaoRepository = cartaoRepository;
+        executor.execute(() -> {
+            List<CartaoCredito> ativos = cartaoRepository.listarAtivos();
+            mainHandler.post(() -> cartoesAtivos.setValue(ativos));
+        });
+    }
+
+    public void salvarComCartao(double valor, TipoLancamento tipo, String data, String descricao,
+                                 String categoriaId, List<String> tagIds, String cartaoId) {
+        if (registrarCompraCartaoUseCase == null) {
+            mainHandler.post(() -> erro.setValue("Use case de cartão não configurado"));
+            return;
+        }
+        executor.execute(() -> {
+            try {
+                RegistrarCompraCartaoInput input = new RegistrarCompraCartaoInput(
+                        cartaoId,
+                        TipoCompraCartao.CREDITO,
+                        valor,
+                        data,
+                        descricao,
+                        categoriaId,
+                        tagIds,
+                        1,
+                        null);
+                registrarCompraCartaoUseCase.executar(input);
+                mainHandler.post(() -> {
+                    savedLancamentoId.setValue(null);
+                    sucesso.setValue(true);
+                });
+            } catch (Exception e) {
+                mainHandler.post(() -> erro.setValue(e.getMessage()));
+            }
+        });
+    }
+
+    public void salvarParceladoComCartao(double valor, TipoLancamento tipo, String data, String descricao,
+                                          String categoriaId, List<String> tagIds, String cartaoId,
+                                          int numeroParcelas) {
+        if (registrarCompraCartaoUseCase == null) {
+            mainHandler.post(() -> erro.setValue("Use case de parcelamento não configurado"));
+            return;
+        }
+        executor.execute(() -> {
+            try {
+                RegistrarCompraCartaoInput input = new RegistrarCompraCartaoInput(
+                        cartaoId,
+                        TipoCompraCartao.PARCELADO,
+                        valor,
+                        data,
+                        descricao,
+                        categoriaId,
+                        tagIds,
+                        numeroParcelas,
+                        null);
+                registrarCompraCartaoUseCase.executar(input);
+                mainHandler.post(() -> sucesso.setValue(true));
+            } catch (Exception e) {
+                mainHandler.post(() -> erro.setValue(e.getMessage()));
+            }
         });
     }
 
@@ -127,6 +202,7 @@ public class LancamentoFormViewModel extends ViewModel {
     public LiveData<Boolean> getSucesso() { return sucesso; }
     public LiveData<String> getSavedLancamentoId() { return savedLancamentoId; }
     public LiveData<String> getErro() { return erro; }
+    public LiveData<List<CartaoCredito>> getCartoesAtivos() { return cartoesAtivos; }
 
     @Override
     protected void onCleared() {

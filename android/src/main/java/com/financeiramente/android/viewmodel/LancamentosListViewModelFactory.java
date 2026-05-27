@@ -6,8 +6,8 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.TagRepository;
-import com.financeiramente.core.usecase.DeletarLancamentoUseCase;
-import com.financeiramente.core.usecase.ListarLancamentosUseCase;
+import com.financeiramente.core.usecase.lancamento.DeletarLancamentoUseCase;
+import com.financeiramente.core.usecase.lancamento.ListarLancamentosUseCase;
 
 public class LancamentosListViewModelFactory implements ViewModelProvider.Factory {
 

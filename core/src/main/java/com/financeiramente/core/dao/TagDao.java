@@ -34,6 +34,7 @@ public class TagDao implements TagRepository {
 
     @Override
     public void deletar(String id) {
+        db.execute("DELETE FROM lancamento_tag WHERE tag_id=?", id);
         db.execute("DELETE FROM tag WHERE id=?", id);
     }
 

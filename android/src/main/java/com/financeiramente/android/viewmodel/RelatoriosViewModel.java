@@ -13,9 +13,9 @@ import com.financeiramente.core.domain.vo.TipoLancamento;
 import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
 import com.financeiramente.core.repository.TagRepository;
-import com.financeiramente.core.usecase.FiltroRelatorio;
-import com.financeiramente.core.usecase.GerarRelatorioUseCase;
-import com.financeiramente.core.usecase.RelatorioResult;
+import com.financeiramente.core.usecase.relatorio.FiltroRelatorio;
+import com.financeiramente.core.usecase.relatorio.GerarRelatorioUseCase;
+import com.financeiramente.core.usecase.relatorio.RelatorioResult;
 
 import java.util.LinkedHashMap;
 import java.time.LocalDate;

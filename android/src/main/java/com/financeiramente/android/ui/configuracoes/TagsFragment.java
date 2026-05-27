@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -42,6 +43,10 @@ public class TagsFragment extends Fragment {
     private TextView tvEmptyTags;
     private IconeSelectorAdapter emojiSelectorAdapter;
     private CorSelectorAdapter corSelectorAdapter;
+    private MaterialButton btnAdicionar;
+
+    private String tagEmEdicaoId;
+    private long tagEmEdicaoCriadoEm;
 
     @Nullable
     @Override
@@ -57,7 +62,7 @@ public class TagsFragment extends Fragment {
         view.findViewById(R.id.btn_back_tags).setOnClickListener(v ->
             Navigation.findNavController(view).navigateUp());
 
-        tagRepository = AppContext.get(requireContext()).getTagRepository();
+        tagRepository = AppContext.get(requireContext()).getCoreServices().getTagRepository();
         etNomeTag = view.findViewById(R.id.et_nome_tag);
         cgTags = view.findViewById(R.id.cg_tags_existentes);
         tvEmptyTags = view.findViewById(R.id.tv_tags_vazio);
@@ -78,8 +83,16 @@ public class TagsFragment extends Fragment {
         rvCores.setLayoutManager(new GridLayoutManager(requireContext(), 8));
         rvCores.setAdapter(corSelectorAdapter);
 
-        MaterialButton btnAdicionar = view.findViewById(R.id.btn_add_tag);
-        btnAdicionar.setOnClickListener(v -> criarTag());
+        btnAdicionar = view.findViewById(R.id.btn_add_tag);
+        btnAdicionar.setOnClickListener(v -> {
+            if (tagEmEdicaoId == null) {
+                criarTag();
+            } else {
+                salvarEdicaoTag();
+            }
+        });
+
+        resetarFormularioTag();
 
         carregarTags();
     }
@@ -122,13 +135,7 @@ public class TagsFragment extends Fragment {
 
                 if (!isAdded()) return;
                 requireActivity().runOnUiThread(() -> {
-                    etNomeTag.setText("");
-                    if (emojiSelectorAdapter != null) {
-                        emojiSelectorAdapter.setSelectedIcone(Tag.DEFAULT_EMOJI);
-                    }
-                    if (corSelectorAdapter != null) {
-                        corSelectorAdapter.setSelectedCor(Tag.DEFAULT_COLOR);
-                    }
+                    resetarFormularioTag();
                     Toast.makeText(requireContext(), getString(R.string.tag_criada), Toast.LENGTH_SHORT).show();
                 });
 
@@ -147,6 +154,103 @@ public class TagsFragment extends Fragment {
         });
     }
 
+    private void salvarEdicaoTag() {
+        String nome = etNomeTag.getText() != null ? etNomeTag.getText().toString().trim() : "";
+        if (nome.isEmpty()) {
+            Toast.makeText(requireContext(), getString(R.string.tag_erro_nome), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        executor.execute(() -> {
+            try {
+                Tag existenteComMesmoNome = tagRepository.buscarPorNome(nome).orElse(null);
+                if (existenteComMesmoNome != null && !existenteComMesmoNome.getId().equals(tagEmEdicaoId)) {
+                    postToast(getString(R.string.tag_erro_existente));
+                    return;
+                }
+
+                String emojiSelecionado = emojiSelectorAdapter != null
+                        ? emojiSelectorAdapter.getSelectedIcone()
+                        : Tag.DEFAULT_EMOJI;
+                String corSelecionada = corSelectorAdapter != null
+                        ? corSelectorAdapter.getSelectedCor()
+                        : Tag.DEFAULT_COLOR;
+
+                if (emojiSelecionado == null || emojiSelecionado.trim().isEmpty()) {
+                    emojiSelecionado = Tag.DEFAULT_EMOJI;
+                }
+                if (corSelecionada == null || corSelecionada.trim().isEmpty()) {
+                    corSelecionada = Tag.DEFAULT_COLOR;
+                }
+
+                Tag tagAtualizada = new Tag(
+                        tagEmEdicaoId,
+                        nome,
+                        emojiSelecionado,
+                        corSelecionada,
+                        tagEmEdicaoCriadoEm);
+                tagRepository.atualizar(tagAtualizada);
+
+                if (!isAdded()) return;
+                requireActivity().runOnUiThread(() -> {
+                    resetarFormularioTag();
+                    Toast.makeText(requireContext(), getString(R.string.tag_atualizada), Toast.LENGTH_SHORT).show();
+                });
+
+                carregarTags();
+            } catch (Exception e) {
+                postToast(e.getMessage() != null ? e.getMessage() : getString(R.string.em_construcao));
+            }
+        });
+    }
+
+    private void excluirTag(Tag tag) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.tag_excluir)
+                .setMessage(getString(R.string.tag_confirmar_excluir, tag.getNome()))
+                .setPositiveButton(R.string.excluir, (dialog, which) -> executor.execute(() -> {
+                    try {
+                        tagRepository.deletar(tag.getId());
+                        if (!isAdded()) return;
+                        requireActivity().runOnUiThread(() -> {
+                            if (tag.getId().equals(tagEmEdicaoId)) {
+                                resetarFormularioTag();
+                            }
+                            Toast.makeText(requireContext(), getString(R.string.tag_excluida), Toast.LENGTH_SHORT).show();
+                        });
+                        carregarTags();
+                    } catch (Exception e) {
+                        postToast(e.getMessage() != null ? e.getMessage() : getString(R.string.em_construcao));
+                    }
+                }))
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void iniciarEdicao(Tag tag) {
+        tagEmEdicaoId = tag.getId();
+        tagEmEdicaoCriadoEm = tag.getCriadoEm();
+        etNomeTag.setText(tag.getNome());
+        emojiSelectorAdapter.setSelectedIcone(tag.getEmoji() != null ? tag.getEmoji() : Tag.DEFAULT_EMOJI);
+        corSelectorAdapter.setSelectedCor(tag.getCor() != null ? tag.getCor() : Tag.DEFAULT_COLOR);
+        btnAdicionar.setText(R.string.editar);
+    }
+
+    private void resetarFormularioTag() {
+        tagEmEdicaoId = null;
+        tagEmEdicaoCriadoEm = 0L;
+        etNomeTag.setText("");
+        if (emojiSelectorAdapter != null) {
+            emojiSelectorAdapter.setSelectedIcone(Tag.DEFAULT_EMOJI);
+        }
+        if (corSelectorAdapter != null) {
+            corSelectorAdapter.setSelectedCor(Tag.DEFAULT_COLOR);
+        }
+        if (btnAdicionar != null) {
+            btnAdicionar.setText(R.string.tag_add);
+        }
+    }
+
     private void renderizarTags(List<Tag> tags) {
         cgTags.removeAllViews();
         boolean vazio = tags == null || tags.isEmpty();
@@ -162,8 +266,10 @@ public class TagsFragment extends Fragment {
                     ? Tag.DEFAULT_EMOJI
                     : tag.getEmoji();
             chip.setText(emoji + " " + tag.getNome());
-            chip.setClickable(false);
+            chip.setClickable(true);
             chip.setCheckable(false);
+            chip.setCloseIconVisible(true);
+            chip.setCloseIconContentDescription(getString(R.string.tag_excluir));
 
             String corHex = (tag.getCor() == null || tag.getCor().trim().isEmpty())
                     ? Tag.DEFAULT_COLOR
@@ -178,6 +284,9 @@ public class TagsFragment extends Fragment {
             } catch (IllegalArgumentException ignored) {
                 // Ignora cor inválida e mantém estilo padrão do chip.
             }
+
+            chip.setOnClickListener(v -> iniciarEdicao(tag));
+            chip.setOnCloseIconClickListener(v -> excluirTag(tag));
 
             cgTags.addView(chip);
         }
@@ -196,6 +305,9 @@ public class TagsFragment extends Fragment {
         tvEmptyTags = null;
         emojiSelectorAdapter = null;
         corSelectorAdapter = null;
+        btnAdicionar = null;
+        tagEmEdicaoId = null;
+        tagEmEdicaoCriadoEm = 0L;
     }
 
     @Override

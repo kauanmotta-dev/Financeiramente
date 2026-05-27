@@ -12,8 +12,8 @@ import com.financeiramente.core.domain.entity.Lancamento;
 import com.financeiramente.core.domain.entity.Tag;
 import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.TagRepository;
-import com.financeiramente.core.usecase.DeletarLancamentoUseCase;
-import com.financeiramente.core.usecase.ListarLancamentosUseCase;
+import com.financeiramente.core.usecase.lancamento.DeletarLancamentoUseCase;
+import com.financeiramente.core.usecase.lancamento.ListarLancamentosUseCase;
 
 import java.time.LocalDate;
 import java.util.Collections;

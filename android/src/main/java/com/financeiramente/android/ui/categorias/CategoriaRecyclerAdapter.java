@@ -278,6 +278,22 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
 
     private void bindChild(ChildViewHolder holder, Item item) {
         Categoria cat = item.categoria;
+        Categoria categoriaVisual = resolveCategoriaVisualParaFilha(cat);
+        String icone = CategoriaVisualFallback.icone(categoriaVisual, null);
+        String cor = CategoriaVisualFallback.cor(categoriaVisual, null);
+
+        holder.tvIcone.setText(icone);
+        try {
+            int color = Color.parseColor(cor);
+            GradientDrawable bg = new GradientDrawable();
+            bg.setShape(GradientDrawable.OVAL);
+            bg.setColor(color);
+            bg.setSize(dpToPx(32), dpToPx(32));
+            holder.flIconeContainer.setBackground(bg);
+        } catch (IllegalArgumentException ignored) {
+            holder.flIconeContainer.setBackgroundResource(R.drawable.bg_category_icon);
+        }
+
         holder.tvNome.setText(cat.getNome());
         if (cat.getLimiteMensal() != null) {
             holder.tvLimite.setText(String.format("R$ %.2f/mês", cat.getLimiteMensal()));
@@ -297,6 +313,18 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
             listener.onChildLongClick(items.get(pos).categoria);
             return true;
         });
+    }
+
+    private Categoria resolveCategoriaVisualParaFilha(Categoria filha) {
+        if (filha == null || filha.getPaiId() == null) {
+            return filha;
+        }
+        for (Categoria root : rootCategories) {
+            if (filha.getPaiId().equals(root.getId())) {
+                return root;
+            }
+        }
+        return filha;
     }
 
     private void toggleExpand(int headerPos) {
@@ -374,11 +402,15 @@ public class CategoriaRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.
     }
 
     static class ChildViewHolder extends RecyclerView.ViewHolder {
+        final FrameLayout flIconeContainer;
+        final TextView tvIcone;
         final TextView tvNome;
         final TextView tvLimite;
 
         ChildViewHolder(@NonNull View itemView) {
             super(itemView);
+            flIconeContainer = itemView.findViewById(R.id.fl_subcategoria_icone_container);
+            tvIcone = itemView.findViewById(R.id.tv_subcategoria_icone);
             tvNome   = itemView.findViewById(R.id.tv_subcategoria_nome);
             tvLimite = itemView.findViewById(R.id.tv_subcategoria_limite);
         }

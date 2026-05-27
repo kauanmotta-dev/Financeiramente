@@ -7,8 +7,8 @@ import androidx.lifecycle.ViewModelProvider;
 import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
 import com.financeiramente.core.repository.TagRepository;
-import com.financeiramente.core.usecase.EditarLancamentoUseCase;
-import com.financeiramente.core.usecase.RegistrarLancamentoUseCase;
+import com.financeiramente.core.usecase.lancamento.EditarLancamentoUseCase;
+import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoUseCase;
 
 public class LancamentoFormViewModelFactory implements ViewModelProvider.Factory {
 

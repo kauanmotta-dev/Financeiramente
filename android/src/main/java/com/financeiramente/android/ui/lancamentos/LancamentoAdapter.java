@@ -35,6 +35,11 @@ import java.util.Map;
 
 public class LancamentoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+    private static final double THOUSAND = 1_000d;
+    private static final double MILLION = 1_000_000d;
+    private static final double BILLION = 1_000_000_000d;
+    private static final double TRILLION = 1_000_000_000_000d;
+
     public static final int VIEW_TYPE_HEADER = 0;
     public static final int VIEW_TYPE_ITEM   = 1;
 
@@ -75,6 +80,7 @@ public class LancamentoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     // ─── Listeners ───────────────────────────────────────────────────────────
 
     public interface OnItemClickListener { void onClick(Lancamento lancamento); }
+    public interface OnItemLongClickListener { boolean onLongClick(Lancamento lancamento); }
 
     // ─── State ───────────────────────────────────────────────────────────────
 
@@ -87,12 +93,15 @@ public class LancamentoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private List<ListItem> displayList = new ArrayList<>();
 
     private OnItemClickListener clickListener;
+    private OnItemLongClickListener longClickListener;
 
     /** Tracks the last position that received an entry animation. */
     private int lastAnimatedPosition = -1;
 
-    public LancamentoAdapter(OnItemClickListener clickListener) {
+    public LancamentoAdapter(OnItemClickListener clickListener,
+                             OnItemLongClickListener longClickListener) {
         this.clickListener = clickListener;
+        this.longClickListener = longClickListener;
     }
 
     // ─── Public API ──────────────────────────────────────────────────────────
@@ -254,7 +263,7 @@ public class LancamentoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         h.tvDataHeader.setText(item.dataFormatada);
 
         Context ctx = h.itemView.getContext();
-        String valorFormatado = formatValor(Math.abs(item.dayBalance));
+        String valorFormatado = formatValorCompact(Math.abs(item.dayBalance));
         String saldoText = (item.dayBalance >= 0 ? "+" : "-") + "R$ " + valorFormatado;
         h.tvSaldoDia.setText(ctx.getString(R.string.saldo_dia, saldoText));
 
@@ -284,7 +293,7 @@ public class LancamentoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         h.tvDescricao.setText(l.getDescricao());
 
         // Categoria • data
-        String catNome = cat != null ? cat.getNome() : l.getCategoriaId();
+        String catNome = cat != null ? cat.getNome() : "Sem Categoria";
         h.tvCategoriaData.setText(catNome + " • " + formatDisplayDate(l.getData()));
 
         // Tags como chips
@@ -309,7 +318,7 @@ public class LancamentoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         // Valor formatado em verde/vermelho
         double val = l.getValor();
         String sinal = l.getTipo() == TipoLancamento.RECEITA ? "+" : "-";
-        h.tvValor.setText(sinal + "R$ " + formatValor(val));
+        h.tvValor.setText(sinal + "R$ " + formatValorCompact(val));
         int corValor = l.getTipo() == TipoLancamento.RECEITA
                 ? ContextCompat.getColor(ctx, R.color.verde_success)
                 : ContextCompat.getColor(ctx, R.color.vermelho_error);
@@ -318,6 +327,8 @@ public class LancamentoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         h.itemView.setOnClickListener(v -> {
             if (clickListener != null) clickListener.onClick(l);
         });
+        h.itemView.setOnLongClickListener(v ->
+                longClickListener != null && longClickListener.onLongClick(l));
     }
 
     private void applyCircleBackground(TextView tv, String hexColor) {
@@ -341,6 +352,23 @@ public class LancamentoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     private String formatValor(double valor) {
         return String.format(Locale.getDefault(), "%.2f", valor);
+    }
+
+    private String formatValorCompact(double valor) {
+        double abs = Math.abs(valor);
+        if (abs >= TRILLION) {
+            return String.format(Locale.getDefault(), "%.2f tri", valor / TRILLION);
+        }
+        if (abs >= BILLION) {
+            return String.format(Locale.getDefault(), "%.2f bi", valor / BILLION);
+        }
+        if (abs >= MILLION) {
+            return String.format(Locale.getDefault(), "%.2f mi", valor / MILLION);
+        }
+        if (abs >= THOUSAND) {
+            return String.format(Locale.getDefault(), "%.2f mil", valor / THOUSAND);
+        }
+        return formatValor(valor);
     }
 
     private String formatDisplayDate(String isoDate) {

@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
@@ -29,13 +30,22 @@ import java.util.Locale;
 
 public class GastosCategoriaFragment extends Fragment {
 
+    private static final String ARG_SOURCE_TAB = "sourceTab";
+
     private GastosCategoriaViewModel viewModel;
     private GastosCategoriaAdapter adapter;
     private TextView tvCompetencia;
+    private TextView tvTotalPrimarioLabel;
+    private TextView tvTotalSecundarioLabel;
     private TextView tvTotalRecebido;
     private TextView tvTotalGasto;
+    private View layoutTotalSecundario;
     private View emptyState;
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+    private double totalRecebidoAtual = 0d;
+    private double totalGastoAtual = 0d;
+    private double totalPrevistoAtual = 0d;
+    private GastosCategoriaViewModel.ModoExibicao modoAtual = GastosCategoriaViewModel.ModoExibicao.GASTOS;
 
     @Nullable
     @Override
@@ -50,13 +60,16 @@ public class GastosCategoriaFragment extends Fragment {
 
         AppContext appContext = AppContext.get(requireContext());
         GastosCategoriaViewModelFactory factory = new GastosCategoriaViewModelFactory(
-                appContext.getCategoriaRepository(),
-                appContext.getLancamentoRepository());
+                appContext.getCoreServices().getCategoriaRepository(),
+                appContext.getCoreServices().getLancamentoRepository());
         viewModel = new ViewModelProvider(this, factory).get(GastosCategoriaViewModel.class);
 
         tvCompetencia = view.findViewById(R.id.tv_competencia);
+        tvTotalPrimarioLabel = view.findViewById(R.id.tv_total_primario_label);
+        tvTotalSecundarioLabel = view.findViewById(R.id.tv_total_secundario_label);
         tvTotalRecebido = view.findViewById(R.id.tv_total_recebido);
         tvTotalGasto = view.findViewById(R.id.tv_total_gasto);
+        layoutTotalSecundario = view.findViewById(R.id.layout_total_secundario);
         emptyState = view.findViewById(R.id.layout_empty_state);
         configurarEmptyState();
 
@@ -69,24 +82,31 @@ public class GastosCategoriaFragment extends Fragment {
         btnProximoMes.setOnClickListener(v -> viewModel.proximoMes());
         btnAbrirGraficos.setOnClickListener(v ->
             Navigation.findNavController(view).navigate(R.id.nav_relatorios));
-        btnAbrirLancamentos.setOnClickListener(v ->
-            Navigation.findNavController(view).navigate(R.id.lancamentosListFragment));
+        btnAbrirLancamentos.setOnClickListener(v -> {
+            Bundle args = new Bundle();
+            args.putInt(ARG_SOURCE_TAB, R.id.nav_gastos);
+            Navigation.findNavController(view).navigate(R.id.lancamentosListFragment, args);
+        });
 
         MaterialButtonToggleGroup toggleModo = view.findViewById(R.id.toggle_modo);
         MaterialButton btnModoRecebido = view.findViewById(R.id.btn_modo_recebido);
         MaterialButton btnModoGastos = view.findViewById(R.id.btn_modo_gastos);
         toggleModo.check(R.id.btn_modo_gastos);
         atualizarEstiloModo(btnModoRecebido, btnModoGastos, R.id.btn_modo_gastos);
+        atualizarResumoModo();
         toggleModo.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (!isChecked) {
                 return;
             }
             atualizarEstiloModo(btnModoRecebido, btnModoGastos, checkedId);
             if (checkedId == R.id.btn_modo_recebido) {
+                modoAtual = GastosCategoriaViewModel.ModoExibicao.RECEBIDOS;
                 viewModel.setModoExibicao(GastosCategoriaViewModel.ModoExibicao.RECEBIDOS);
             } else {
+                modoAtual = GastosCategoriaViewModel.ModoExibicao.GASTOS;
                 viewModel.setModoExibicao(GastosCategoriaViewModel.ModoExibicao.GASTOS);
             }
+            atualizarResumoModo();
         });
 
         RecyclerView recyclerView = view.findViewById(R.id.rv_gastos_categoria);
@@ -116,13 +136,18 @@ public class GastosCategoriaFragment extends Fragment {
         });
 
         viewModel.getTotalRecebido().observe(getViewLifecycleOwner(), valor -> {
-            double total = valor != null ? valor : 0d;
-            tvTotalRecebido.setText(currencyFormat.format(total));
+            totalRecebidoAtual = valor != null ? valor : 0d;
+            atualizarResumoModo();
         });
 
         viewModel.getTotalGasto().observe(getViewLifecycleOwner(), valor -> {
-            double total = valor != null ? valor : 0d;
-            tvTotalGasto.setText(currencyFormat.format(total));
+            totalGastoAtual = valor != null ? valor : 0d;
+            atualizarResumoModo();
+        });
+
+        viewModel.getTotalPrevistoGasto().observe(getViewLifecycleOwner(), valor -> {
+            totalPrevistoAtual = valor != null ? valor : 0d;
+            atualizarResumoModo();
         });
 
         viewModel.getErro().observe(getViewLifecycleOwner(), msg -> {
@@ -171,5 +196,23 @@ public class GastosCategoriaFragment extends Fragment {
         button.setStrokeColor(ColorStateList.valueOf(strokeColor));
         button.setBackgroundTintList(ColorStateList.valueOf(backgroundColor));
         button.setTextColor(strokeColor);
+    }
+
+    private void atualizarResumoModo() {
+        if (modoAtual == GastosCategoriaViewModel.ModoExibicao.RECEBIDOS) {
+            tvTotalPrimarioLabel.setText(R.string.gastos_total_recebido);
+            tvTotalRecebido.setText(currencyFormat.format(totalRecebidoAtual));
+            tvTotalRecebido.setTextColor(ContextCompat.getColor(requireContext(), R.color.verde_success));
+            layoutTotalSecundario.setVisibility(View.GONE);
+            return;
+        }
+
+        tvTotalPrimarioLabel.setText(R.string.gastos_total_gasto);
+        tvTotalRecebido.setText(currencyFormat.format(totalGastoAtual));
+        tvTotalRecebido.setTextColor(ContextCompat.getColor(requireContext(), R.color.vermelho_error));
+        tvTotalSecundarioLabel.setText(R.string.gastos_total_previsto);
+        tvTotalGasto.setText(currencyFormat.format(totalPrevistoAtual));
+        tvTotalGasto.setTextColor(ContextCompat.getColor(requireContext(), R.color.vermelho_error));
+        layoutTotalSecundario.setVisibility(View.VISIBLE);
     }
 }

@@ -52,6 +52,18 @@ public class AporteMetaDao implements AporteMetaRepository {
         return result.orElse(0.0);
     }
 
+    @Override
+    public double somarPorMesEAno(int mes, int ano) {
+        String mesStr = String.format("%02d", mes);
+        String dataPrefixo = ano + "-" + mesStr;
+        Optional<Double> result = db.queryOne(
+            "SELECT COALESCE(SUM(valor), 0) AS total FROM aporte_meta WHERE data LIKE ? || '%'",
+            row -> row.getDouble("total"),
+            dataPrefixo
+        );
+        return result.orElse(0.0);
+    }
+
     // ─── RowMapper ────────────────────────────────────────────────────────────
 
     private static final RowMapper<AporteMeta> MAPPER = row -> new AporteMeta(

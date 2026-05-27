@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
 import com.financeiramente.core.repository.TagRepository;
-import com.financeiramente.core.usecase.GerarRelatorioUseCase;
+import com.financeiramente.core.usecase.relatorio.GerarRelatorioUseCase;
 
 public class RelatoriosViewModelFactory implements ViewModelProvider.Factory {
 

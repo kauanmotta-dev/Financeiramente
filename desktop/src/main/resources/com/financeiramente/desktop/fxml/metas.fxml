@@ -31,7 +31,7 @@
                 <HBox spacing="8">
                     <Button text="Nova" onAction="#novaMeta" styleClass="btn-primary" />
                     <Button fx:id="btnEditar" text="Editar" onAction="#editarSelecionado" disable="true" styleClass="btn-ghost" />
-                    <Button fx:id="btnDesativar" text="Desativar" onAction="#desativarSelecionado"
+                    <Button fx:id="btnExcluir" text="Excluir" onAction="#excluirSelecionado"
                             styleClass="btn-danger" disable="true" />
                 </HBox>
             </VBox>
