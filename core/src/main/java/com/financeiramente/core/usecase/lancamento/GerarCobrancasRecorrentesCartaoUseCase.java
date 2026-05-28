@@ -1,6 +1,7 @@
 package com.financeiramente.core.usecase.lancamento;
 
-import com.financeiramente.core.db.DatabaseDriver;
+import com.financeiramente.core.db.TransactionManager;
+import com.financeiramente.core.db.AppLogger;
 import com.financeiramente.core.domain.entity.CompraCartao;
 import com.financeiramente.core.domain.entity.Fatura;
 import com.financeiramente.core.domain.vo.TipoLancamento;
@@ -17,16 +18,19 @@ public class GerarCobrancasRecorrentesCartaoUseCase {
     private final CompraCartaoRepository compraCartaoRepository;
     private final ResolverFaturaParaLancamentoUseCase resolverFatura;
     private final RegistrarLancamentoUseCase registrarLancamento;
-    private final DatabaseDriver databaseDriver;
+    private final TransactionManager transactionManager;
+    private final AppLogger logger;
 
     public GerarCobrancasRecorrentesCartaoUseCase(CompraCartaoRepository compraCartaoRepository,
                                                   ResolverFaturaParaLancamentoUseCase resolverFatura,
                                                   RegistrarLancamentoUseCase registrarLancamento,
-                                                  DatabaseDriver databaseDriver) {
+                                                  TransactionManager transactionManager,
+                                                  AppLogger logger) {
         this.compraCartaoRepository = compraCartaoRepository;
         this.resolverFatura = resolverFatura;
         this.registrarLancamento = registrarLancamento;
-        this.databaseDriver = databaseDriver;
+        this.transactionManager = transactionManager;
+        this.logger = logger;
     }
 
     public int executar() {
@@ -35,54 +39,51 @@ public class GerarCobrancasRecorrentesCartaoUseCase {
             return 0;
         }
 
-        int totalGerado = 0;
+        final int[] totalGerado = {0};
         LocalDate hoje = LocalDate.now();
 
-        databaseDriver.beginTransaction();
         try {
-            for (CompraCartao compra : recorrentes) {
-                // 1. Verificação rápida por data (sem criar fatura): já existe lançamento
-                //    com data dentro do mês calendário atual para esta recorrência?
-                String mesAtual = YearMonth.from(hoje).toString(); // YYYY-MM
-                if (compraCartaoRepository.existeLancamentoRecorrenteNoMes(compra.getId(), mesAtual)) {
-                    continue;
+            transactionManager.executeInTransaction(() -> {
+                for (CompraCartao compra : recorrentes) {
+                    String mesAtual = YearMonth.from(hoje).toString();
+                    if (compraCartaoRepository.existeLancamentoRecorrenteNoMes(compra.getId(), mesAtual)) {
+                        continue;
+                    }
+
+                    LocalDate dataMesAtual = YearMonth.from(hoje).atDay(compra.getDiaRecorrencia());
+                    LocalDate dataCobranca = hoje.isAfter(dataMesAtual)
+                        ? YearMonth.from(hoje).plusMonths(1).atDay(compra.getDiaRecorrencia())
+                        : dataMesAtual;
+
+                    Fatura fatura = resolverFatura.executar(compra.getCartaoId(), dataCobranca.toString());
+
+                    if (compraCartaoRepository.existeLancamentoRecorrenteNaFatura(compra.getId(), fatura.getId())) {
+                        continue;
+                    }
+
+                    RegistrarLancamentoInput input = new RegistrarLancamentoInput(
+                            compra.getValorTotal(),
+                            TipoLancamento.DESPESA,
+                            dataCobranca.toString(),
+                            compra.getDescricao(),
+                            compra.getCategoriaId(),
+                            fatura.getId(),
+                            compra.getId(),
+                            Collections.emptyList()
+                    );
+
+                    registrarLancamento.executar(input);
+                    totalGerado[0]++;
                 }
 
-                // 2. Determina a data-alvo: este mês (se ainda não passou o dia) ou próximo
-                LocalDate dataMesAtual = YearMonth.from(hoje).atDay(compra.getDiaRecorrencia());
-                LocalDate dataCobranca = hoje.isAfter(dataMesAtual)
-                    ? YearMonth.from(hoje).plusMonths(1).atDay(compra.getDiaRecorrencia())
-                    : dataMesAtual;
-
-                // 3. Resolve (e cria se necessário) a fatura para a data-alvo
-                Fatura fatura = resolverFatura.executar(compra.getCartaoId(), dataCobranca.toString());
-
-                // 4. Guarda dupla: cobre o caso em que a primeira cobrança foi pré-gerada
-                //    pelo registrarRecorrente numa fatura futura (ex.: dia já passou no mês de cadastro)
-                if (compraCartaoRepository.existeLancamentoRecorrenteNaFatura(compra.getId(), fatura.getId())) {
-                    continue;
-                }
-
-                RegistrarLancamentoInput input = new RegistrarLancamentoInput(
-                        compra.getValorTotal(),
-                        TipoLancamento.DESPESA,
-                        dataCobranca.toString(),
-                        compra.getDescricao(),
-                        compra.getCategoriaId(),
-                        fatura.getId(),
-                        compra.getId(),
-                        Collections.emptyList()
-                );
-
-                registrarLancamento.executar(input);
-                totalGerado++;
-            }
-
-            databaseDriver.commitTransaction();
-            return totalGerado;
-        } catch (Exception e) {
-            databaseDriver.rollbackTransaction();
-            throw e;
+            });
+        } catch (RuntimeException exception) {
+            logger.error("Rollback ao gerar cobrancas recorrentes do cartao.", exception);
+            throw exception;
         }
+
+        logger.info("Geradas " + totalGerado[0] + " cobrancas recorrentes no cartao.");
+
+        return totalGerado[0];
     }
 }

@@ -18,6 +18,7 @@ import com.financeiramente.android.viewmodel.CartaoFormViewModel;
 import com.financeiramente.android.viewmodel.CartaoFormViewModelFactory;
 import com.financeiramente.core.domain.entity.CartaoCredito;
 import com.financeiramente.core.domain.vo.BandeiraCartao;
+import java.math.BigDecimal;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.snackbar.Snackbar;
@@ -120,9 +121,9 @@ public class CartaoFormFragment extends BottomSheetDialogFragment {
             return;
         }
 
-        Double limite = null;
+        BigDecimal limite = null;
         if (!limiteStr.isEmpty()) {
-            try { limite = Double.parseDouble(limiteStr.replace(",", ".")); }
+            try { limite = new BigDecimal(limiteStr.replace(",", ".")); }
             catch (NumberFormatException ignored) {}
         }
 

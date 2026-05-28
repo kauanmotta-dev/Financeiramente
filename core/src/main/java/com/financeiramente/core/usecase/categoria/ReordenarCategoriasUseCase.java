@@ -19,7 +19,7 @@ public class ReordenarCategoriasUseCase {
             final int posicao = i;
             Categoria categoria = categoriaRepository.buscarPorId(idsOrdenados.get(i))
                     .orElseThrow(() -> new DomainException("Categoria não encontrada na reordenação."));
-            categoria.setOrdem(posicao);
+            categoria.reordenar(posicao);
             categoriaRepository.atualizar(categoria);
         }
     }

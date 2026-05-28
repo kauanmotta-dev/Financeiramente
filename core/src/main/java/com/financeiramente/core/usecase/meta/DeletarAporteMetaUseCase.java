@@ -5,6 +5,8 @@ import com.financeiramente.core.repository.AporteMetaRepository;
 import com.financeiramente.core.repository.MetaRepository;
 import com.financeiramente.core.util.DomainException;
 
+import java.math.BigDecimal;
+
 public class DeletarAporteMetaUseCase {
 
     private final MetaRepository metaRepository;
@@ -22,8 +24,8 @@ public class DeletarAporteMetaUseCase {
 
         aporteRepository.deletar(aporteId);
 
-        double novoValorAtual = aporteRepository.somarPorMeta(metaId);
-        meta.setValorAtual(novoValorAtual);
+        BigDecimal novoValorAtual = aporteRepository.somarPorMeta(metaId);
+        meta.atualizarValorAtual(novoValorAtual);
         metaRepository.atualizar(meta);
     }
 }

@@ -19,18 +19,21 @@ import com.financeiramente.core.usecase.lancamento.ListarLancamentosUseCase;
 import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoUseCase;
 import com.financeiramente.core.usecase.categoria.ReordenarCategoriasUseCase;
 import com.financeiramente.desktop.db.JdbcDatabaseDriver;
+import com.financeiramente.desktop.logging.JavaUtilAppLogger;
 
 public class AppContext {
 
     private static AppContext instance;
 
     private final JdbcDatabaseDriver databaseDriver;
+    private final JavaUtilAppLogger logger;
 
     private final CoreServices coreServices;
 
     private AppContext() {
         this.databaseDriver = new JdbcDatabaseDriver();
-        this.coreServices = CoreBootstrap.create(databaseDriver);
+        this.logger = new JavaUtilAppLogger(AppContext.class);
+        this.coreServices = CoreBootstrap.create(databaseDriver, logger);
     }
 
     public static synchronized AppContext get() {

@@ -28,6 +28,8 @@ import com.financeiramente.core.domain.entity.Meta;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
+import java.math.BigDecimal;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -145,13 +147,13 @@ public class MetasFragment extends Fragment {
         switch (filtroAtual) {
             case FILTRO_EM_ANDAMENTO:
                 filtradas = todasMetas.stream()
-                        .filter(m -> (m.getValorAtual() + m.getValorInicial()) < m.getValorObjetivo()
+                        .filter(m -> m.getValorAtual().add(m.getValorInicial()).compareTo(m.getValorObjetivo()) < 0
                                 && !estaAtrasada(m))
                         .collect(Collectors.toList());
                 break;
             case FILTRO_CONCLUIDAS:
                 filtradas = todasMetas.stream()
-                        .filter(m -> (m.getValorAtual() + m.getValorInicial()) >= m.getValorObjetivo())
+                        .filter(m -> m.getValorAtual().add(m.getValorInicial()).compareTo(m.getValorObjetivo()) >= 0)
                         .collect(Collectors.toList());
                 break;
             default: // FILTRO_TODAS
@@ -179,9 +181,9 @@ public class MetasFragment extends Fragment {
 
         double somaProgresso = 0.0;
         for (Meta m : lista) {
-            if (m.getValorObjetivo() > 0) {
-                double totalSalvo = m.getValorAtual() + m.getValorInicial();
-                somaProgresso += Math.min((totalSalvo / m.getValorObjetivo()) * 100.0, 100.0);
+            if (m.getValorObjetivo().compareTo(BigDecimal.ZERO) > 0) {
+                double totalSalvo = m.getValorAtual().add(m.getValorInicial()).doubleValue();
+                somaProgresso += Math.min((totalSalvo / m.getValorObjetivo().doubleValue()) * 100.0, 100.0);
             }
         }
         int progressoMedio = (int) (somaProgresso / total);

@@ -8,6 +8,7 @@ import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.FaturaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,22 +33,24 @@ public class CalcularSaldoDashboardUseCase {
     }
 
     public SaldoDashboardResult executar(int ano, int mes) {
+        List<Categoria> todasCategorias = categoriaRepository.listarTodas();
+
         // ── Saldo em Conta ────────────────────────────────────────────────────
-        double totalReceita       = lancamentoRepository.somarPorTipoEMes(TipoLancamento.RECEITA, ano, mes);
-        double despesasSemFatura  = lancamentoRepository.somarDespesasSemFaturaPorMes(ano, mes);
-        double faturasPagas       = faturaRepository.somarValorPagoPorDataDePagamento(ano, mes);
-        double aportesMeta        = aporteMetaRepository.somarPorMesEAno(mes, ano);
+        double totalReceita       = lancamentoRepository.somarPorTipoEMes(TipoLancamento.RECEITA, ano, mes).doubleValue();
+        double despesasSemFatura  = lancamentoRepository.somarDespesasSemFaturaPorMes(ano, mes).doubleValue();
+        double faturasPagas       = faturaRepository.somarValorPagoPorDataDePagamento(ano, mes).doubleValue();
+        double aportesMeta        = aporteMetaRepository.somarPorMesEAno(mes, ano).doubleValue();
         double saldoConta         = totalReceita - despesasSemFatura - faturasPagas - aportesMeta;
         double totalGastoConta    = despesasSemFatura + faturasPagas + aportesMeta;
 
         // ── Saldo Essenciais ──────────────────────────────────────────────────
-        double limiteEssenciais  = calcularLimitePorTipo(TipoCategoria.ESSENCIAL);
-        double gastoEssenciais   = lancamentoRepository.somarDespesasPorTipoCategoriaEMes(TipoCategoria.ESSENCIAL, ano, mes);
+        double limiteEssenciais  = calcularLimitePorTipo(TipoCategoria.ESSENCIAL, todasCategorias);
+        double gastoEssenciais   = lancamentoRepository.somarDespesasPorTipoCategoriaEMes(TipoCategoria.ESSENCIAL, ano, mes).doubleValue();
         double saldoEssenciais   = limiteEssenciais - gastoEssenciais;
 
         // ── Saldo Não Essenciais ──────────────────────────────────────────────
-        double limiteNaoEssenciais = calcularLimitePorTipo(TipoCategoria.NAO_ESSENCIAL);
-        double gastoNaoEssenciais  = lancamentoRepository.somarDespesasPorTipoCategoriaEMes(TipoCategoria.NAO_ESSENCIAL, ano, mes);
+        double limiteNaoEssenciais = calcularLimitePorTipo(TipoCategoria.NAO_ESSENCIAL, todasCategorias);
+        double gastoNaoEssenciais  = lancamentoRepository.somarDespesasPorTipoCategoriaEMes(TipoCategoria.NAO_ESSENCIAL, ano, mes).doubleValue();
         double saldoNaoEssenciais  = limiteNaoEssenciais - gastoNaoEssenciais;
 
         return new SaldoDashboardResult(
@@ -58,8 +61,7 @@ public class CalcularSaldoDashboardUseCase {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private double calcularLimitePorTipo(TipoCategoria tipo) {
-        List<Categoria> todas = categoriaRepository.listarTodas();
+    private double calcularLimitePorTipo(TipoCategoria tipo, List<Categoria> todas) {
         Map<String, List<Categoria>> filhasPorPai = new HashMap<>();
         List<Categoria> raizes = new ArrayList<>();
 
@@ -80,8 +82,8 @@ public class CalcularSaldoDashboardUseCase {
 
     private double calcularLimiteEfetivo(Categoria categoria,
                                           Map<String, List<Categoria>> filhasPorPai) {
-        if (categoria.getLimiteMensal() != null && categoria.getLimiteMensal() > 0) {
-            return categoria.getLimiteMensal();
+        if (categoria.getLimiteMensal() != null && categoria.getLimiteMensal().compareTo(BigDecimal.ZERO) > 0) {
+            return categoria.getLimiteMensal().doubleValue();
         }
         double somaFilhas = 0.0;
         for (Categoria filha : filhasPorPai.getOrDefault(categoria.getId(), Collections.emptyList())) {

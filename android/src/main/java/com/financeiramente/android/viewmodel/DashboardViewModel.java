@@ -15,6 +15,7 @@ import com.financeiramente.core.usecase.saldo.SaldoDashboardResult;
 import com.financeiramente.core.usecase.meta.CalcularTotalAportesMesUseCase;
 import com.financeiramente.core.usecase.lancamento.DeletarLancamentoUseCase;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
@@ -60,10 +61,10 @@ public class DashboardViewModel extends ViewModel {
         executor.execute(() -> {
             try {
                 SaldoDashboardResult resultado = calcularSaldo.executar(ano, mes);
-                double totalAportesMes = calcularTotalAportesMes.executar(ano, mes);
+                BigDecimal totalAportesMes = calcularTotalAportesMes.executar(ano, mes);
                 List<CartaoLimiteResumo> resumoCartoes = carregarResumoCartoes();
                 double percentual = resultado.getTotalReceita() > 0.0
-                        ? (totalAportesMes / resultado.getTotalReceita()) * 100.0
+                        ? totalAportesMes.doubleValue() / resultado.getTotalReceita() * 100.0
                         : 0.0;
 
                 mainHandler.post(() -> {
@@ -81,11 +82,11 @@ public class DashboardViewModel extends ViewModel {
         List<CartaoCredito> cartoes = cartaoRepository.listarAtivos();
         List<CartaoLimiteResumo> resumo = new ArrayList<>();
         for (CartaoCredito cartao : cartoes) {
-            if (cartao.getLimite() == null || cartao.getLimite() <= 0.0) {
+            if (cartao.getLimite() == null || cartao.getLimite().compareTo(BigDecimal.ZERO) <= 0) {
                 continue;
             }
-            double limite = cartao.getLimite();
-            double utilizado = faturaRepository.somarTotalUtilizadoPorCartao(cartao.getId());
+            double limite = cartao.getLimite().doubleValue();
+            double utilizado = faturaRepository.somarTotalUtilizadoPorCartao(cartao.getId()).doubleValue();
             double percentual = limite > 0.0 ? (utilizado / limite) * 100.0 : 0.0;
             resumo.add(new CartaoLimiteResumo(
                     cartao.getId(),

@@ -1,6 +1,6 @@
 package com.financeiramente.core.usecase.fatura;
 
-import com.financeiramente.core.db.DatabaseDriver;
+import com.financeiramente.core.db.TransactionManager;
 import com.financeiramente.core.domain.entity.Fatura;
 import com.financeiramente.core.domain.vo.StatusFatura;
 import com.financeiramente.core.domain.vo.TipoLancamento;
@@ -11,6 +11,7 @@ import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoUseCase;
 import com.financeiramente.core.util.DomainException;
 import com.financeiramente.core.util.FinanceCalculator;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Collections;
@@ -21,18 +22,18 @@ public class PagarFaturaUseCase {
     private final LancamentoRepository lancamentoRepository;
     private final RegistrarLancamentoUseCase registrarLancamento;
     private final ResolverFaturaParaLancamentoUseCase resolverFatura;
-    private final DatabaseDriver databaseDriver;
+    private final TransactionManager transactionManager;
 
     public PagarFaturaUseCase(FaturaRepository faturaRepository,
                                LancamentoRepository lancamentoRepository,
                                RegistrarLancamentoUseCase registrarLancamento,
                                ResolverFaturaParaLancamentoUseCase resolverFatura,
-                               DatabaseDriver databaseDriver) {
+                               TransactionManager transactionManager) {
         this.faturaRepository = faturaRepository;
         this.lancamentoRepository = lancamentoRepository;
         this.registrarLancamento = registrarLancamento;
         this.resolverFatura = resolverFatura;
-        this.databaseDriver = databaseDriver;
+        this.transactionManager = transactionManager;
     }
 
     public PagamentoFaturaResult executar(String faturaId, double valorFatura, double valorPago) {
@@ -46,14 +47,17 @@ public class PagarFaturaUseCase {
             throw new DomainException("Fatura já foi paga integralmente.");
         }
 
-        databaseDriver.beginTransaction();
-        try {
+        final PagamentoFaturaResult[] resultado = new PagamentoFaturaResult[1];
+
+        transactionManager.executeInTransaction(() -> {
             String hoje = LocalDate.now().toString();
+            BigDecimal bdFatura = BigDecimal.valueOf(valorFatura);
+            BigDecimal bdPago   = BigDecimal.valueOf(valorPago);
 
             // 1. Delta: diferença entre o extrato declarado e os lançamentos já registrados
-            double somaExistente = lancamentoRepository.somarPorFatura(faturaId);
-            double delta = valorFatura - somaExistente;
-            if (delta > 0) {
+            BigDecimal somaExistente = lancamentoRepository.somarPorFatura(faturaId);
+            BigDecimal delta = bdFatura.subtract(somaExistente);
+            if (delta.compareTo(BigDecimal.ZERO) > 0) {
                 RegistrarLancamentoInput encargosInput = new RegistrarLancamentoInput(
                         delta,
                         TipoLancamento.DESPESA,
@@ -66,10 +70,10 @@ public class PagarFaturaUseCase {
             }
 
             // 2. Calcular resultado do pagamento
-            PagamentoFaturaResult result = FinanceCalculator.calcularPagamentoFatura(valorFatura, valorPago);
+            PagamentoFaturaResult result = FinanceCalculator.calcularPagamentoFatura(bdFatura, bdPago);
 
             // 3. Lançamento de pagamento (débito na conta corrente — não vinculado à fatura)
-            double valorEfetivamentePago = Math.min(valorPago, valorFatura);
+            BigDecimal valorEfetivamentePago = bdPago.min(bdFatura);
             RegistrarLancamentoInput pagamentoInput = new RegistrarLancamentoInput(
                     valorEfetivamentePago,
                     TipoLancamento.DESPESA,
@@ -103,11 +107,9 @@ public class PagarFaturaUseCase {
                 registrarLancamento.executar(rolloverInput);
             }
 
-            databaseDriver.commitTransaction();
-            return result;
-        } catch (Exception e) {
-            databaseDriver.rollbackTransaction();
-            throw e;
-        }
+            resultado[0] = result;
+        });
+
+        return resultado[0];
     }
 }

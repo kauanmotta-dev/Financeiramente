@@ -5,6 +5,7 @@ import com.financeiramente.core.repository.MetaRepository;
 import com.financeiramente.core.util.DomainException;
 import com.financeiramente.core.util.FinanceCalculator;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -22,13 +23,13 @@ public class CalcularProjecaoMetaUseCase {
         Meta meta = metaRepository.buscarPorId(metaId)
                 .orElseThrow(() -> new DomainException("Meta não encontrada."));
 
-        if (meta.getValorAtual() <= 0) {
+        if (meta.getValorAtual().compareTo(BigDecimal.ZERO) <= 0) {
             return Optional.empty();
         }
 
         // Valor efetivo a atingir descontando o valor inicial já disponível
-        double valorEfetivo = meta.getValorEfetivo();
-        if (valorEfetivo <= 0) {
+        BigDecimal valorEfetivo = meta.getValorEfetivo();
+        if (valorEfetivo.compareTo(BigDecimal.ZERO) <= 0) {
             // Valor inicial já cobre o objetivo
             return Optional.of(LocalDate.now());
         }

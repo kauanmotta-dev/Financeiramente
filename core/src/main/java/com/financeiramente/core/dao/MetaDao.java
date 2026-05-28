@@ -4,6 +4,7 @@ import com.financeiramente.core.db.DatabaseDriver;
 import com.financeiramente.core.db.RowMapper;
 import com.financeiramente.core.domain.entity.Meta;
 import com.financeiramente.core.repository.MetaRepository;
+import com.financeiramente.core.util.MonetaryValues;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,9 +23,9 @@ public class MetaDao implements MetaRepository {
             "INSERT INTO meta(id, nome, valor_objetivo, valor_atual, valor_inicial, data_alvo, descricao, criado_em) VALUES (?,?,?,?,?,?,?,?)",
             meta.getId(),
             meta.getNome(),
-            meta.getValorObjetivo(),
-            meta.getValorAtual(),
-            meta.getValorInicial(),
+            MonetaryValues.toDouble(meta.getValorObjetivo()),
+            MonetaryValues.toDouble(meta.getValorAtual()),
+            MonetaryValues.toDouble(meta.getValorInicial()),
             meta.getDataAlvo(),
             meta.getDescricao(),
             meta.getCriadoEm()
@@ -36,9 +37,9 @@ public class MetaDao implements MetaRepository {
         db.execute(
             "UPDATE meta SET nome=?, valor_objetivo=?, valor_atual=?, valor_inicial=?, data_alvo=?, descricao=? WHERE id=?",
             meta.getNome(),
-            meta.getValorObjetivo(),
-            meta.getValorAtual(),
-            meta.getValorInicial(),
+            MonetaryValues.toDouble(meta.getValorObjetivo()),
+            MonetaryValues.toDouble(meta.getValorAtual()),
+            MonetaryValues.toDouble(meta.getValorInicial()),
             meta.getDataAlvo(),
             meta.getDescricao(),
             meta.getId()
@@ -65,9 +66,9 @@ public class MetaDao implements MetaRepository {
     private static final RowMapper<Meta> MAPPER = row -> new Meta(
         row.getString("id"),
         row.getString("nome"),
-        row.getDouble("valor_objetivo"),
-        row.getDouble("valor_atual"),
-        row.isNull("valor_inicial") ? 0.0 : row.getDouble("valor_inicial"),
+        MonetaryValues.fromDouble(row.getDouble("valor_objetivo")),
+        MonetaryValues.fromDouble(row.getDouble("valor_atual")),
+        row.isNull("valor_inicial") ? MonetaryValues.fromDouble(0.0) : MonetaryValues.fromDouble(row.getDouble("valor_inicial")),
         row.isNull("data_alvo") ? null : row.getString("data_alvo"),
         row.isNull("descricao") ? null : row.getString("descricao"),
         row.getLong("criado_em")

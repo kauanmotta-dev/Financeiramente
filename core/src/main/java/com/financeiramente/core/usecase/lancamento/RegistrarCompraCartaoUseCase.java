@@ -1,15 +1,18 @@
 package com.financeiramente.core.usecase.lancamento;
 
-import com.financeiramente.core.db.DatabaseDriver;
+import com.financeiramente.core.db.TransactionManager;
+import com.financeiramente.core.db.AppLogger;
 import com.financeiramente.core.domain.entity.CompraCartao;
 import com.financeiramente.core.domain.entity.Fatura;
 import com.financeiramente.core.domain.vo.TipoCompraCartao;
 import com.financeiramente.core.domain.vo.TipoLancamento;
 import com.financeiramente.core.repository.CompraCartaoRepository;
 import com.financeiramente.core.usecase.fatura.ResolverFaturaParaLancamentoUseCase;
+import com.financeiramente.core.util.DataValidator;
 import com.financeiramente.core.util.DomainException;
 import com.financeiramente.core.util.FinanceCalculator;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -18,59 +21,60 @@ public class RegistrarCompraCartaoUseCase {
     private final CompraCartaoRepository compraCartaoRepository;
     private final ResolverFaturaParaLancamentoUseCase resolverFatura;
     private final RegistrarLancamentoUseCase registrarLancamento;
-    private final DatabaseDriver databaseDriver;
+    private final TransactionManager transactionManager;
+    private final AppLogger logger;
 
     public RegistrarCompraCartaoUseCase(CompraCartaoRepository compraCartaoRepository,
                                         ResolverFaturaParaLancamentoUseCase resolverFatura,
                                         RegistrarLancamentoUseCase registrarLancamento,
-                                        DatabaseDriver databaseDriver) {
+                                        TransactionManager transactionManager,
+                                        AppLogger logger) {
         this.compraCartaoRepository = compraCartaoRepository;
         this.resolverFatura = resolverFatura;
         this.registrarLancamento = registrarLancamento;
-        this.databaseDriver = databaseDriver;
+        this.transactionManager = transactionManager;
+        this.logger = logger;
     }
 
     public CompraCartao executar(RegistrarCompraCartaoInput input) {
         validarInput(input);
 
-        databaseDriver.beginTransaction();
+        final CompraCartao[] compraCriada = new CompraCartao[1];
+
         try {
-            CompraCartao compra = criarCompra(input);
-            compraCartaoRepository.salvar(compra);
+            transactionManager.executeInTransaction(() -> {
+                CompraCartao compra = criarCompra(input);
+                compraCartaoRepository.salvar(compra);
 
-            if (compra.getTipo() == TipoCompraCartao.CREDITO) {
-                registrarCredito(input, compra);
-            } else if (compra.getTipo() == TipoCompraCartao.PARCELADO) {
-                registrarParcelado(input, compra);
-            } else {
-                registrarRecorrente(input, compra);
-            }
+                if (compra.getTipo() == TipoCompraCartao.CREDITO) {
+                    registrarCredito(input, compra);
+                } else if (compra.getTipo() == TipoCompraCartao.PARCELADO) {
+                    registrarParcelado(input, compra);
+                } else {
+                    registrarRecorrente(input, compra);
+                }
 
-            databaseDriver.commitTransaction();
-            return compra;
-        } catch (Exception e) {
-            databaseDriver.rollbackTransaction();
-            throw e;
+                compraCriada[0] = compra;
+            });
+        } catch (RuntimeException exception) {
+            logger.error("Rollback ao registrar compra no cartao.", exception);
+            throw exception;
         }
+
+        return compraCriada[0];
     }
 
     private void validarInput(RegistrarCompraCartaoInput input) {
         if (input == null) {
             throw new DomainException("Input da compra no cartão é obrigatório.");
         }
-        if (input.getCartaoId() == null || input.getCartaoId().trim().isEmpty()) {
-            throw new DomainException("Cartão da compra é obrigatório.");
-        }
+        DomainException.requireNonBlank(input.getCartaoId(), "Cartão da compra é obrigatório.");
         if (input.getTipo() == null) {
             throw new DomainException("Tipo da compra no cartão é obrigatório.");
         }
-        if (input.getData() == null || input.getData().trim().isEmpty()) {
-            throw new DomainException("Data da compra é obrigatória.");
-        }
-        if (input.getDescricao() == null || input.getDescricao().trim().isEmpty()) {
-            throw new DomainException("Descrição da compra é obrigatória.");
-        }
-        if (input.getValorTotal() <= 0) {
+        DataValidator.validarData(input.getData());
+        DomainException.requireNonBlank(input.getDescricao(), "Descrição da compra é obrigatória.");
+        if (input.getValorTotal().compareTo(BigDecimal.ZERO) <= 0) {
             throw new DomainException("Valor da compra deve ser maior que zero.");
         }
 
@@ -122,7 +126,7 @@ public class RegistrarCompraCartaoUseCase {
 
     private void registrarParcelado(RegistrarCompraCartaoInput input, CompraCartao compra) {
         int parcelas = input.getNumeroParcelas();
-        double[] valores = FinanceCalculator.distribuirParcelas(input.getValorTotal(), parcelas);
+        BigDecimal[] valores = FinanceCalculator.distribuirParcelas(input.getValorTotal(), parcelas);
         LocalDate dataBase = LocalDate.parse(input.getData());
 
         for (int i = 0; i < parcelas; i++) {

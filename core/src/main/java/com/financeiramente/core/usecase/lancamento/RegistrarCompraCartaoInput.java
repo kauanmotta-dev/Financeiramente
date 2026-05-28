@@ -1,6 +1,7 @@
 package com.financeiramente.core.usecase.lancamento;
 
 import com.financeiramente.core.domain.vo.TipoCompraCartao;
+import java.math.BigDecimal;
 
 import java.util.Collections;
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.List;
 public class RegistrarCompraCartaoInput {
     private final String cartaoId;
     private final TipoCompraCartao tipo;
-    private final double valorTotal;
+    private final BigDecimal valorTotal;
     private final String data;
     private final String descricao;
     private final String categoriaId;
@@ -18,7 +19,7 @@ public class RegistrarCompraCartaoInput {
 
     public RegistrarCompraCartaoInput(String cartaoId,
                                       TipoCompraCartao tipo,
-                                      double valorTotal,
+                                      BigDecimal valorTotal,
                                       String data,
                                       String descricao,
                                       String categoriaId,
@@ -36,9 +37,21 @@ public class RegistrarCompraCartaoInput {
         this.diaRecorrencia = diaRecorrencia;
     }
 
+    public RegistrarCompraCartaoInput(String cartaoId,
+                                      TipoCompraCartao tipo,
+                                      String valorTotal,
+                                      String data,
+                                      String descricao,
+                                      String categoriaId,
+                                      List<String> tags,
+                                      int numeroParcelas,
+                                      Integer diaRecorrencia) {
+        this(cartaoId, tipo, new BigDecimal(valorTotal), data, descricao, categoriaId, tags, numeroParcelas, diaRecorrencia);
+    }
+
     public String getCartaoId() { return cartaoId; }
     public TipoCompraCartao getTipo() { return tipo; }
-    public double getValorTotal() { return valorTotal; }
+    public BigDecimal getValorTotal() { return valorTotal; }
     public String getData() { return data; }
     public String getDescricao() { return descricao; }
     public String getCategoriaId() { return categoriaId; }

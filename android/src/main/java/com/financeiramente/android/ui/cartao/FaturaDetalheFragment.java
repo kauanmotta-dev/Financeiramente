@@ -31,6 +31,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.math.BigDecimal;
 
 public class FaturaDetalheFragment extends Fragment {
 
@@ -143,10 +144,13 @@ public class FaturaDetalheFragment extends Fragment {
 
         viewModel.getResultadoPagamento().observe(getViewLifecycleOwner(), result -> {
             if (result != null) {
-                String msg = result.getSaldoDevedor() > 0
-                        ? getString(R.string.fatura_paga_parcial,
-                                String.format(Locale.getDefault(), "R$ %.2f", result.getSaldoDevedor()))
-                        : getString(R.string.fatura_paga_total);
+                String msg;
+                if (result.getSaldoDevedor().compareTo(BigDecimal.ZERO) > 0) {
+                    msg = getString(R.string.fatura_paga_parcial,
+                            String.format(Locale.getDefault(), "R$ %.2f", result.getSaldoDevedor().doubleValue()));
+                } else {
+                    msg = getString(R.string.fatura_paga_total);
+                }
                 Snackbar.make(requireView(), msg, Snackbar.LENGTH_LONG).show();
             }
         });

@@ -1,20 +1,21 @@
 package com.financeiramente.core.domain.entity;
 
 import com.financeiramente.core.domain.vo.TipoCategoria;
+import java.math.BigDecimal;
 
 public class Categoria {
     private final String id;
     private String nome;
     private String paiId;
     private TipoCategoria tipo;
-    private Double limiteMensal;
+    private BigDecimal limiteMensal;
     private int ordem;
     private long criadoEm;
     private String icone;
     private String cor;
 
     public Categoria(String id, String nome, String paiId, TipoCategoria tipo,
-                     Double limiteMensal, int ordem, long criadoEm, String icone, String cor) {
+                     BigDecimal limiteMensal, int ordem, long criadoEm, String icone, String cor) {
         this.id = id;
         this.nome = nome;
         this.paiId = paiId;
@@ -28,20 +29,29 @@ public class Categoria {
 
     public String getId() { return id; }
     public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
     public String getPaiId() { return paiId; }
-    public void setPaiId(String paiId) { this.paiId = paiId; }
     public TipoCategoria getTipo() { return tipo; }
-    public void setTipo(TipoCategoria tipo) { this.tipo = tipo; }
-    public Double getLimiteMensal() { return limiteMensal; }
-    public void setLimiteMensal(Double limiteMensal) { this.limiteMensal = limiteMensal; }
+    public BigDecimal getLimiteMensal() { return limiteMensal; }
     public int getOrdem() { return ordem; }
-    public void setOrdem(int ordem) { this.ordem = ordem; }
     public long getCriadoEm() { return criadoEm; }
     public String getIcone() { return icone; }
-    public void setIcone(String icone) { this.icone = icone; }
     public String getCor() { return cor; }
-    public void setCor(String cor) { this.cor = cor; }
+
+    public void atualizarDadosEdicao(String nome, TipoCategoria tipo, BigDecimal limiteMensal, String icone, String cor) {
+        this.nome = nome;
+        this.tipo = tipo;
+        this.limiteMensal = limiteMensal;
+        if (icone != null) {
+            this.icone = icone;
+        }
+        if (cor != null) {
+            this.cor = cor;
+        }
+    }
+
+    public void reordenar(int ordem) {
+        this.ordem = ordem;
+    }
 
     public static Builder builder(String id) { return new Builder(id); }
 
@@ -50,7 +60,7 @@ public class Categoria {
         private String nome;
         private String paiId;
         private TipoCategoria tipo;
-        private Double limiteMensal;
+        private BigDecimal limiteMensal;
         private int ordem = 0;
         private long criadoEm = System.currentTimeMillis();
         private String icone = "\uD83D\uDCE6";
@@ -61,7 +71,7 @@ public class Categoria {
         public Builder nome(String nome) { this.nome = nome; return this; }
         public Builder paiId(String paiId) { this.paiId = paiId; return this; }
         public Builder tipo(TipoCategoria tipo) { this.tipo = tipo; return this; }
-        public Builder limiteMensal(Double limiteMensal) { this.limiteMensal = limiteMensal; return this; }
+        public Builder limiteMensal(BigDecimal limiteMensal) { this.limiteMensal = limiteMensal; return this; }
         public Builder ordem(int ordem) { this.ordem = ordem; return this; }
         public Builder criadoEm(long criadoEm) { this.criadoEm = criadoEm; return this; }
         public Builder icone(String icone) { this.icone = icone; return this; }

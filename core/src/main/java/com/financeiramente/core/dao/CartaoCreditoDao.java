@@ -5,6 +5,7 @@ import com.financeiramente.core.db.RowMapper;
 import com.financeiramente.core.domain.entity.CartaoCredito;
 import com.financeiramente.core.domain.vo.BandeiraCartao;
 import com.financeiramente.core.repository.CartaoCreditoRepository;
+import com.financeiramente.core.util.MonetaryValues;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +27,7 @@ public class CartaoCreditoDao implements CartaoCreditoRepository {
             cartao.getNome(),
             cartao.getDiaVencimento(),
             cartao.getDiasParaFechamento(),
-            cartao.getLimite(),
+            cartao.getLimite() != null ? MonetaryValues.toDouble(cartao.getLimite()) : null,
             cartao.getBandeira() != null ? cartao.getBandeira().name().toLowerCase() : null,
             cartao.getIcone(),
             cartao.getCor(),
@@ -43,7 +44,7 @@ public class CartaoCreditoDao implements CartaoCreditoRepository {
             cartao.getNome(),
             cartao.getDiaVencimento(),
             cartao.getDiasParaFechamento(),
-            cartao.getLimite(),
+            cartao.getLimite() != null ? MonetaryValues.toDouble(cartao.getLimite()) : null,
             cartao.getBandeira() != null ? cartao.getBandeira().name().toLowerCase() : null,
             cartao.getIcone(),
             cartao.getCor(),
@@ -75,7 +76,7 @@ public class CartaoCreditoDao implements CartaoCreditoRepository {
         row.getString("nome"),
         row.getInt("dia_vencimento"),
         row.getInt("dias_fechamento"),
-        row.isNull("limite") ? null : row.getDouble("limite"),
+        row.isNull("limite") ? null : MonetaryValues.fromDouble(row.getDouble("limite")),
         row.isNull("bandeira") ? null : BandeiraCartao.fromString(row.getString("bandeira")),
         row.getString("icone"),
         row.getString("cor"),

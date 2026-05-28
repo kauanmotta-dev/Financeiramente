@@ -5,7 +5,9 @@ import com.financeiramente.core.db.RowMapper;
 import com.financeiramente.core.domain.entity.Fatura;
 import com.financeiramente.core.domain.vo.StatusFatura;
 import com.financeiramente.core.repository.FaturaRepository;
+import com.financeiramente.core.util.MonetaryValues;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,7 +29,7 @@ public class FaturaDao implements FaturaRepository {
             fatura.getMes(),
             fatura.getDataFechamento(),
             fatura.getDataVencimento(),
-            fatura.getValorPago(),
+            MonetaryValues.toDouble(fatura.getValorPago()),
             fatura.getStatus().name().toLowerCase(),
             fatura.getDescricao(),
             fatura.getCriadoEm(),
@@ -39,7 +41,7 @@ public class FaturaDao implements FaturaRepository {
     public void atualizar(Fatura fatura) {
         db.execute(
             "UPDATE fatura SET valor_pago=?, status=?, descricao=?, atualizado_em=? WHERE id=?",
-            fatura.getValorPago(),
+            MonetaryValues.toDouble(fatura.getValorPago()),
             fatura.getStatus().name().toLowerCase(),
             fatura.getDescricao(),
             fatura.getAtualizadoEm(),
@@ -87,27 +89,27 @@ public class FaturaDao implements FaturaRepository {
     }
 
     @Override
-    public double somarTotalUtilizadoPorCartao(String cartaoId) {
-        Optional<Double> result = db.queryOne(
+    public BigDecimal somarTotalUtilizadoPorCartao(String cartaoId) {
+        Optional<BigDecimal> result = db.queryOne(
             "SELECT COALESCE(SUM(l.valor), 0) AS total " +
             "FROM lancamento l JOIN fatura f ON l.fatura_id = f.id " +
             "WHERE f.cartao_id=? AND f.status IN ('aberto','fechado')",
-            row -> row.getDouble("total"),
+            row -> MonetaryValues.fromDouble(row.getDouble("total")),
             cartaoId
         );
-        return result.orElse(0.0);
+        return result.orElse(BigDecimal.ZERO);
     }
 
     @Override
-    public double somarValorPagoPorDataDePagamento(int ano, int mes) {
+    public BigDecimal somarValorPagoPorDataDePagamento(int ano, int mes) {
         String prefix = String.format("%04d-%02d", ano, mes);
-        Optional<Double> result = db.queryOne(
+        Optional<BigDecimal> result = db.queryOne(
             "SELECT COALESCE(SUM(valor_pago), 0) AS total FROM fatura " +
             "WHERE status IN ('pago','pago_parcial') AND substr(mes,1,7)=?",
-            row -> row.getDouble("total"),
+            row -> MonetaryValues.fromDouble(row.getDouble("total")),
             prefix
         );
-        return result.orElse(0.0);
+        return result.orElse(BigDecimal.ZERO);
     }
 
     // ─── RowMapper ────────────────────────────────────────────────────────────
@@ -118,7 +120,7 @@ public class FaturaDao implements FaturaRepository {
         row.getString("mes"),
         row.getString("data_fechamento"),
         row.getString("data_vencimento"),
-        row.getDouble("valor_pago"),
+        MonetaryValues.fromDouble(row.getDouble("valor_pago")),
         StatusFatura.fromString(row.getString("status")),
         row.isNull("descricao") ? null : row.getString("descricao"),
         row.getLong("criado_em"),

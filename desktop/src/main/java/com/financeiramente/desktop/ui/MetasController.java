@@ -22,6 +22,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -104,11 +106,10 @@ public class MetasController {
             protected void updateItem(Meta item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) { setText(null); return; }
-                double pct = item.getValorObjetivo() > 0
-                        ? (item.getValorAtual() / item.getValorObjetivo()) * 100 : 0;
+                double pct = percentual(item.getValorAtual(), item.getValorObjetivo());
                 setText(String.format("%s  —  %.1f%%  (R$ %.2f / R$ %.2f)",
                         item.getNome(), Math.min(pct, 100),
-                        item.getValorAtual(), item.getValorObjetivo()));
+                    item.getValorAtual().doubleValue(), item.getValorObjetivo().doubleValue()));
             }
         });
     }
@@ -137,12 +138,11 @@ public class MetasController {
 
     private void carregarDetalhe(Meta meta) {
         lblDetalheNome.setText(meta.getNome());
-        double pct = meta.getValorObjetivo() > 0
-                ? (meta.getValorAtual() / meta.getValorObjetivo()) * 100 : 0;
+        double pct = percentual(meta.getValorAtual(), meta.getValorObjetivo());
         pbProgresso.setProgress(Math.min(pct, 100) / 100.0);
         lblPercentual.setText(String.format(Locale.getDefault(), "%.1f%%", Math.min(pct, 100)));
         lblValores.setText(String.format(Locale.getDefault(),
-                "R$ %.2f / R$ %.2f", meta.getValorAtual(), meta.getValorObjetivo()));
+            "R$ %.2f / R$ %.2f", meta.getValorAtual().doubleValue(), meta.getValorObjetivo().doubleValue()));
 
         Task<List<Object>> task = new Task<>() {
             @Override
@@ -209,10 +209,13 @@ public class MetasController {
         String nome = tfNome.getText().trim();
         String valorStr = tfValorObjetivo.getText().trim();
         if (nome.isEmpty()) { lblErroMeta.setText("Nome é obrigatório."); lblErroMeta.setVisible(true); return; }
-        double valorObjetivo;
+        BigDecimal valorObjetivo;
         try {
-            valorObjetivo = Double.parseDouble(valorStr.replace(',', '.'));
+            valorObjetivo = new BigDecimal(valorStr.replace(',', '.'));
         } catch (NumberFormatException e) {
+            lblErroMeta.setText("Valor inválido."); lblErroMeta.setVisible(true); return;
+        }
+        if (valorObjetivo.compareTo(BigDecimal.ZERO) <= 0) {
             lblErroMeta.setText("Valor inválido."); lblErroMeta.setVisible(true); return;
         }
         String dataAlvo = tfDataAlvo.getText().trim().isEmpty() ? null : tfDataAlvo.getText().trim();
@@ -221,8 +224,9 @@ public class MetasController {
         Task<Meta> task = new Task<>() {
             @Override
             protected Meta call() {
-                if (idEdicao == null) return criarMeta.executar(nome, valorObjetivo, 0.0, dataAlvo, descricao);
-                else return editarMeta.executar(idEdicao, nome, valorObjetivo, 0.0, dataAlvo, descricao);
+                double valorObjetivoDouble = valorObjetivo.doubleValue();
+                if (idEdicao == null) return criarMeta.executar(nome, valorObjetivoDouble, 0.0, dataAlvo, descricao);
+                else return editarMeta.executar(idEdicao, nome, valorObjetivoDouble, 0.0, dataAlvo, descricao);
             }
         };
         task.setOnSucceeded(e -> { carregarMetas(); limparFormularioMeta(); lblStatus.setText("Meta salva."); });
@@ -245,15 +249,16 @@ public class MetasController {
         if (valorStr.isEmpty() || data.isEmpty()) {
             lblErroAporte.setText("Valor e data são obrigatórios."); lblErroAporte.setVisible(true); return;
         }
-        double valor;
-        try { valor = Double.parseDouble(valorStr.replace(',', '.')); }
+        BigDecimal valor;
+        try { valor = new BigDecimal(valorStr.replace(',', '.')); }
         catch (NumberFormatException e) { lblErroAporte.setText("Valor inválido."); lblErroAporte.setVisible(true); return; }
+        if (valor.compareTo(BigDecimal.ZERO) <= 0) { lblErroAporte.setText("Valor inválido."); lblErroAporte.setVisible(true); return; }
         String descricao = tfAporteDescricao.getText().trim().isEmpty() ? null : tfAporteDescricao.getText().trim();
         final String metaId = metaSelecionada.getId();
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() {
-                registrarAporte.executar(metaId, valor, data, descricao);
+                registrarAporte.executar(metaId, valor.doubleValue(), data, descricao);
                 return null;
             }
         };
@@ -274,6 +279,15 @@ public class MetasController {
             lblErroAporte.setText(msg); lblErroAporte.setVisible(true);
         });
         Thread t = new Thread(task); t.setDaemon(true); t.start();
+    }
+
+    private double percentual(BigDecimal atual, BigDecimal objetivo) {
+        if (atual == null || objetivo == null || objetivo.compareTo(BigDecimal.ZERO) <= 0) {
+            return 0;
+        }
+        return atual.multiply(BigDecimal.valueOf(100))
+                .divide(objetivo, 2, RoundingMode.HALF_UP)
+                .doubleValue();
     }
 
     @FXML

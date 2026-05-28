@@ -12,6 +12,7 @@ import com.financeiramente.core.usecase.categoria.DeletarCategoriaUseCase;
 import com.financeiramente.core.usecase.categoria.EditarCategoriaUseCase;
 import com.financeiramente.core.usecase.categoria.ReordenarCategoriasUseCase;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,7 +86,13 @@ public class CategoriasViewModel extends ViewModel {
 
     public void criarCategoria(String nome, TipoCategoria tipo, String paiId, Double limiteMensal) {
         try {
-            criarCategoriaUseCase.executar(nome, tipo, paiId, limiteMensal, null, null);
+            criarCategoriaUseCase.executar(
+                    nome,
+                    tipo,
+                    paiId,
+                    limiteMensal != null ? BigDecimal.valueOf(limiteMensal) : null,
+                    null,
+                    null);
             carregarCategorias();
         } catch (Exception e) {
             erro.setValue(e.getMessage());
@@ -94,7 +101,13 @@ public class CategoriasViewModel extends ViewModel {
 
     public void editarCategoria(String id, String nome, TipoCategoria tipo, Double limiteMensal) {
         try {
-            editarCategoriaUseCase.executar(id, nome, tipo, limiteMensal, null, null);
+            editarCategoriaUseCase.executar(
+                    id,
+                    nome,
+                    tipo,
+                    limiteMensal != null ? BigDecimal.valueOf(limiteMensal) : null,
+                    null,
+                    null);
             carregarCategorias();
         } catch (Exception e) {
             erro.setValue(e.getMessage());

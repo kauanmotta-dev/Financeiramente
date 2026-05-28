@@ -1,10 +1,11 @@
 package com.financeiramente.core.domain.entity;
 
 import com.financeiramente.core.domain.vo.TipoLancamento;
+import java.math.BigDecimal;
 
 public class Lancamento {
     private final String id;
-    private double valor;
+    private BigDecimal valor;
     private TipoLancamento tipo;
     private String data;
     private String descricao;
@@ -14,7 +15,7 @@ public class Lancamento {
     private long criadoEm;
     private long atualizadoEm;
 
-    public Lancamento(String id, double valor, TipoLancamento tipo, String data,
+    public Lancamento(String id, BigDecimal valor, TipoLancamento tipo, String data,
                       String descricao, String categoriaId, String faturaId,
                       String compraCartaoId,
                       long criadoEm, long atualizadoEm) {
@@ -31,16 +32,11 @@ public class Lancamento {
     }
 
     public String getId() { return id; }
-    public double getValor() { return valor; }
-    public void setValor(double valor) { this.valor = valor; }
+    public BigDecimal getValor() { return valor; }
     public TipoLancamento getTipo() { return tipo; }
-    public void setTipo(TipoLancamento tipo) { this.tipo = tipo; }
     public String getData() { return data; }
-    public void setData(String data) { this.data = data; }
     public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; }
     public String getCategoriaId() { return categoriaId; }
-    public void setCategoriaId(String categoriaId) { this.categoriaId = categoriaId; }
     public String getFaturaId() { return faturaId; }
     public void setFaturaId(String faturaId) { this.faturaId = faturaId; }
     public String getCompraCartaoId() { return compraCartaoId; }
@@ -49,11 +45,19 @@ public class Lancamento {
     public long getAtualizadoEm() { return atualizadoEm; }
     public void setAtualizadoEm(long atualizadoEm) { this.atualizadoEm = atualizadoEm; }
 
+    public void atualizarDados(BigDecimal valor, TipoLancamento tipo, String data, String descricao, String categoriaId) {
+        this.valor = valor;
+        this.tipo = tipo;
+        this.data = data;
+        this.descricao = descricao;
+        this.categoriaId = categoriaId;
+    }
+
     public static Builder builder(String id) { return new Builder(id); }
 
     public static final class Builder {
         private final String id;
-        private double valor;
+        private BigDecimal valor = BigDecimal.ZERO;
         private TipoLancamento tipo = TipoLancamento.DESPESA;
         private String data;
         private String descricao;
@@ -65,7 +69,8 @@ public class Lancamento {
 
         private Builder(String id) { this.id = id; }
 
-        public Builder valor(double valor) { this.valor = valor; return this; }
+        public Builder valor(BigDecimal valor) { this.valor = valor; return this; }
+        public Builder valor(double valor) { this.valor = BigDecimal.valueOf(valor); return this; }
         public Builder tipo(TipoLancamento tipo) { this.tipo = tipo; return this; }
         public Builder data(String data) { this.data = data; return this; }
         public Builder descricao(String descricao) { this.descricao = descricao; return this; }

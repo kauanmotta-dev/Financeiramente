@@ -6,6 +6,7 @@ import com.financeiramente.core.repository.AporteMetaRepository;
 import com.financeiramente.core.repository.MetaRepository;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 public class CalcularTotalAportesMesUseCase {
 
@@ -18,14 +19,14 @@ public class CalcularTotalAportesMesUseCase {
         this.aporteMetaRepository = aporteMetaRepository;
     }
 
-    public double executar(int ano, int mes) {
+    public BigDecimal executar(int ano, int mes) {
         List<Meta> metasAtivas = metaRepository.listarAtivas();
         if (metasAtivas == null || metasAtivas.isEmpty()) {
-            return 0.0;
+            return BigDecimal.ZERO;
         }
 
         String prefixoMes = String.format("%04d-%02d", ano, mes);
-        double totalAportesMes = 0.0;
+        BigDecimal totalAportesMes = BigDecimal.ZERO;
 
         for (Meta meta : metasAtivas) {
             List<AporteMeta> aportes = aporteMetaRepository.listarPorMeta(meta.getId());
@@ -35,7 +36,7 @@ public class CalcularTotalAportesMesUseCase {
             for (AporteMeta aporte : aportes) {
                 String data = aporte.getData();
                 if (data != null && data.startsWith(prefixoMes)) {
-                    totalAportesMes += aporte.getValor();
+                    totalAportesMes = totalAportesMes.add(aporte.getValor());
                 }
             }
         }

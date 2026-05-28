@@ -18,6 +18,7 @@ import com.financeiramente.core.usecase.fatura.FaturaDetalheResult;
 import com.financeiramente.core.usecase.fatura.PagarFaturaUseCase;
 import com.financeiramente.core.usecase.fatura.PagamentoFaturaResult;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,7 @@ public class FaturaDetalheViewModel extends ViewModel {
                 Fatura fatura = faturaRepository.buscarPorId(faturaId).orElse(null);
                 if (fatura == null) return;
                 List<Lancamento> lancamentos = lancamentoRepository.listarPorFatura(faturaId);
-                double total = lancamentoRepository.somarPorFatura(faturaId);
+                double total = lancamentoRepository.somarPorFatura(faturaId).doubleValue();
 
                 List<Categoria> cats = categoriaRepository.listarTodas();
                 Map<String, Categoria> catsMap = new HashMap<>();
@@ -94,7 +95,7 @@ public class FaturaDetalheViewModel extends ViewModel {
                 // Recarregar após pagamento
                 Fatura fatura = faturaRepository.buscarPorId(faturaId).orElse(null);
                 List<Lancamento> lancamentos = lancamentoRepository.listarPorFatura(faturaId);
-                double total = lancamentoRepository.somarPorFatura(faturaId);
+                double total = lancamentoRepository.somarPorFatura(faturaId).doubleValue();
 
                 List<Categoria> cats = categoriaRepository.listarTodas();
                 Map<String, Categoria> catsMap = new HashMap<>();

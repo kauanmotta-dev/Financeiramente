@@ -24,6 +24,7 @@ import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.MetaDetalheViewModel;
 import com.financeiramente.android.viewmodel.MetaDetalheViewModelFactory;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Locale;
 
@@ -89,9 +90,9 @@ public class MetaDetalheFragment extends Fragment {
 
         viewModel.getMeta().observe(getViewLifecycleOwner(), meta -> {
             if (meta == null) return;
-            double totalSalvo = meta.getValorAtual() + meta.getValorInicial();
-            double pct = meta.getValorObjetivo() > 0
-                    ? (totalSalvo / meta.getValorObjetivo()) * 100 : 0;
+            double totalSalvo = meta.getValorAtual().add(meta.getValorInicial()).doubleValue();
+            double pct = meta.getValorObjetivo().compareTo(BigDecimal.ZERO) > 0
+                    ? (totalSalvo / meta.getValorObjetivo().doubleValue()) * 100 : 0;
             progressBar.setMax(100);
             progressBar.setProgress((int) Math.min(pct, 100));
             tvPercentual.setText(String.format(Locale.getDefault(), "%.1f%%", Math.min(pct, 100)));

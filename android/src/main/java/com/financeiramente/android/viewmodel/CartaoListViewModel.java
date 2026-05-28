@@ -66,7 +66,7 @@ public class CartaoListViewModel extends ViewModel {
 
     public double getLimiteUtilizado(String cartaoId) {
         try {
-            return faturaRepository.somarTotalUtilizadoPorCartao(cartaoId);
+            return faturaRepository.somarTotalUtilizadoPorCartao(cartaoId).doubleValue();
         } catch (Exception e) {
             return 0.0;
         }

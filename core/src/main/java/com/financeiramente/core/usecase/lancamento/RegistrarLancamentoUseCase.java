@@ -6,8 +6,10 @@ import com.financeiramente.core.domain.vo.TipoCategoria;
 import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
 import com.financeiramente.core.repository.TagRepository;
+import com.financeiramente.core.util.DataValidator;
 import com.financeiramente.core.util.DomainException;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public class RegistrarLancamentoUseCase {
@@ -25,12 +27,19 @@ public class RegistrarLancamentoUseCase {
     }
 
     public Lancamento executar(RegistrarLancamentoInput input) {
-        if (input.getValor() <= 0) {
+        if (input == null) {
+            throw new DomainException("Input do lançamento é obrigatório.");
+        }
+
+        String dataValidada = DataValidator.validarData(input.getData());
+
+        if (input.getValor().compareTo(BigDecimal.ZERO) <= 0) {
             throw new DomainException("Valor deve ser maior que zero.");
         }
 
         if (input.getCategoriaId() != null) {
-            Categoria categoria = categoriaRepository.buscarPorId(input.getCategoriaId())
+            String categoriaId = DomainException.requireNonBlank(input.getCategoriaId(), "Categoria é obrigatória.");
+            Categoria categoria = categoriaRepository.buscarPorId(categoriaId)
                     .orElseThrow(() -> new DomainException("Categoria não encontrada."));
             if (categoria.getPaiId() == null && categoria.getTipo() != TipoCategoria.SEM_TIPO) {
                 throw new DomainException(
@@ -46,7 +55,7 @@ public class RegistrarLancamentoUseCase {
         Lancamento lancamento = Lancamento.builder(UUID.randomUUID().toString())
                 .valor(input.getValor())
                 .tipo(input.getTipo())
-                .data(input.getData())
+                .data(dataValidada)
                 .descricao(input.getDescricao())
                 .categoriaId(input.getCategoriaId())
                 .faturaId(input.getFaturaId())

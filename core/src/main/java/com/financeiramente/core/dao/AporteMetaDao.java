@@ -4,7 +4,9 @@ import com.financeiramente.core.db.DatabaseDriver;
 import com.financeiramente.core.db.RowMapper;
 import com.financeiramente.core.domain.entity.AporteMeta;
 import com.financeiramente.core.repository.AporteMetaRepository;
+import com.financeiramente.core.util.MonetaryValues;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,7 +24,7 @@ public class AporteMetaDao implements AporteMetaRepository {
             "INSERT INTO aporte_meta(id, meta_id, valor, data, descricao, criado_em) VALUES (?,?,?,?,?,?)",
             aporte.getId(),
             aporte.getMetaId(),
-            aporte.getValor(),
+            MonetaryValues.toDouble(aporte.getValor()),
             aporte.getData(),
             aporte.getDescricao(),
             aporte.getCriadoEm()
@@ -43,25 +45,25 @@ public class AporteMetaDao implements AporteMetaRepository {
     }
 
     @Override
-    public double somarPorMeta(String metaId) {
-        Optional<Double> result = db.queryOne(
+    public BigDecimal somarPorMeta(String metaId) {
+        Optional<BigDecimal> result = db.queryOne(
             "SELECT COALESCE(SUM(valor), 0) AS total FROM aporte_meta WHERE meta_id=?",
-            row -> row.getDouble("total"),
+            row -> MonetaryValues.fromDouble(row.getDouble("total")),
             metaId
         );
-        return result.orElse(0.0);
+        return result.orElse(BigDecimal.ZERO);
     }
 
     @Override
-    public double somarPorMesEAno(int mes, int ano) {
+    public BigDecimal somarPorMesEAno(int mes, int ano) {
         String mesStr = String.format("%02d", mes);
         String dataPrefixo = ano + "-" + mesStr;
-        Optional<Double> result = db.queryOne(
+        Optional<BigDecimal> result = db.queryOne(
             "SELECT COALESCE(SUM(valor), 0) AS total FROM aporte_meta WHERE data LIKE ? || '%'",
-            row -> row.getDouble("total"),
+            row -> MonetaryValues.fromDouble(row.getDouble("total")),
             dataPrefixo
         );
-        return result.orElse(0.0);
+        return result.orElse(BigDecimal.ZERO);
     }
 
     // ─── RowMapper ────────────────────────────────────────────────────────────
@@ -69,7 +71,7 @@ public class AporteMetaDao implements AporteMetaRepository {
     private static final RowMapper<AporteMeta> MAPPER = row -> new AporteMeta(
         row.getString("id"),
         row.getString("meta_id"),
-        row.getDouble("valor"),
+        MonetaryValues.fromDouble(row.getDouble("valor")),
         row.getString("data"),
         row.isNull("descricao") ? null : row.getString("descricao"),
         row.getLong("criado_em")

@@ -4,8 +4,10 @@ import com.financeiramente.core.domain.entity.AporteMeta;
 import com.financeiramente.core.domain.entity.Meta;
 import com.financeiramente.core.repository.AporteMetaRepository;
 import com.financeiramente.core.repository.MetaRepository;
+import com.financeiramente.core.util.DataValidator;
 import com.financeiramente.core.util.DomainException;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public class RegistrarAporteMetaUseCase {
@@ -20,28 +22,27 @@ public class RegistrarAporteMetaUseCase {
     }
 
     public AporteMeta executar(String metaId, double valor, String data, String descricao) {
-        Meta meta = metaRepository.buscarPorId(metaId)
+        String metaIdValidado = DomainException.requireNonBlank(metaId, "Meta é obrigatória.");
+        String dataValidada = DataValidator.validarData(data);
+
+        Meta meta = metaRepository.buscarPorId(metaIdValidado)
                 .orElseThrow(() -> new DomainException("Meta não encontrada."));
 
         if (valor <= 0) {
             throw new DomainException("Valor do aporte deve ser maior que zero.");
         }
-        if (data == null || data.trim().isEmpty()) {
-            throw new DomainException("Data do aporte é obrigatória.");
-        }
-
         AporteMeta aporte = new AporteMeta(
                 UUID.randomUUID().toString(),
-                metaId,
-                valor,
-                data.trim(),
+            metaIdValidado,
+                BigDecimal.valueOf(valor),
+            dataValidada,
                 descricao,
                 System.currentTimeMillis()
         );
         aporteRepository.salvar(aporte);
 
-        double novoValorAtual = aporteRepository.somarPorMeta(metaId);
-        meta.setValorAtual(novoValorAtual);
+        BigDecimal novoValorAtual = aporteRepository.somarPorMeta(metaId);
+        meta.atualizarValorAtual(novoValorAtual);
         metaRepository.atualizar(meta);
 
         return aporte;

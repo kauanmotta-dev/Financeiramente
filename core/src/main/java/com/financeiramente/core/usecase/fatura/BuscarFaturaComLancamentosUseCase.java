@@ -24,7 +24,7 @@ public class BuscarFaturaComLancamentosUseCase {
                 .orElseThrow(() -> new DomainException("Fatura não encontrada."));
 
         List<Lancamento> lancamentos = lancamentoRepository.listarPorFatura(faturaId);
-        double total = lancamentoRepository.somarPorFatura(faturaId);
+        double total = lancamentoRepository.somarPorFatura(faturaId).doubleValue();
 
         return new FaturaDetalheResult(fatura, lancamentos, total);
     }

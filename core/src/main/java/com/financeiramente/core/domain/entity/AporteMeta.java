@@ -1,14 +1,16 @@
 package com.financeiramente.core.domain.entity;
 
+import java.math.BigDecimal;
+
 public class AporteMeta {
     private final String id;
     private String metaId;
-    private double valor;
+    private BigDecimal valor;
     private String data;
     private String descricao;
     private long criadoEm;
 
-    public AporteMeta(String id, String metaId, double valor, String data,
+    public AporteMeta(String id, String metaId, BigDecimal valor, String data,
                       String descricao, long criadoEm) {
         this.id = id;
         this.metaId = metaId;
@@ -21,8 +23,8 @@ public class AporteMeta {
     public String getId() { return id; }
     public String getMetaId() { return metaId; }
     public void setMetaId(String metaId) { this.metaId = metaId; }
-    public double getValor() { return valor; }
-    public void setValor(double valor) { this.valor = valor; }
+    public BigDecimal getValor() { return valor; }
+    public void setValor(BigDecimal valor) { this.valor = valor; }
     public String getData() { return data; }
     public void setData(String data) { this.data = data; }
     public String getDescricao() { return descricao; }

@@ -16,6 +16,7 @@ import com.financeiramente.core.usecase.cartao.EditarCartaoCreditoInput;
 import com.financeiramente.core.usecase.cartao.EditarCartaoCreditoUseCase;
 import com.financeiramente.core.util.FaturaDateCalculator;
 
+import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -72,7 +73,7 @@ public class CartaoFormViewModel extends ViewModel {
     }
 
     public void criar(String nome, int diaVencimento, int diasParaFechamento,
-                      Double limite, BandeiraCartao bandeira, String icone, String cor) {
+                      BigDecimal limite, BandeiraCartao bandeira, String icone, String cor) {
         executor.execute(() -> {
             try {
                 CriarCartaoCreditoInput input = new CriarCartaoCreditoInput(
@@ -86,7 +87,7 @@ public class CartaoFormViewModel extends ViewModel {
     }
 
     public void editar(String id, String nome, int diaVencimento, int diasParaFechamento,
-                       Double limite, BandeiraCartao bandeira, String icone, String cor) {
+                       BigDecimal limite, BandeiraCartao bandeira, String icone, String cor) {
         executor.execute(() -> {
             try {
                 EditarCartaoCreditoInput input = new EditarCartaoCreditoInput(

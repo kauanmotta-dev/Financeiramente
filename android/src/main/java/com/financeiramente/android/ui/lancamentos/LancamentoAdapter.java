@@ -178,7 +178,7 @@ public class LancamentoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
             double balance = 0;
             for (Lancamento l : group) {
-                balance += l.getTipo() == TipoLancamento.RECEITA ? l.getValor() : -l.getValor();
+                balance += l.getTipo() == TipoLancamento.RECEITA ? l.getValor().doubleValue() : -l.getValor().doubleValue();
             }
 
             result.add(new DateHeaderItem(dataIso, formatDate(dataIso), balance));
@@ -316,7 +316,7 @@ public class LancamentoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         }
 
         // Valor formatado em verde/vermelho
-        double val = l.getValor();
+        double val = l.getValor().doubleValue();
         String sinal = l.getTipo() == TipoLancamento.RECEITA ? "+" : "-";
         h.tvValor.setText(sinal + "R$ " + formatValorCompact(val));
         int corValor = l.getTipo() == TipoLancamento.RECEITA

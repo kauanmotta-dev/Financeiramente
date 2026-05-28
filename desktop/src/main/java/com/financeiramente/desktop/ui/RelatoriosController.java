@@ -25,6 +25,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.StringConverter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -184,19 +185,19 @@ public class RelatoriosController {
 
     private void atualizarUI(RelatorioResult res) {
         // Resumo
-        lblTotalReceitas.setText(String.format(Locale.getDefault(), "R$ %.2f", res.getTotalReceitas()));
-        lblTotalDespesas.setText(String.format(Locale.getDefault(), "R$ %.2f", res.getTotalDespesas()));
-        double saldo = res.getSaldo();
-        lblSaldo.setText(String.format(Locale.getDefault(), "R$ %.2f", saldo));
-        lblSaldo.setStyle(saldo >= 0
+        lblTotalReceitas.setText(String.format(Locale.getDefault(), "R$ %.2f", res.getTotalReceitas().doubleValue()));
+        lblTotalDespesas.setText(String.format(Locale.getDefault(), "R$ %.2f", res.getTotalDespesas().doubleValue()));
+        BigDecimal saldo = res.getSaldo();
+        lblSaldo.setText(String.format(Locale.getDefault(), "R$ %.2f", saldo.doubleValue()));
+        lblSaldo.setStyle(saldo.compareTo(BigDecimal.ZERO) >= 0
                 ? "-fx-font-weight: bold; -fx-text-fill: #2E7D32;"
                 : "-fx-font-weight: bold; -fx-text-fill: #C62828;");
 
         // Por categoria
         ObservableList<CatRow> catRows = FXCollections.observableArrayList();
-        for (Map.Entry<String, Double> e : res.getTotalPorCategoria().entrySet()) {
+        for (Map.Entry<String, BigDecimal> e : res.getTotalPorCategoria().entrySet()) {
             catRows.add(new CatRow(e.getKey(),
-                    String.format(Locale.getDefault(), "%.2f", e.getValue())));
+                String.format(Locale.getDefault(), "%.2f", e.getValue().doubleValue())));
         }
         tvCategorias.setItems(catRows);
 

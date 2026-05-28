@@ -20,6 +20,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -132,10 +133,10 @@ public class LancamentoFormController {
         String valorStr = tfValor.getText().trim().replace(",", ".");
         String descricao = tfDescricao.getText().trim();
 
-        double valor;
+        BigDecimal valor;
         try {
-            valor = Double.parseDouble(valorStr);
-            if (valor <= 0) throw new NumberFormatException();
+            valor = new BigDecimal(valorStr.replace(',', '.'));
+            if (valor.compareTo(BigDecimal.ZERO) <= 0) throw new NumberFormatException();
         } catch (NumberFormatException e) {
             lblErro.setText("Valor inválido. Informe um número maior que zero.");
             return;
@@ -156,8 +157,6 @@ public class LancamentoFormController {
 
         RegistrarLancamentoInput input = new RegistrarLancamentoInput(
                 valor, tipo, data, descricao, categoria.getId(), null, Collections.emptyList());
-
-        final double finalValor = valor;
         executor.execute(() -> {
             try {
                 if (editandoId != null) {

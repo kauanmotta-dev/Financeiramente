@@ -13,6 +13,8 @@ import com.financeiramente.android.R;
 import com.financeiramente.core.domain.entity.Meta;
 import com.google.android.material.button.MaterialButton;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -71,9 +73,9 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
         Meta meta = items.get(position);
         h.tvNome.setText(meta.getNome());
 
-        double totalSalvo = meta.getValorAtual() + meta.getValorInicial();
-        double percentual = meta.getValorObjetivo() > 0
-                ? (totalSalvo / meta.getValorObjetivo()) * 100.0
+        double totalSalvo = meta.getValorAtual().add(meta.getValorInicial()).doubleValue();
+        double percentual = meta.getValorObjetivo().compareTo(BigDecimal.ZERO) > 0
+                ? (totalSalvo / meta.getValorObjetivo().doubleValue()) * 100.0
                 : 0.0;
         h.cpvProgresso.setProgress((float) Math.min(percentual, 100.0));
 
@@ -88,7 +90,7 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
         }
 
         int statusColor;
-        if (totalSalvo >= meta.getValorObjetivo()) {
+        if (totalSalvo >= meta.getValorObjetivo().doubleValue()) {
             h.tvStatus.setText(R.string.meta_status_concluida);
             statusColor = ContextCompat.getColor(h.itemView.getContext(), R.color.verde_success);
         } else if (estaAtrasada(meta)) {
@@ -151,11 +153,11 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
      * Returns null when there is insufficient data (no progress, or already completed).
      */
     private String calcularProjecao(Meta meta) {
-        double restante = meta.getValorEfetivo() - meta.getValorAtual();
+        double restante = meta.getValorEfetivo().subtract(meta.getValorAtual()).doubleValue();
         if (restante <= 0) {
             return null; // already met
         }
-        if (meta.getValorAtual() <= 0 || meta.getCriadoEm() <= 0) {
+        if (meta.getValorAtual().compareTo(BigDecimal.ZERO) <= 0 || meta.getCriadoEm() <= 0) {
             return null; // no data
         }
 
@@ -166,14 +168,14 @@ public class MetaAdapter extends RecyclerView.Adapter<MetaAdapter.ViewHolder> {
             return null;
         }
 
-        double mediaMensal = meta.getValorAtual() / (double) mesesDecorridos;
+        double mediaMensal = meta.getValorAtual().doubleValue() / mesesDecorridos;
         if (mediaMensal <= 0) {
             return null;
         }
 
         long mesesRestantes = (long) Math.ceil(restante / mediaMensal);
         LocalDate projecaoData = hoje.plusMonths(mesesRestantes);
-        return meta.getValorAtual() > 0
+        return meta.getValorAtual().compareTo(BigDecimal.ZERO) > 0
                 ? String.format(Locale.getDefault(), "📈 +R$ %.0f/mês · %s",
                         mediaMensal, projecaoData.format(MONTH_FMT))
                 : null;
