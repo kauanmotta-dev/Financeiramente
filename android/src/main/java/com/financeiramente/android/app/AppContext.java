@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.financeiramente.android.db.AndroidDatabaseDriver;
+import com.financeiramente.android.logging.AndroidAppLogger;
 import com.financeiramente.core.bootstrap.CoreBootstrap;
 import com.financeiramente.core.bootstrap.CoreServices;
 import com.financeiramente.core.usecase.fatura.AtualizarStatusFaturasUseCase;
@@ -32,7 +33,6 @@ import com.financeiramente.core.usecase.relatorio.GerarRelatorioUseCase;
 import com.financeiramente.core.usecase.lancamento.ListarLancamentosUseCase;
 import com.financeiramente.core.usecase.lancamento.RegistrarCompraCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoCartaoUseCase;
-import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoParceladoCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoUseCase;
 import com.financeiramente.core.usecase.categoria.ReordenarCategoriasUseCase;
 import com.financeiramente.core.usecase.fatura.ResolverFaturaParaLancamentoUseCase;
@@ -45,10 +45,12 @@ public class AppContext {
     private static AppContext instance;
 
     private final AndroidDatabaseDriver databaseDriver;
+    private final AndroidAppLogger logger;
 
     private final CoreServices coreServices;
 
     private AppContext(Context context) {
+        this.logger = new AndroidAppLogger(TAG);
         BootstrapResult bootstrap = inicializarCoreComRecuperacao(context);
         this.databaseDriver = bootstrap.databaseDriver;
         this.coreServices = bootstrap.coreServices;
@@ -57,7 +59,7 @@ public class AppContext {
     private BootstrapResult inicializarCoreComRecuperacao(Context context) {
         try {
             AndroidDatabaseDriver driver = new AndroidDatabaseDriver(context);
-            CoreServices services = CoreBootstrap.create(driver);
+            CoreServices services = CoreBootstrap.create(driver, logger);
             return new BootstrapResult(driver, services);
         } catch (Exception firstFailure) {
             // If Android restores an old DB backup, migration can fail at startup.
@@ -65,7 +67,7 @@ public class AppContext {
             context.deleteDatabase(DB_NAME);
             try {
                 AndroidDatabaseDriver driver = new AndroidDatabaseDriver(context);
-                CoreServices services = CoreBootstrap.create(driver);
+                CoreServices services = CoreBootstrap.create(driver, logger);
                 return new BootstrapResult(driver, services);
             } catch (Exception secondFailure) {
                 throw new IllegalStateException("Nao foi possivel inicializar o banco de dados", secondFailure);
@@ -122,9 +124,6 @@ public class AppContext {
     }
     public RegistrarLancamentoCartaoUseCase getRegistrarLancamentoCartaoUseCase() {
         return coreServices.getRegistrarLancamentoCartaoUseCase();
-    }
-    public RegistrarLancamentoParceladoCartaoUseCase getRegistrarLancamentoParceladoCartaoUseCase() {
-        return coreServices.getRegistrarLancamentoParceladoCartaoUseCase();
     }
     public RegistrarCompraCartaoUseCase getRegistrarCompraCartaoUseCase() {
         return coreServices.getRegistrarCompraCartaoUseCase();

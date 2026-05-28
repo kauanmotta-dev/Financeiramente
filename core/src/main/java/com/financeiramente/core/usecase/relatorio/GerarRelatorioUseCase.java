@@ -2,16 +2,17 @@ package com.financeiramente.core.usecase.relatorio;
 
 import com.financeiramente.core.domain.entity.Categoria;
 import com.financeiramente.core.domain.entity.Lancamento;
-import com.financeiramente.core.domain.entity.Tag;
 import com.financeiramente.core.domain.vo.TipoLancamento;
 import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
 import com.financeiramente.core.repository.TagRepository;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.math.BigDecimal;
 
 /**
  * Gera um relatório financeiro aplicando os filtros de FiltroRelatorio.
@@ -33,59 +34,53 @@ public class GerarRelatorioUseCase {
     }
 
     public RelatorioResult executar(FiltroRelatorio filtro) {
-        List<Lancamento> lancamentos = lancamentoRepository.listarPorPeriodo(
-                filtro.getDataInicio(), filtro.getDataFim());
+        List<Lancamento> lancamentos = lancamentoRepository.listarPorPeriodoComFiltros(
+            filtro.getDataInicio(),
+            filtro.getDataFim(),
+            filtro.getCategoriaId(),
+            filtro.getTipo(),
+            filtro.getTagId()
+        );
 
-        if (filtro.getCategoriaId() != null) {
-            List<Lancamento> filtrados = new ArrayList<>();
-            for (Lancamento l : lancamentos) {
-                if (filtro.getCategoriaId().equals(l.getCategoriaId())) {
-                    filtrados.add(l);
-                }
-            }
-            lancamentos = filtrados;
+        BigDecimal totalReceitas = BigDecimal.ZERO;
+        BigDecimal totalDespesas = BigDecimal.ZERO;
+        Map<String, BigDecimal> totaisPorCategoriaId = lancamentoRepository.somarDespesasPorCategoriaEPeriodo(
+            filtro.getDataInicio(),
+            filtro.getDataFim(),
+            filtro.getCategoriaId(),
+            filtro.getTipo(),
+            filtro.getTagId()
+        );
+        Map<String, String> categoriaIdParaNome = carregarCategoriasPorId(totaisPorCategoriaId);
+        Map<String, BigDecimal> totalPorCategoria = new LinkedHashMap<>();
+
+        for (Map.Entry<String, BigDecimal> entry : totaisPorCategoriaId.entrySet()) {
+            String categoriaId = entry.getKey();
+            String nomeCategoria = categoriaIdParaNome.getOrDefault(categoriaId, categoriaId);
+            totalPorCategoria.put(nomeCategoria, entry.getValue());
         }
-
-        if (filtro.getTipo() != null) {
-            List<Lancamento> filtrados = new ArrayList<>();
-            for (Lancamento l : lancamentos) {
-                if (filtro.getTipo().equals(l.getTipo())) {
-                    filtrados.add(l);
-                }
-            }
-            lancamentos = filtrados;
-        }
-
-        if (filtro.getTagId() != null) {
-            List<Lancamento> filtrados = new ArrayList<>();
-            for (Lancamento l : lancamentos) {
-                List<Tag> tags = tagRepository.listarPorLancamento(l.getId());
-                for (Tag t : tags) {
-                    if (filtro.getTagId().equals(t.getId())) {
-                        filtrados.add(l);
-                        break;
-                    }
-                }
-            }
-            lancamentos = filtrados;
-        }
-
-        double totalReceitas = 0.0;
-        double totalDespesas = 0.0;
-        Map<String, Double> totalPorCategoria = new LinkedHashMap<>();
 
         for (Lancamento l : lancamentos) {
             if (l.getTipo() == TipoLancamento.RECEITA) {
-                totalReceitas += l.getValor();
+                totalReceitas = totalReceitas.add(l.getValor());
             } else {
-                totalDespesas += l.getValor();
-                String catNome = categoriaRepository.buscarPorId(l.getCategoriaId())
-                        .map(Categoria::getNome)
-                        .orElse(l.getCategoriaId());
-                totalPorCategoria.merge(catNome, l.getValor(), Double::sum);
+                totalDespesas = totalDespesas.add(l.getValor());
             }
         }
 
         return new RelatorioResult(lancamentos, totalReceitas, totalDespesas, totalPorCategoria);
+    }
+
+    private Map<String, String> carregarCategoriasPorId(Map<String, BigDecimal> totaisPorCategoriaId) {
+        if (totaisPorCategoriaId.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Categoria> categorias = categoriaRepository.listarPorIds(List.copyOf(totaisPorCategoriaId.keySet()));
+        Map<String, String> categoriaIdParaNome = new HashMap<>();
+        for (Categoria categoria : categorias) {
+            categoriaIdParaNome.put(categoria.getId(), categoria.getNome());
+        }
+        return categoriaIdParaNome;
     }
 }

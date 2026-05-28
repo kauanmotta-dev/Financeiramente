@@ -4,6 +4,7 @@ import com.financeiramente.core.domain.entity.Meta;
 import com.financeiramente.core.repository.MetaRepository;
 import com.financeiramente.core.util.DomainException;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public class CriarMetaUseCase {
@@ -32,9 +33,9 @@ public class CriarMetaUseCase {
         Meta meta = new Meta(
                 UUID.randomUUID().toString(),
                 nome.trim(),
-                valorObjetivo,
-                0.0,
-                valorInicial,
+                BigDecimal.valueOf(valorObjetivo),
+                BigDecimal.ZERO,
+                BigDecimal.valueOf(valorInicial),
                 dataAlvo,
                 descricao,
                 System.currentTimeMillis()

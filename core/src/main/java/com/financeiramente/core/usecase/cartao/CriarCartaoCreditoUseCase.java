@@ -3,7 +3,7 @@ package com.financeiramente.core.usecase.cartao;
 import com.financeiramente.core.domain.entity.CartaoCredito;
 import com.financeiramente.core.repository.CartaoCreditoRepository;
 import com.financeiramente.core.util.DomainException;
-
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public class CriarCartaoCreditoUseCase {
@@ -24,7 +24,7 @@ public class CriarCartaoCreditoUseCase {
         if (input.getDiasParaFechamento() < 1 || input.getDiasParaFechamento() > 28) {
             throw new DomainException("Dias para fechamento deve estar entre 1 e 28.");
         }
-        if (input.getLimite() != null && input.getLimite() <= 0) {
+        if (input.getLimite() != null && input.getLimite().compareTo(BigDecimal.ZERO) <= 0) {
             throw new DomainException("Limite deve ser maior que zero.");
         }
 

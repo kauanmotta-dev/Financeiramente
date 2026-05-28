@@ -55,6 +55,7 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -99,7 +100,7 @@ public class RelatoriosFragment extends Fragment {
     private LinearLayout layoutPieLegenda;
     private MaterialButtonToggleGroup toggleChartTipo;
 
-    private Map<String, Double> ultimoTotalPorCategoria = null;
+    private Map<String, BigDecimal> ultimoTotalPorCategoria = null;
 
     private RelatorioResult ultimoResultadoBruto = null;
     private List<Categoria> listaCategorias = new ArrayList<>();
@@ -378,7 +379,7 @@ public class RelatoriosFragment extends Fragment {
 
     // ─── Chart Population ────────────────────────────────────────────────────
 
-    private void atualizarHorizontalBarChart(Map<String, Double> totalPorCategoria) {
+    private void atualizarHorizontalBarChart(Map<String, BigDecimal> totalPorCategoria) {
         if (totalPorCategoria == null || totalPorCategoria.isEmpty()) {
             horizontalBarChart.clear();
             horizontalBarChart.invalidate();
@@ -389,7 +390,7 @@ public class RelatoriosFragment extends Fragment {
         List<String> labels    = new ArrayList<>();
         List<Integer> colors   = new ArrayList<>();
         int idx = 0;
-        for (Map.Entry<String, Double> entry : totalPorCategoria.entrySet()) {
+        for (Map.Entry<String, BigDecimal> entry : totalPorCategoria.entrySet()) {
             entries.add(new BarEntry(idx, entry.getValue().floatValue()));
             labels.add(entry.getKey());
             colors.add(PIE_COLORS[idx % PIE_COLORS.length]);
@@ -418,7 +419,7 @@ public class RelatoriosFragment extends Fragment {
         horizontalBarChart.invalidate();
     }
 
-    private void atualizarPieChart(Map<String, Double> totalPorCategoria) {
+    private void atualizarPieChart(Map<String, BigDecimal> totalPorCategoria) {
         ultimoTotalPorCategoria = totalPorCategoria;
         layoutPieLegenda.removeAllViews();
         if (totalPorCategoria == null || totalPorCategoria.isEmpty()) {
@@ -433,7 +434,7 @@ public class RelatoriosFragment extends Fragment {
         List<Integer> colors = new ArrayList<>();
         int idx = 0;
 
-        for (Map.Entry<String, Double> entry : totalPorCategoria.entrySet()) {
+        for (Map.Entry<String, BigDecimal> entry : totalPorCategoria.entrySet()) {
             entries.add(new PieEntry(entry.getValue().floatValue(), ""));
             int color = PIE_COLORS[idx % PIE_COLORS.length];
             colors.add(color);
@@ -586,8 +587,8 @@ public class RelatoriosFragment extends Fragment {
     private void atualizarUI(RelatorioResult res) {
         if (res == null) return;
 
-        double totalReceitas = res.getTotalReceitas();
-        double totalDespesas = res.getTotalDespesas();
+        BigDecimal totalReceitas = res.getTotalReceitas();
+        BigDecimal totalDespesas = res.getTotalDespesas();
 
         tvTotalReceitas.setText(getString(R.string.relatorio_resumo_recebido,
             String.format(Locale.getDefault(), "R$ %.2f", totalReceitas)));
@@ -598,14 +599,14 @@ public class RelatoriosFragment extends Fragment {
         tvResumoPercentual.setText(getString(R.string.relatorio_resumo_percentual, percentual));
         pbResumoPercentual.setProgressCompat(percentual, true);
 
-        double saldo = res.getSaldo();
+        BigDecimal saldo = res.getSaldo();
         tvSaldo.setText(String.format(Locale.getDefault(), "R$ %.2f", saldo));
-        tvSaldo.setTextColor(saldo >= 0 ? 0xFF2E7D32 : 0xFFC62828);
+        tvSaldo.setTextColor(saldo.compareTo(BigDecimal.ZERO) >= 0 ? 0xFF2E7D32 : 0xFFC62828);
 
         atualizarPieChart(res.getTotalPorCategoria());
 
         layoutCategorias.removeAllViews();
-        for (Map.Entry<String, Double> entry : res.getTotalPorCategoria().entrySet()) {
+        for (Map.Entry<String, BigDecimal> entry : res.getTotalPorCategoria().entrySet()) {
             LinearLayout row = new LinearLayout(requireContext());
             row.setOrientation(LinearLayout.HORIZONTAL);
             LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
@@ -645,16 +646,16 @@ public class RelatoriosFragment extends Fragment {
             filtrados.add(lancamento);
         }
 
-        double receitas = 0.0;
-        double despesas = 0.0;
-        Map<String, Double> totalPorCategoria = new LinkedHashMap<>();
+        BigDecimal receitas = BigDecimal.ZERO;
+        BigDecimal despesas = BigDecimal.ZERO;
+        Map<String, BigDecimal> totalPorCategoria = new LinkedHashMap<>();
         for (Lancamento lancamento : filtrados) {
             if (lancamento.getTipo() == TipoLancamento.RECEITA) {
-                receitas += lancamento.getValor();
+                receitas = receitas.add(lancamento.getValor());
                 continue;
             }
 
-            despesas += lancamento.getValor();
+            despesas = despesas.add(lancamento.getValor());
             Categoria categoriaRaiz = encontrarCategoriaRaiz(lancamento.getCategoriaId());
             String nomeCategoria;
             if (categoriaRaiz != null) {
@@ -662,7 +663,7 @@ public class RelatoriosFragment extends Fragment {
             } else {
                 nomeCategoria = lancamento.getCategoriaId();
             }
-            totalPorCategoria.merge(nomeCategoria, lancamento.getValor(), Double::sum);
+            totalPorCategoria.merge(nomeCategoria, lancamento.getValor(), BigDecimal::add);
         }
 
         return new RelatorioResult(filtrados, receitas, despesas, totalPorCategoria);

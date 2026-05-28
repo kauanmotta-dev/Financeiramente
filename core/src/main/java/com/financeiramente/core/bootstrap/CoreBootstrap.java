@@ -8,6 +8,7 @@ import com.financeiramente.core.dao.FaturaDao;
 import com.financeiramente.core.dao.LancamentoDao;
 import com.financeiramente.core.dao.MetaDao;
 import com.financeiramente.core.dao.TagDao;
+import com.financeiramente.core.db.AppLogger;
 import com.financeiramente.core.db.DatabaseDriver;
 import com.financeiramente.core.db.DatabaseMigrator;
 import com.financeiramente.core.repository.AporteMetaRepository;
@@ -37,7 +38,6 @@ import com.financeiramente.core.usecase.lancamento.ListarComprasCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.CancelarRecorrenciaCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.RegistrarCompraCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoCartaoUseCase;
-import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoParceladoCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoUseCase;
 import com.financeiramente.core.usecase.meta.CalcularProjecaoMetaUseCase;
 import com.financeiramente.core.usecase.meta.CalcularTotalAportesMesUseCase;
@@ -55,7 +55,13 @@ public final class CoreBootstrap {
     }
 
     public static CoreServices create(DatabaseDriver databaseDriver) {
-        new DatabaseMigrator(databaseDriver).migrate();
+        return create(databaseDriver, new AppLogger() {});
+    }
+
+    public static CoreServices create(DatabaseDriver databaseDriver, AppLogger logger) {
+        AppLogger safeLogger = logger != null ? logger : new AppLogger() {};
+
+        new DatabaseMigrator(databaseDriver, safeLogger).migrate();
 
         CategoriaRepository categoriaRepository = new CategoriaDao(databaseDriver);
         LancamentoRepository lancamentoRepository = new LancamentoDao(databaseDriver);
@@ -110,7 +116,8 @@ public final class CoreBootstrap {
                 compraCartaoRepository,
                 resolverFaturaParaLancamentoUseCase,
                 registrarLancamentoUseCase,
-                databaseDriver);
+                databaseDriver,
+                safeLogger);
         DeletarCompraCartaoUseCase deletarCompraCartaoUseCase =
                 new DeletarCompraCartaoUseCase(compraCartaoRepository);
         GerarCobrancasRecorrentesCartaoUseCase gerarCobrancasRecorrentesCartaoUseCase =
@@ -118,7 +125,8 @@ public final class CoreBootstrap {
                         compraCartaoRepository,
                         resolverFaturaParaLancamentoUseCase,
                         registrarLancamentoUseCase,
-                        databaseDriver);
+                        databaseDriver,
+                        safeLogger);
         CancelarRecorrenciaCartaoUseCase cancelarRecorrenciaCartaoUseCase =
                 new CancelarRecorrenciaCartaoUseCase(compraCartaoRepository);
         ListarComprasCartaoUseCase listarComprasCartaoUseCase =
@@ -127,11 +135,6 @@ public final class CoreBootstrap {
                 resolverFaturaParaLancamentoUseCase,
                 registrarLancamentoUseCase,
                 databaseDriver);
-        RegistrarLancamentoParceladoCartaoUseCase registrarLancamentoParceladoCartaoUseCase =
-                new RegistrarLancamentoParceladoCartaoUseCase(
-                        resolverFaturaParaLancamentoUseCase,
-                        registrarLancamentoUseCase,
-                        databaseDriver);
         AtualizarStatusFaturasUseCase atualizarStatusFaturasUseCase = new AtualizarStatusFaturasUseCase(faturaRepository);
         PagarFaturaUseCase pagarFaturaUseCase = new PagarFaturaUseCase(
                 faturaRepository,
@@ -181,7 +184,6 @@ public final class CoreBootstrap {
                 cancelarRecorrenciaCartaoUseCase,
                 listarComprasCartaoUseCase,
                 registrarLancamentoCartaoUseCase,
-                registrarLancamentoParceladoCartaoUseCase,
                 atualizarStatusFaturasUseCase,
                 pagarFaturaUseCase);
     }

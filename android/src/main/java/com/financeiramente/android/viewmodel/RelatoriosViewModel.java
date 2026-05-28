@@ -87,10 +87,10 @@ public class RelatoriosViewModel extends ViewModel {
                 String[] labels  = new String[6];
                 for (int i = 5; i >= 0; i--) {
                     LocalDate mes = hoje.minusMonths(i);
-                    receitas[5 - i] = (float) lancamentoRepository.somarPorTipoEMes(
-                            TipoLancamento.RECEITA, mes.getYear(), mes.getMonthValue());
-                    despesas[5 - i] = (float) lancamentoRepository.somarPorTipoEMes(
-                            TipoLancamento.DESPESA, mes.getYear(), mes.getMonthValue());
+                    receitas[5 - i] = lancamentoRepository.somarPorTipoEMes(
+                            TipoLancamento.RECEITA, mes.getYear(), mes.getMonthValue()).floatValue();
+                    despesas[5 - i] = lancamentoRepository.somarPorTipoEMes(
+                            TipoLancamento.DESPESA, mes.getYear(), mes.getMonthValue()).floatValue();
                     labels[5 - i] = mesesAbrev[mes.getMonthValue() - 1];
                 }
                 mainHandler.post(() -> {

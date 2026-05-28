@@ -5,6 +5,7 @@ import com.financeiramente.core.db.RowMapper;
 import com.financeiramente.core.domain.entity.CompraCartao;
 import com.financeiramente.core.domain.vo.TipoCompraCartao;
 import com.financeiramente.core.repository.CompraCartaoRepository;
+import com.financeiramente.core.util.MonetaryValues;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +26,7 @@ public class CompraCartaoDao implements CompraCartaoRepository {
             compra.getId(),
             compra.getCartaoId(),
             compra.getDescricao(),
-            compra.getValorTotal(),
+            MonetaryValues.toDouble(compra.getValorTotal()),
             compra.getTipo().name().toLowerCase(),
             compra.getTotalParcelas(),
             compra.getCategoriaId(),
@@ -43,7 +44,7 @@ public class CompraCartaoDao implements CompraCartaoRepository {
             "UPDATE compra_cartao SET cartao_id=?, descricao=?, valor_total=?, tipo=?, total_parcelas=?, categoria_id=?, data_compra=?, dia_recorrencia=?, ativo=?, atualizado_em=? WHERE id=?",
             compra.getCartaoId(),
             compra.getDescricao(),
-            compra.getValorTotal(),
+            MonetaryValues.toDouble(compra.getValorTotal()),
             compra.getTipo().name().toLowerCase(),
             compra.getTotalParcelas(),
             compra.getCategoriaId(),
@@ -110,7 +111,7 @@ public class CompraCartaoDao implements CompraCartaoRepository {
         row.getString("id"),
         row.getString("cartao_id"),
         row.getString("descricao"),
-        row.getDouble("valor_total"),
+        MonetaryValues.fromDouble(row.getDouble("valor_total")),
         TipoCompraCartao.valueOf(row.getString("tipo").toUpperCase()),
         row.isNull("total_parcelas") ? null : row.getInt("total_parcelas"),
         row.isNull("categoria_id") ? null : row.getString("categoria_id"),

@@ -17,6 +17,7 @@ import com.financeiramente.core.util.FinanceCalculator;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.math.BigDecimal;
 import java.util.Locale;
 
 public class PagarFaturaBottomSheet extends BottomSheetDialogFragment {
@@ -73,7 +74,9 @@ public class PagarFaturaBottomSheet extends BottomSheetDialogFragment {
             tvPreview.setVisibility(View.GONE);
             return;
         }
-        PagamentoFaturaResult result = FinanceCalculator.calcularPagamentoFatura(valorExtrato, valorPago);
+        PagamentoFaturaResult result = FinanceCalculator.calcularPagamentoFatura(
+                BigDecimal.valueOf(valorExtrato),
+                BigDecimal.valueOf(valorPago));
         String statusStr;
         switch (result.getStatusResultante()) {
             case PAGO: statusStr = getString(R.string.fatura_status_pago); break;
@@ -82,8 +85,8 @@ public class PagarFaturaBottomSheet extends BottomSheetDialogFragment {
         }
         String preview = getString(R.string.pagar_fatura_preview,
                 valorPago, statusStr);
-        if (result.getSaldoDevedor() > 0) {
-            preview += "\n" + getString(R.string.pagar_fatura_saldo_devedor, result.getSaldoDevedor());
+        if (result.getSaldoDevedor().compareTo(BigDecimal.ZERO) > 0) {
+            preview += "\n" + getString(R.string.pagar_fatura_saldo_devedor, result.getSaldoDevedor().doubleValue());
         }
         tvPreview.setText(preview);
         tvPreview.setVisibility(View.VISIBLE);

@@ -1,6 +1,7 @@
 package com.financeiramente.core.usecase.relatorio;
 
 import com.financeiramente.core.domain.entity.Lancamento;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -10,29 +11,29 @@ import java.util.Map;
  */
 public class RelatorioResult {
     private final List<Lancamento> lancamentos;
-    private final Map<String, Double> totalPorCategoria;
-    private final double totalReceitas;
-    private final double totalDespesas;
-    private final double saldo;
+    private final Map<String, BigDecimal> totalPorCategoria;
+    private final BigDecimal totalReceitas;
+    private final BigDecimal totalDespesas;
+    private final BigDecimal saldo;
 
     public RelatorioResult(List<Lancamento> lancamentos,
-                           double totalReceitas,
-                           double totalDespesas,
-                           Map<String, Double> totalPorCategoria) {
+                           BigDecimal totalReceitas,
+                           BigDecimal totalDespesas,
+                           Map<String, BigDecimal> totalPorCategoria) {
         this.lancamentos = lancamentos != null
                 ? Collections.unmodifiableList(lancamentos)
                 : Collections.emptyList();
         this.totalPorCategoria = totalPorCategoria != null
                 ? Collections.unmodifiableMap(totalPorCategoria)
                 : Collections.emptyMap();
-        this.totalReceitas = totalReceitas;
-        this.totalDespesas = totalDespesas;
-        this.saldo = totalReceitas - totalDespesas;
+        this.totalReceitas = totalReceitas != null ? totalReceitas : BigDecimal.ZERO;
+        this.totalDespesas = totalDespesas != null ? totalDespesas : BigDecimal.ZERO;
+        this.saldo = this.totalReceitas.subtract(this.totalDespesas);
     }
 
     public List<Lancamento> getLancamentos() { return lancamentos; }
-    public Map<String, Double> getTotalPorCategoria() { return totalPorCategoria; }
-    public double getTotalReceitas() { return totalReceitas; }
-    public double getTotalDespesas() { return totalDespesas; }
-    public double getSaldo() { return saldo; }
+    public Map<String, BigDecimal> getTotalPorCategoria() { return totalPorCategoria; }
+    public BigDecimal getTotalReceitas() { return totalReceitas; }
+    public BigDecimal getTotalDespesas() { return totalDespesas; }
+    public BigDecimal getSaldo() { return saldo; }
 }

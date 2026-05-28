@@ -135,12 +135,15 @@ public class DatabaseMigrator {
             ")";
 
     private final DatabaseDriver driver;
+    private final AppLogger logger;
 
-    public DatabaseMigrator(DatabaseDriver driver) {
+    public DatabaseMigrator(DatabaseDriver driver, AppLogger logger) {
         this.driver = driver;
+        this.logger = logger;
     }
 
     public void migrate() {
+        logger.info("Iniciando migracao do schema do banco.");
         driver.execute("PRAGMA journal_mode = WAL");
         driver.execute("PRAGMA foreign_keys = ON");
 
@@ -149,17 +152,20 @@ public class DatabaseMigrator {
         int currentVersion = driver.getSchemaVersion();
 
         if (currentVersion < 1) {
+            logger.info("Aplicando migracao de schema versao 1.");
             applyMigration1();
             driver.setSchemaVersion(1);
             currentVersion = 1;
         }
 
         if (currentVersion < 2) {
+            logger.info("Aplicando migracao de schema versao 2.");
             applyMigration2();
             driver.setSchemaVersion(2);
             currentVersion = 2;
         }
 
+        logger.info("Migracao do schema concluida na versao " + currentVersion + ".");
     }
 
     private void applyMigration1() {

@@ -27,7 +27,6 @@ import com.financeiramente.core.usecase.lancamento.ListarComprasCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.CancelarRecorrenciaCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.RegistrarCompraCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoCartaoUseCase;
-import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoParceladoCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoUseCase;
 import com.financeiramente.core.usecase.meta.CalcularProjecaoMetaUseCase;
 import com.financeiramente.core.usecase.meta.CalcularTotalAportesMesUseCase;
@@ -78,7 +77,6 @@ public class CoreServices {
     private final CancelarRecorrenciaCartaoUseCase cancelarRecorrenciaCartaoUseCase;
     private final ListarComprasCartaoUseCase listarComprasCartaoUseCase;
     private final RegistrarLancamentoCartaoUseCase registrarLancamentoCartaoUseCase;
-    private final RegistrarLancamentoParceladoCartaoUseCase registrarLancamentoParceladoCartaoUseCase;
     private final AtualizarStatusFaturasUseCase atualizarStatusFaturasUseCase;
     private final PagarFaturaUseCase pagarFaturaUseCase;
 
@@ -118,7 +116,6 @@ public class CoreServices {
             CancelarRecorrenciaCartaoUseCase cancelarRecorrenciaCartaoUseCase,
             ListarComprasCartaoUseCase listarComprasCartaoUseCase,
             RegistrarLancamentoCartaoUseCase registrarLancamentoCartaoUseCase,
-            RegistrarLancamentoParceladoCartaoUseCase registrarLancamentoParceladoCartaoUseCase,
             AtualizarStatusFaturasUseCase atualizarStatusFaturasUseCase,
             PagarFaturaUseCase pagarFaturaUseCase) {
         this.categoriaRepository = categoriaRepository;
@@ -156,7 +153,6 @@ public class CoreServices {
         this.cancelarRecorrenciaCartaoUseCase = cancelarRecorrenciaCartaoUseCase;
         this.listarComprasCartaoUseCase = listarComprasCartaoUseCase;
         this.registrarLancamentoCartaoUseCase = registrarLancamentoCartaoUseCase;
-        this.registrarLancamentoParceladoCartaoUseCase = registrarLancamentoParceladoCartaoUseCase;
         this.atualizarStatusFaturasUseCase = atualizarStatusFaturasUseCase;
         this.pagarFaturaUseCase = pagarFaturaUseCase;
     }
@@ -201,7 +197,6 @@ public class CoreServices {
     }
     public ListarComprasCartaoUseCase getListarComprasCartaoUseCase() { return listarComprasCartaoUseCase; }
     public RegistrarLancamentoCartaoUseCase getRegistrarLancamentoCartaoUseCase() { return registrarLancamentoCartaoUseCase; }
-    public RegistrarLancamentoParceladoCartaoUseCase getRegistrarLancamentoParceladoCartaoUseCase() { return registrarLancamentoParceladoCartaoUseCase; }
     public AtualizarStatusFaturasUseCase getAtualizarStatusFaturasUseCase() { return atualizarStatusFaturasUseCase; }
     public PagarFaturaUseCase getPagarFaturaUseCase() { return pagarFaturaUseCase; }
 }

@@ -21,8 +21,7 @@ public class CancelarRecorrenciaCartaoUseCase {
             throw new DomainException("Apenas compras recorrentes podem ser canceladas.");
         }
 
-        compra.setAtivo(false);
-        compra.setAtualizadoEm(System.currentTimeMillis());
+        compra.cancelarRecorrencia(System.currentTimeMillis());
         compraCartaoRepository.atualizar(compra);
     }
 }

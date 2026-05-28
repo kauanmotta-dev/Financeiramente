@@ -12,4 +12,5 @@ public interface CategoriaRepository {
     List<Categoria> listarRaizes();
     List<Categoria> listarFilhas(String paiId);
     List<Categoria> listarTodas();
+    List<Categoria> listarPorIds(List<String> ids);
 }

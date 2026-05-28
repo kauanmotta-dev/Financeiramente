@@ -33,7 +33,7 @@ public class ListarComprasCartaoUseCase {
             int parcelasPagas = 0;
 
             for (Lancamento lancamento : lancamentos) {
-                valorJaDebitado += lancamento.getValor();
+                valorJaDebitado += lancamento.getValor().doubleValue();
                 if (compra.getTipo() == TipoCompraCartao.PARCELADO) {
                     LocalDate dataLancamento = LocalDate.parse(lancamento.getData());
                     if (!dataLancamento.isAfter(hoje)) {

@@ -5,6 +5,7 @@ import com.financeiramente.core.domain.vo.TipoCategoria;
 import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.util.DomainException;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public class CriarCategoriaUseCase {
@@ -15,12 +16,12 @@ public class CriarCategoriaUseCase {
         this.categoriaRepository = categoriaRepository;
     }
 
-    public Categoria executar(String nome, TipoCategoria tipo, String paiId, Double limiteMensal,
+    public Categoria executar(String nome, TipoCategoria tipo, String paiId, BigDecimal limiteMensal,
                               String icone, String cor) {
         if (nome == null || nome.trim().isEmpty()) {
             throw new DomainException("Nome da categoria é obrigatório.");
         }
-        if (limiteMensal != null && limiteMensal <= 0) {
+        if (limiteMensal != null && limiteMensal.compareTo(BigDecimal.ZERO) <= 0) {
             throw new DomainException("Limite mensal deve ser positivo.");
         }
 
@@ -31,13 +32,13 @@ public class CriarCategoriaUseCase {
                 throw new DomainException(
                         "Não é permitido criar subcategoria de uma subcategoria (máximo 2 níveis).");
             }
-            
-           tipo = pai.getTipo();
+
+            tipo = pai.getTipo();
             if (limiteMensal != null && pai.getLimiteMensal() != null) {
-                double limiteUtilizado = categoriaRepository.listarFilhas(paiId).stream()
-                        .mapToDouble(filha -> filha.getLimiteMensal() != null ? filha.getLimiteMensal() : 0.0)
-                        .sum();
-                if (limiteMensal + limiteUtilizado > pai.getLimiteMensal()) {
+                BigDecimal limiteUtilizado = categoriaRepository.listarFilhas(paiId).stream()
+                        .map(filha -> filha.getLimiteMensal() != null ? filha.getLimiteMensal() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                if (limiteMensal.add(limiteUtilizado).compareTo(pai.getLimiteMensal()) > 0) {
                     throw new DomainException(
                             "Limite das subcategorias não podem ultrapassar o limite da categoria pai (R$ "
                             + String.format("%.2f", pai.getLimiteMensal()) + ").");

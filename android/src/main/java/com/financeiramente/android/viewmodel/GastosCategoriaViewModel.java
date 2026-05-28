@@ -246,7 +246,7 @@ public class GastosCategoriaViewModel extends ViewModel {
                 Map<String, Double> utilizadoPorCategoria = new HashMap<>();
                 for (Categoria categoria : todas) {
                     double utilizado = lancamentoRepository.somarPorCategoria(
-                            categoria.getId(), ano, mes);
+                            categoria.getId(), ano, mes).doubleValue();
                     utilizadoPorCategoria.put(categoria.getId(), utilizado);
                 }
 
@@ -302,9 +302,9 @@ public class GastosCategoriaViewModel extends ViewModel {
                 }
 
                 double recebidoMes = lancamentoRepository.somarPorTipoEMes(
-                        TipoLancamento.RECEITA, ano, mes);
+                        TipoLancamento.RECEITA, ano, mes).doubleValue();
                 double gastoMes = lancamentoRepository.somarPorTipoEMes(
-                        TipoLancamento.DESPESA, ano, mes);
+                        TipoLancamento.DESPESA, ano, mes).doubleValue();
                 double totalPrevistoMes = limiteEssenciais + limiteNaoEssenciais;
 
                 mainHandler.post(() -> {
@@ -342,7 +342,7 @@ public class GastosCategoriaViewModel extends ViewModel {
         List<Categoria> filhas = filhasPorPai.getOrDefault(categoria.getId(), Collections.emptyList());
         List<GastoCategoriaNode> filhasNo = new ArrayList<>();
 
-        double limiteProprio = categoria.getLimiteMensal() != null ? categoria.getLimiteMensal() : 0d;
+        double limiteProprio = categoria.getLimiteMensal() != null ? categoria.getLimiteMensal().doubleValue() : 0d;
         double somaLimitesFilhas = 0d;
         double utilizadoAgregado = utilizadoPorCategoria.getOrDefault(categoria.getId(), 0d);
 

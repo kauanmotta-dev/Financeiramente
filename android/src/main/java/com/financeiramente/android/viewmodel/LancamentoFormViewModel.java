@@ -25,6 +25,7 @@ import com.financeiramente.core.usecase.lancamento.RegistrarLancamentoUseCase;
 
 import java.util.Collections;
 import java.util.List;
+import java.math.BigDecimal;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -120,7 +121,7 @@ public class LancamentoFormViewModel extends ViewModel {
                 RegistrarCompraCartaoInput input = new RegistrarCompraCartaoInput(
                         cartaoId,
                         TipoCompraCartao.CREDITO,
-                        valor,
+                            BigDecimal.valueOf(valor),
                         data,
                         descricao,
                         categoriaId,
@@ -150,7 +151,7 @@ public class LancamentoFormViewModel extends ViewModel {
                 RegistrarCompraCartaoInput input = new RegistrarCompraCartaoInput(
                         cartaoId,
                         TipoCompraCartao.PARCELADO,
-                        valor,
+                    BigDecimal.valueOf(valor),
                         data,
                         descricao,
                         categoriaId,
@@ -170,7 +171,7 @@ public class LancamentoFormViewModel extends ViewModel {
         executor.execute(() -> {
             try {
                 RegistrarLancamentoInput input = new RegistrarLancamentoInput(
-                        valor, tipo, data, descricao, categoriaId, null, tagIds);
+                        BigDecimal.valueOf(valor), tipo, data, descricao, categoriaId, null, tagIds);
                 Lancamento salvo = registrar.executar(input);
                 mainHandler.post(() -> {
                     savedLancamentoId.setValue(salvo.getId());
@@ -187,7 +188,7 @@ public class LancamentoFormViewModel extends ViewModel {
         executor.execute(() -> {
             try {
                 RegistrarLancamentoInput input = new RegistrarLancamentoInput(
-                        valor, tipo, data, descricao, categoriaId, null, tagIds);
+                        BigDecimal.valueOf(valor), tipo, data, descricao, categoriaId, null, tagIds);
                 editar.executar(id, input);
                 mainHandler.post(() -> sucesso.setValue(true));
             } catch (Exception e) {

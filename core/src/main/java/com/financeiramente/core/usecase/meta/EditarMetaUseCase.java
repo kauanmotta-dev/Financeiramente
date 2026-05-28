@@ -4,6 +4,8 @@ import com.financeiramente.core.domain.entity.Meta;
 import com.financeiramente.core.repository.MetaRepository;
 import com.financeiramente.core.util.DomainException;
 
+import java.math.BigDecimal;
+
 public class EditarMetaUseCase {
 
     private final MetaRepository repository;
@@ -30,11 +32,12 @@ public class EditarMetaUseCase {
             throw new DomainException("Valor inicial deve ser menor que o valor objetivo.");
         }
 
-        meta.setNome(nome.trim());
-        meta.setValorObjetivo(valorObjetivo);
-        meta.setValorInicial(valorInicial);
-        meta.setDataAlvo(dataAlvo);
-        meta.setDescricao(descricao);
+        meta.atualizarDadosEdicao(
+            nome.trim(),
+            BigDecimal.valueOf(valorObjetivo),
+            BigDecimal.valueOf(valorInicial),
+            dataAlvo,
+            descricao);
         repository.atualizar(meta);
         return meta;
     }

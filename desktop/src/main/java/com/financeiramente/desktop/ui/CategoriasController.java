@@ -21,6 +21,7 @@ import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class CategoriasController {
@@ -153,11 +154,11 @@ public class CategoriasController {
             return;
         }
 
-        Double limite = null;
+        BigDecimal limite = null;
         String limiteStr = tfLimite.getText() != null ? tfLimite.getText().trim() : "";
         if (!limiteStr.isEmpty()) {
             try {
-                limite = Double.parseDouble(limiteStr);
+                limite = new BigDecimal(limiteStr.replace(',', '.'));
             } catch (NumberFormatException e) {
                 mostrarErro("Limite mensal inválido. Use ponto como separador decimal.");
                 return;

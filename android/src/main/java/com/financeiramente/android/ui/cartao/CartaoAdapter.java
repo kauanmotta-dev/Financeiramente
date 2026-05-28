@@ -82,7 +82,7 @@ public class CartaoAdapter extends RecyclerView.Adapter<CartaoAdapter.ViewHolder
             tvVencimento.setText(String.format(Locale.getDefault(),
                     "Vencimento: dia %d", cartao.getDiaVencimento()));
 
-            if (cartao.getLimite() != null && cartao.getLimite() > 0) {
+            if (cartao.getLimite() != null && cartao.getLimite().doubleValue() > 0) {
                 tvLimiteTotal.setText(String.format(Locale.getDefault(), "Limite: R$ %.2f", cartao.getLimite()));
                 tvLimiteTotal.setVisibility(View.VISIBLE);
                 tvUtilizado.setVisibility(View.VISIBLE);

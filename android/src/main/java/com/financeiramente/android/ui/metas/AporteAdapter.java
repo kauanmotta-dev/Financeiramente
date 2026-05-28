@@ -51,7 +51,7 @@ public class AporteAdapter extends RecyclerView.Adapter<AporteAdapter.ViewHolder
     public void onBindViewHolder(@NonNull ViewHolder h, int position) {
         AporteMeta aporte = items.get(position);
         h.tvData.setText(aporte.getData());
-        h.tvValor.setText(formatCurrencyCompact(aporte.getValor()));
+        h.tvValor.setText(formatCurrencyCompact(aporte.getValor().doubleValue()));
         String desc = aporte.getDescricao();
         h.tvDescricao.setText(desc != null && !desc.isEmpty() ? desc : "—");
         h.btnExcluir.setOnClickListener(v -> onDeleteClick.onDeleteClick(aporte));

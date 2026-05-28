@@ -25,6 +25,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.Optional;
+import java.math.BigDecimal;
 
 public class CategoriaFormFragment extends Fragment {
 
@@ -204,11 +205,11 @@ public class CategoriaFormFragment extends Fragment {
             }
         }
 
-        Double limiteMensal = null;
+        BigDecimal limiteMensal = null;
         String limiteStr = etLimite.getText() != null ? etLimite.getText().toString().trim() : "";
         if (!limiteStr.isEmpty()) {
             try {
-                limiteMensal = Double.parseDouble(limiteStr);
+                limiteMensal = new BigDecimal(limiteStr);
             } catch (NumberFormatException e) {
                 Toast.makeText(requireContext(), getString(R.string.erro_limite_invalido),
                         Toast.LENGTH_SHORT).show();
