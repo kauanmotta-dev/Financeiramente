@@ -1,4 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="chip_stroke_width">1dp</dimen>
+
+    <!-- Spacing tokens -->
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">16dp</dimen>
+    <dimen name="spacing_lg">24dp</dimen>
+    <dimen name="spacing_xl">32dp</dimen>
+
+    <!-- Touch targets -->
+    <dimen name="touch_target_min">48dp</dimen>
+    <dimen name="icon_size_sm">24dp</dimen>
+    <dimen name="icon_size_md">40dp</dimen>
+    <dimen name="icon_size_lg">44dp</dimen>
+
+    <!-- Card -->
+    <dimen name="card_corner_sm">8dp</dimen>
+    <dimen name="card_corner_md">12dp</dimen>
+    <dimen name="card_corner_lg">16dp</dimen>
+    <dimen name="card_stroke_width">1dp</dimen>
+    <dimen name="card_margin_horizontal">16dp</dimen>
+    <dimen name="card_margin_vertical">6dp</dimen>
+
+    <!-- Bottom sheet -->
+    <dimen name="bottom_sheet_peek_height">460dp</dimen>
 </resources>

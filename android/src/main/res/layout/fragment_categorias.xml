@@ -5,42 +5,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        app:elevation="0dp">
 
-        <LinearLayout
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar_categorias"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingTop="12dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="8dp">
-
-            <ImageButton
-                android:id="@+id/btn_back_categorias"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/voltar"
-                android:padding="8dp"
-                android:src="@android:drawable/ic_media_previous"
-                android:tint="?attr/colorOnSurfaceVariant" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/nav_categorias"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
+            android:layout_height="?attr/actionBarSize"
+            app:title="@string/nav_categorias"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:layout_scrollFlags="scroll|enterAlways|snap" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tab_layout_categorias"
@@ -52,6 +28,14 @@
             app:tabSelectedTextColor="?attr/colorPrimary"
             app:tabTextColor="?attr/colorOnSurfaceVariant" />
 
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:orientation="vertical">
+
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/vp_categorias"
             android:layout_width="match_parent"
@@ -62,9 +46,9 @@
             android:id="@+id/btn_add_categoria"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
+            android:layout_marginHorizontal="@dimen/spacing_md"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="@dimen/spacing_md"
             android:text="@string/add_categoria"
             app:icon="@android:drawable/ic_input_add" />
 

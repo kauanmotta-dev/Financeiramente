@@ -13,7 +13,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp"
+            android:padding="@dimen/spacing_md"
             android:paddingBottom="96dp">
 
             <LinearLayout
@@ -31,7 +31,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/voltar"
                     android:padding="8dp"
-                    android:src="@android:drawable/ic_media_previous"
+                    android:src="@drawable/ic_arrow_back"
                     android:tint="?attr/colorOnSurfaceVariant" />
 
                 <TextView
@@ -47,12 +47,14 @@
             </LinearLayout>
 
             <!-- Progresso -->
-            <ProgressBar
+            <com.google.android.material.progressindicator.LinearProgressIndicator
                 android:id="@+id/pb_detalhe_progresso"
-                style="@android:style/Widget.ProgressBar.Horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="16dp"
-                android:layout_marginBottom="8dp" />
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                app:indicatorColor="?attr/colorPrimary"
+                app:trackColor="@color/cinza_divider"
+                app:trackCornerRadius="4dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"

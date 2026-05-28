@@ -17,6 +17,7 @@ import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.CategoriasViewModel;
 import com.financeiramente.android.viewmodel.CategoriasViewModelFactory;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -35,7 +36,8 @@ public class CategoriasFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        view.findViewById(R.id.btn_back_categorias).setOnClickListener(v ->
+        MaterialToolbar toolbarCategorias = view.findViewById(R.id.toolbar_categorias);
+        toolbarCategorias.setNavigationOnClickListener(v ->
             Navigation.findNavController(view).navigateUp());
 
         AppContext ctx = AppContext.get(requireContext());

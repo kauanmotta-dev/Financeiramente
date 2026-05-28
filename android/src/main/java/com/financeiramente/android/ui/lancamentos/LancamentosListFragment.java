@@ -1,6 +1,8 @@
 package com.financeiramente.android.ui.lancamentos;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +12,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
@@ -25,9 +26,13 @@ import com.financeiramente.android.viewmodel.LancamentosListViewModelFactory;
 import com.financeiramente.core.domain.entity.CartaoCredito;
 import com.financeiramente.core.domain.entity.Lancamento;
 import com.financeiramente.core.domain.vo.TipoLancamento;
+import com.facebook.shimmer.ShimmerFrameLayout;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.search.SearchBar;
+import com.google.android.material.search.SearchView;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -39,9 +44,12 @@ public class LancamentosListFragment extends Fragment {
 
     private LancamentosListViewModel viewModel;
     private LancamentoAdapter adapter;
+    private RecyclerView recyclerLancamentos;
     private View emptyState;
+    private ShimmerFrameLayout shimmerLancamentos;
     private TipoLancamento filtroTipoAtual = null;
     private int sourceTab = 0;
+    private boolean carregamentoInicialFinalizado = false;
 
     @Nullable
     @Override
@@ -57,7 +65,8 @@ public class LancamentosListFragment extends Fragment {
         Bundle args = getArguments();
         sourceTab = args != null ? args.getInt(ARG_SOURCE_TAB, 0) : 0;
 
-        view.findViewById(R.id.btn_back_lancamentos).setOnClickListener(v -> {
+        MaterialToolbar toolbarLancamentos = view.findViewById(R.id.toolbar_lancamentos);
+        toolbarLancamentos.setNavigationOnClickListener(v -> {
             if (!Navigation.findNavController(view).navigateUp()) {
                 Navigation.findNavController(view).navigate(
                         sourceTab == R.id.nav_gastos ? R.id.nav_gastos : R.id.nav_dashboard);
@@ -73,6 +82,9 @@ public class LancamentosListFragment extends Fragment {
         viewModel = new ViewModelProvider(this, factory).get(LancamentosListViewModel.class);
 
         // ── Empty state — Épico 8 ─────────────────────────────────────────
+        shimmerLancamentos = view.findViewById(R.id.shimmer_lancamentos);
+        mostrarLoadingInicial(true);
+
         emptyState = view.findViewById(R.id.layout_empty_state);
         ((ImageView) emptyState.findViewById(R.id.iv_empty_illustration))
             .setVisibility(View.GONE);
@@ -98,10 +110,10 @@ public class LancamentosListFragment extends Fragment {
             });
 
         // ── RecyclerView ─────────────────────────────────────────────────────
-        RecyclerView rv = view.findViewById(R.id.rv_lancamentos);
-        rv.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rv.setAdapter(adapter);
-        rv.addItemDecoration(new StickyDateHeaderDecoration(adapter));
+        recyclerLancamentos = view.findViewById(R.id.rv_lancamentos);
+        recyclerLancamentos.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerLancamentos.setAdapter(adapter);
+        recyclerLancamentos.addItemDecoration(new StickyDateHeaderDecoration(adapter));
 
         // ── Swipe actions ────────────────────────────────────────────────────
         LancamentoSwipeCallback swipeCallback = new LancamentoSwipeCallback(
@@ -130,21 +142,31 @@ public class LancamentosListFragment extends Fragment {
                     }
                 });
 
-        new ItemTouchHelper(swipeCallback).attachToRecyclerView(rv);
+        new ItemTouchHelper(swipeCallback).attachToRecyclerView(recyclerLancamentos);
 
         // ── SearchBar / SearchView ────────────────────────────────────────────
-        SearchView searchView = view.findViewById(R.id.search_view_inline);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        SearchBar searchBar = view.findViewById(R.id.search_bar);
+        SearchView searchView = view.findViewById(R.id.search_view);
+        searchView.setupWithSearchBar(searchBar);
+        searchView.getEditText().addTextChangedListener(new TextWatcher() {
             @Override
-            public boolean onQueryTextSubmit(String query) {
-                adapter.filter(query);
-                return true;
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
 
             @Override
-            public boolean onQueryTextChange(String newText) {
-                adapter.filter(newText);
-                return true;
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                adapter.filter(s != null ? s.toString() : "");
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+        searchView.addTransitionListener((sv, previousState, newState) -> {
+            if (newState == SearchView.TransitionState.HIDDEN
+                    && (searchView.getEditText().getText() == null
+                    || searchView.getEditText().getText().length() == 0)) {
+                adapter.filter("");
             }
         });
 
@@ -165,6 +187,10 @@ public class LancamentosListFragment extends Fragment {
         // ── Observe ──────────────────────────────────────────────────────────
         viewModel.getLancamentos().observe(getViewLifecycleOwner(), lancamentos -> {
             renderLista();
+            if (!carregamentoInicialFinalizado) {
+                carregamentoInicialFinalizado = true;
+                mostrarLoadingInicial(false);
+            }
         });
 
         viewModel.getCategorias().observe(getViewLifecycleOwner(), cats ->
@@ -198,7 +224,27 @@ public class LancamentosListFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        if (!carregamentoInicialFinalizado) {
+            mostrarLoadingInicial(true);
+        }
         viewModel.carregarLancamentos();
+    }
+
+    private void mostrarLoadingInicial(boolean loading) {
+        if (recyclerLancamentos != null) {
+            recyclerLancamentos.setVisibility(loading ? View.INVISIBLE : View.VISIBLE);
+        }
+        if (loading && emptyState != null) {
+            emptyState.setVisibility(View.GONE);
+        }
+        if (shimmerLancamentos != null) {
+            shimmerLancamentos.setVisibility(loading ? View.VISIBLE : View.GONE);
+            if (loading) {
+                shimmerLancamentos.startShimmer();
+            } else {
+                shimmerLancamentos.stopShimmer();
+            }
+        }
     }
 
     private void carregarCartoesAtivos(View rootView) {

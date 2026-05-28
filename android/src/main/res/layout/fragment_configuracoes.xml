@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
@@ -9,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/spacing_md">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -26,7 +27,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/voltar"
             android:padding="8dp"
-            android:src="@android:drawable/ic_media_previous"
+            android:src="@drawable/ic_arrow_back"
             android:tint="?attr/colorOnSurfaceVariant" />
 
         <TextView
@@ -40,28 +41,192 @@
 
     </LinearLayout>
 
-    <com.google.android.material.button.MaterialButton
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/spacing_sm"
+        android:text="@string/configuracoes_secao_gerenciamento"
+        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+        android:textColor="?attr/colorOnSurfaceVariant" />
+
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/btn_categorias"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/gerenciar_categorias"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="@dimen/card_corner_lg"
+        app:strokeColor="@color/cinza_divider"
+        app:strokeWidth="@dimen/card_stroke_width">
 
-    <com.google.android.material.button.MaterialButton
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:minHeight="@dimen/touch_target_min"
+            android:orientation="horizontal"
+            android:padding="@dimen/spacing_md">
+
+            <ImageView
+                android:layout_width="@dimen/icon_size_sm"
+                android:layout_height="@dimen/icon_size_sm"
+                android:layout_marginEnd="@dimen/spacing_md"
+                android:src="@drawable/ic_categories"
+                android:tint="?attr/colorPrimary" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/gerenciar_categorias"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:text="@string/configuracoes_subtitulo_categorias"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="@dimen/icon_size_sm"
+                android:layout_height="@dimen/icon_size_sm"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_chevron_right"
+                android:tint="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/btn_tags"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/gerenciar_tags"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+        android:layout_marginTop="@dimen/spacing_sm"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="@dimen/card_corner_lg"
+        app:strokeColor="@color/cinza_divider"
+        app:strokeWidth="@dimen/card_stroke_width">
 
-    <com.google.android.material.button.MaterialButton
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:minHeight="@dimen/touch_target_min"
+            android:orientation="horizontal"
+            android:padding="@dimen/spacing_md">
+
+            <ImageView
+                android:layout_width="@dimen/icon_size_sm"
+                android:layout_height="@dimen/icon_size_sm"
+                android:layout_marginEnd="@dimen/spacing_md"
+                android:src="@drawable/ic_tag"
+                android:tint="?attr/colorPrimary" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/gerenciar_tags"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:text="@string/configuracoes_subtitulo_tags"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="@dimen/icon_size_sm"
+                android:layout_height="@dimen/icon_size_sm"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_chevron_right"
+                android:tint="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/btn_cartoes"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/gerenciar_cartoes"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+        android:layout_marginTop="@dimen/spacing_sm"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="@dimen/card_corner_lg"
+        app:strokeColor="@color/cinza_divider"
+        app:strokeWidth="@dimen/card_stroke_width">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:minHeight="@dimen/touch_target_min"
+            android:orientation="horizontal"
+            android:padding="@dimen/spacing_md">
+
+            <ImageView
+                android:layout_width="@dimen/icon_size_sm"
+                android:layout_height="@dimen/icon_size_sm"
+                android:layout_marginEnd="@dimen/spacing_md"
+                android:src="@drawable/ic_credit_card"
+                android:tint="?attr/colorPrimary" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/gerenciar_cartoes"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:text="@string/configuracoes_subtitulo_cartoes"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="@dimen/icon_size_sm"
+                android:layout_height="@dimen/icon_size_sm"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_chevron_right"
+                android:tint="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 

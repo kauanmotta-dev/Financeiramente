@@ -7,6 +7,7 @@
     android:background="?attr/colorBackground">
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/content_dashboard"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
@@ -16,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/spacing_md">
 
         <TextView
             android:layout_width="match_parent"
@@ -60,9 +61,9 @@
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:src="@android:drawable/ic_menu_view"
+                        android:src="@drawable/ic_visibility"
                         android:tint="?attr/colorOnSurfaceVariant"
-                        android:contentDescription="Mostrar/ocultar saldo" />
+                        android:contentDescription="@string/dashboard_ocultar_saldo" />
 
                 </LinearLayout>
 
@@ -302,5 +303,22 @@
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
+
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/shimmer_dashboard"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:shimmer_auto_start="false"
+        app:shimmer_base_alpha="0.4"
+        app:shimmer_duration="1000"
+        app:shimmer_highlight_alpha="0.9">
+
+        <include
+            layout="@layout/layout_shimmer_dashboard"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </com.facebook.shimmer.ShimmerFrameLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -21,6 +21,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
 
     private NavController navController;
     private BottomNavigationView bottomNav;
+    private FloatingActionButton fabNovoLancamento;
     private View navHostContainer;
 
     @Override
@@ -50,7 +52,9 @@ public class MainActivity extends AppCompatActivity {
         navHostContainer = findViewById(R.id.nav_host_fragment);
 
         bottomNav = findViewById(R.id.bottom_nav);
+        fabNovoLancamento = findViewById(R.id.fab_novo_lancamento);
         configurarBottomNavigation(bottomNav);
+        configurarFabGlobal();
         configurarInsetsEComportamentoTeclado();
     }
 
@@ -109,6 +113,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void configurarFabGlobal() {
+        if (fabNovoLancamento == null) {
+            return;
+        }
+        fabNovoLancamento.setOnClickListener(v -> abrirFormularioNovoLancamento());
+    }
+
     private void configurarInsetsEComportamentoTeclado() {
         View root = findViewById(R.id.activity_main_root);
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
@@ -130,6 +141,17 @@ public class MainActivity extends AppCompatActivity {
                         systemBars.bottom);
             }
 
+            if (fabNovoLancamento != null
+                    && fabNovoLancamento.getLayoutParams()
+                    instanceof androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) {
+                androidx.constraintlayout.widget.ConstraintLayout.LayoutParams fabParams =
+                        (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams)
+                                fabNovoLancamento.getLayoutParams();
+                int margemPadrao = getResources().getDimensionPixelSize(R.dimen.spacing_md);
+                fabParams.bottomMargin = margemPadrao + systemBars.bottom;
+                fabNovoLancamento.setLayoutParams(fabParams);
+            }
+
             boolean tecladoAberto = insets.isVisible(WindowInsetsCompat.Type.ime());
             setBottomNavVisible(!tecladoAberto);
             return insets;
@@ -138,13 +160,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setBottomNavVisible(boolean visible) {
-        if (bottomNav == null) {
+        if (bottomNav == null && fabNovoLancamento == null) {
             return;
         }
+
         int visibility = visible ? View.VISIBLE : View.GONE;
-        if (bottomNav.getVisibility() != visibility) {
+        if (bottomNav != null && bottomNav.getVisibility() != visibility) {
             bottomNav.setVisibility(visibility);
         }
+        if (fabNovoLancamento != null && fabNovoLancamento.getVisibility() != visibility) {
+            fabNovoLancamento.setVisibility(visibility);
+        }
+    }
+
+    private void abrirFormularioNovoLancamento() {
+        if (navController == null) {
+            return;
+        }
+
+        NavDestination destinoAtual = navController.getCurrentDestination();
+        if (destinoAtual != null && destinoAtual.getId() == R.id.lancamentoFormFragment) {
+            return;
+        }
+
+        Bundle args = new Bundle();
+        int abaAtual = bottomNav != null ? bottomNav.getSelectedItemId() : R.id.nav_dashboard;
+        args.putInt("sourceTab", abaAtual == R.id.nav_gastos ? R.id.nav_gastos : R.id.nav_dashboard);
+        navController.navigate(R.id.lancamentoFormFragment, args);
     }
 
     private int resolverAbaSelecionada(NavDestination destination, Bundle arguments) {
