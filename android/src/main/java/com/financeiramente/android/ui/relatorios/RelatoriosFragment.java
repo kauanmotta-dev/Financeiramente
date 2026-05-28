@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.HorizontalBarChart;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
@@ -129,7 +130,8 @@ public class RelatoriosFragment extends Fragment {
         viewModel = new ViewModelProvider(this, factory).get(RelatoriosViewModel.class);
 
         bindViews(view);
-        view.findViewById(R.id.btn_back_relatorios).setOnClickListener(v -> {
+        MaterialToolbar toolbarRelatorios = view.findViewById(R.id.toolbar_relatorios);
+        toolbarRelatorios.setNavigationOnClickListener(v -> {
             if (!Navigation.findNavController(view).navigateUp()) {
                 Navigation.findNavController(view).navigate(R.id.nav_dashboard);
             }

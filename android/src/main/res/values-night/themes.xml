@@ -30,5 +30,9 @@
 
         <!-- Splash screen (Android 12+) -->
         <item name="android:windowSplashScreenBackground">@color/dark_background</item>
+
+        <!-- Typography -->
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="fontFamily">@font/inter</item>
     </style>
 </resources>

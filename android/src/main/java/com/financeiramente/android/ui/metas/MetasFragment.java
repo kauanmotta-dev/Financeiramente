@@ -25,6 +25,7 @@ import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.MetasViewModel;
 import com.financeiramente.android.viewmodel.MetasViewModelFactory;
 import com.financeiramente.core.domain.entity.Meta;
+import com.facebook.shimmer.ShimmerFrameLayout;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
@@ -45,7 +46,9 @@ public class MetasFragment extends Fragment {
 
     private MetasViewModel viewModel;
     private MetaAdapter adapter;
+    private RecyclerView recyclerMetas;
     private View emptyState;
+    private ShimmerFrameLayout shimmerMetas;
     private Button btnEmptyCta;
     private TextView tvTotalMetas;
     private TextView tvProgressoMedio;
@@ -53,6 +56,7 @@ public class MetasFragment extends Fragment {
 
     private int filtroAtual = FILTRO_TODAS;
     private List<Meta> todasMetas = new ArrayList<>();
+    private boolean carregamentoInicialConcluido = false;
 
     @Nullable
     @Override
@@ -74,6 +78,9 @@ public class MetasFragment extends Fragment {
         viewModel = new ViewModelProvider(this, factory).get(MetasViewModel.class);
 
         // Views
+        shimmerMetas = view.findViewById(R.id.shimmer_metas);
+        mostrarLoadingInicial(true);
+
         emptyState = view.findViewById(R.id.layout_empty_state);
         ((ImageView) emptyState.findViewById(R.id.iv_empty_illustration))
                 .setImageResource(R.drawable.ic_empty_goals);
@@ -90,8 +97,8 @@ public class MetasFragment extends Fragment {
         tvProgressoMedio = view.findViewById(R.id.tv_progresso_medio);
         pbProgressoMedio = view.findViewById(R.id.pb_progresso_medio);
 
-        RecyclerView rv = view.findViewById(R.id.rv_metas);
-        rv.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerMetas = view.findViewById(R.id.rv_metas);
+        recyclerMetas.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         adapter = new MetaAdapter(
                 meta -> {
@@ -117,7 +124,7 @@ public class MetasFragment extends Fragment {
                     .navigate(R.id.action_metasFragment_to_metaDetalheFragment, args);
         });
 
-        rv.setAdapter(adapter);
+        recyclerMetas.setAdapter(adapter);
 
         MaterialButtonToggleGroup toggleGroup = view.findViewById(R.id.toggle_group_filtro);
         toggleGroup.check(R.id.chip_todas);
@@ -133,6 +140,10 @@ public class MetasFragment extends Fragment {
             todasMetas = lista != null ? lista : new ArrayList<>();
             atualizarResumo(todasMetas);
             aplicarFiltro();
+            if (!carregamentoInicialConcluido) {
+                carregamentoInicialConcluido = true;
+                mostrarLoadingInicial(false);
+            }
         });
 
         viewModel.getErro().observe(getViewLifecycleOwner(), msg -> {
@@ -256,7 +267,27 @@ public class MetasFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        if (!carregamentoInicialConcluido) {
+            mostrarLoadingInicial(true);
+        }
         viewModel.carregar();
+    }
+
+    private void mostrarLoadingInicial(boolean loading) {
+        if (recyclerMetas != null) {
+            recyclerMetas.setVisibility(loading ? View.INVISIBLE : View.VISIBLE);
+        }
+        if (loading && emptyState != null) {
+            emptyState.setVisibility(View.GONE);
+        }
+        if (shimmerMetas != null) {
+            shimmerMetas.setVisibility(loading ? View.VISIBLE : View.GONE);
+            if (loading) {
+                shimmerMetas.startShimmer();
+            } else {
+                shimmerMetas.stopShimmer();
+            }
+        }
     }
 }
 

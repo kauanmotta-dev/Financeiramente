@@ -30,4 +30,14 @@
         app:itemTextColor="@color/bottom_nav_selector"
         app:menu="@menu/bottom_nav_menu" />
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_novo_lancamento"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/spacing_md"
+        android:contentDescription="@string/add_lancamento"
+        app:layout_constraintBottom_toTopOf="@id/bottom_nav"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_add" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,30 +5,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:elevation="0dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar_metas"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="@string/nav_metas"
+            app:layout_scrollFlags="scroll|enterAlways|snap" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="16dp"
-            android:paddingTop="16dp"
-            android:paddingBottom="8dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/nav_metas"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
 
         <!-- Summary card -->
         <com.google.android.material.card.MaterialCardView
@@ -37,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
             android:layout_marginBottom="8dp"
-            app:cardCornerRadius="16dp"
+            app:shapeAppearance="@style/ShapeAppearance.Financeiramente.Card.Medium"
             app:cardElevation="2dp"
             app:strokeWidth="0dp">
 
@@ -133,6 +128,7 @@
 
         <!-- List + empty state wrapped in FrameLayout for proper centering -->
         <FrameLayout
+            android:id="@+id/content_metas"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1">
@@ -153,6 +149,23 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:visibility="gone" />
+
+            <com.facebook.shimmer.ShimmerFrameLayout
+                android:id="@+id/shimmer_metas"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                app:shimmer_auto_start="false"
+                app:shimmer_base_alpha="0.4"
+                app:shimmer_duration="1000"
+                app:shimmer_highlight_alpha="0.9">
+
+                <include
+                    layout="@layout/layout_shimmer_meta"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+            </com.facebook.shimmer.ShimmerFrameLayout>
 
         </FrameLayout>
 

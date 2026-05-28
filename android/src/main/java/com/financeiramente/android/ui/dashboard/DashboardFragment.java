@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -23,6 +24,7 @@ import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.DashboardViewModel;
 import com.financeiramente.android.viewmodel.DashboardViewModelFactory;
 import com.financeiramente.core.usecase.saldo.SaldoDashboardResult;
+import com.facebook.shimmer.ShimmerFrameLayout;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
@@ -44,6 +46,9 @@ public class DashboardFragment extends Fragment {
     private TextView tvReceitaConta;
     private LinearProgressIndicator pbSaldoConta;
     private LinearLayout layoutCartoesLimites;
+    private ImageButton btnToggleSaldo;
+    private View contentDashboard;
+    private ShimmerFrameLayout shimmerDashboard;
 
     private MaterialCardView cardAvisoDashboard;
     private TextView tvAvisoEssenciais;
@@ -56,6 +61,7 @@ public class DashboardFragment extends Fragment {
     private double ultimoSaldoEssenciais = 0.0;
     private double ultimoSaldoNaoEssenciais = 0.0;
     private double ultimoPercentualMetas = 0.0;
+    private boolean carregamentoInicialConcluido = false;
 
     private enum NivelAviso {
         VERDE,
@@ -84,6 +90,10 @@ public class DashboardFragment extends Fragment {
         tvReceitaConta = view.findViewById(R.id.tv_receita_conta);
         pbSaldoConta = view.findViewById(R.id.pb_saldo_conta);
         layoutCartoesLimites = view.findViewById(R.id.layout_cartoes_limites);
+        btnToggleSaldo = view.findViewById(R.id.btn_toggle_saldo);
+        contentDashboard = view.findViewById(R.id.content_dashboard);
+        shimmerDashboard = view.findViewById(R.id.shimmer_dashboard);
+        mostrarLoadingInicial(true);
 
         cardAvisoDashboard = view.findViewById(R.id.card_aviso_dashboard);
         tvAvisoEssenciais = view.findViewById(R.id.tv_aviso_essenciais);
@@ -103,6 +113,10 @@ public class DashboardFragment extends Fragment {
         viewModel.getSaldoDashboard().observe(getViewLifecycleOwner(), resultado -> {
             atualizarTopo(resultado);
             atualizarAvisos(resultado);
+            if (!carregamentoInicialConcluido) {
+                carregamentoInicialConcluido = true;
+                mostrarLoadingInicial(false);
+            }
         });
         viewModel.getCartoesLimite().observe(getViewLifecycleOwner(), this::renderizarCartoesLimite);
         viewModel.getPercentualMetas().observe(getViewLifecycleOwner(), percentual -> {
@@ -113,7 +127,7 @@ public class DashboardFragment extends Fragment {
             }
         });
 
-        view.findViewById(R.id.btn_toggle_saldo).setOnClickListener(v -> {
+        btnToggleSaldo.setOnClickListener(v -> {
             saldoOculto = !saldoOculto;
             atualizarTextosSaldo();
         });
@@ -143,7 +157,24 @@ public class DashboardFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (viewModel != null) {
+            if (!carregamentoInicialConcluido) {
+                mostrarLoadingInicial(true);
+            }
             viewModel.carregarDashboard();
+        }
+    }
+
+    private void mostrarLoadingInicial(boolean loading) {
+        if (contentDashboard != null) {
+            contentDashboard.setVisibility(loading ? View.INVISIBLE : View.VISIBLE);
+        }
+        if (shimmerDashboard != null) {
+            shimmerDashboard.setVisibility(loading ? View.VISIBLE : View.GONE);
+            if (loading) {
+                shimmerDashboard.startShimmer();
+            } else {
+                shimmerDashboard.stopShimmer();
+            }
         }
     }
 
@@ -173,6 +204,8 @@ public class DashboardFragment extends Fragment {
             tvSaldoConta.setText("R$ ••••••");
             tvSaldoEssenciais.setText("R$ ••••••");
             tvSaldoNaoEssenciais.setText("R$ ••••••");
+            btnToggleSaldo.setImageResource(R.drawable.ic_visibility_off);
+            btnToggleSaldo.setContentDescription(getString(R.string.dashboard_mostrar_saldo));
             return;
         }
 
@@ -182,6 +215,8 @@ public class DashboardFragment extends Fragment {
         aplicarCorSaldo(tvSaldoConta, ultimoSaldoConta);
         aplicarCorSaldo(tvSaldoEssenciais, ultimoSaldoEssenciais);
         aplicarCorSaldo(tvSaldoNaoEssenciais, ultimoSaldoNaoEssenciais);
+        btnToggleSaldo.setImageResource(R.drawable.ic_visibility);
+        btnToggleSaldo.setContentDescription(getString(R.string.dashboard_ocultar_saldo));
     }
 
     private void animarTexto(TextView textView, double valor) {

@@ -26,7 +26,7 @@
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:contentDescription="@null"
-        android:src="@android:drawable/arrow_down_float"
+        android:src="@drawable/ic_expand_more"
         android:tint="?attr/colorOnSurfaceVariant" />
 
 </LinearLayout>

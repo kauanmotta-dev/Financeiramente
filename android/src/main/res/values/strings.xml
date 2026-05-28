@@ -46,6 +46,10 @@
     <string name="gerenciar_categorias">Gerenciar Categorias</string>
     <string name="gerenciar_tags">Gerenciar Tags</string>
     <string name="gerenciar_cartoes">Gerenciar Cartões</string>
+    <string name="configuracoes_secao_gerenciamento">Ajuste seus cadastros principais</string>
+    <string name="configuracoes_subtitulo_categorias">Organize suas receitas e despesas por tipo</string>
+    <string name="configuracoes_subtitulo_tags">Crie etiquetas para agrupar lançamentos</string>
+    <string name="configuracoes_subtitulo_cartoes">Controle cartões, limites e vencimentos</string>
     <string name="nav_tags">Tags</string>
     <string name="tag_nome">Nome da tag</string>
     <string name="tag_emoji">Emoji</string>
@@ -101,6 +105,8 @@
     <string name="dashboard_saldo_conta">Saldo em Conta</string>
     <string name="dashboard_saldo_essenciais">Saldo Essenciais</string>
     <string name="dashboard_saldo_nao_essenciais">Saldo Não Essenciais</string>
+    <string name="dashboard_ocultar_saldo">Ocultar saldo</string>
+    <string name="dashboard_mostrar_saldo">Mostrar saldo</string>
     <string name="dashboard_progresso_global">Progresso global</string>
     <string name="dashboard_gasto">Gasto</string>
     <string name="dashboard_receita">Receita</string>

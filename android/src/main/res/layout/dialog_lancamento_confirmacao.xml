@@ -7,9 +7,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:divider="?android:listDivider"
-        android:showDividers="middle">
+        android:orientation="vertical">
 
         <!-- Valor -->
         <LinearLayout
@@ -30,6 +28,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/cinza_divider" />
 
         <!-- Tipo -->
         <LinearLayout
@@ -53,6 +56,11 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/cinza_divider" />
+
         <!-- Data -->
         <LinearLayout
             android:id="@+id/row_conf_data"
@@ -74,6 +82,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/cinza_divider" />
 
         <!-- Categoria -->
         <LinearLayout
@@ -97,6 +110,11 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/cinza_divider" />
+
         <!-- Tags -->
         <LinearLayout
             android:id="@+id/row_conf_tags"
@@ -118,6 +136,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/cinza_divider" />
 
         <!-- Cartão -->
         <LinearLayout
@@ -141,6 +164,11 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/cinza_divider" />
+
         <!-- Parcelas -->
         <LinearLayout
             android:id="@+id/row_conf_parcelas"
@@ -162,6 +190,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/cinza_divider" />
 
         <!-- Descrição -->
         <LinearLayout

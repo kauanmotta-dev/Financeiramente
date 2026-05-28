@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="12dp"
     android:layout_marginTop="6dp"
-    app:cardCornerRadius="12dp"
+    app:shapeAppearance="@style/ShapeAppearance.Financeiramente.Card.Small"
     app:cardElevation="0dp"
     app:strokeWidth="1dp"
     app:strokeColor="@color/cinza_divider">
@@ -65,14 +65,16 @@
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
-            <ProgressBar
+            <com.google.android.material.progressindicator.LinearProgressIndicator
                 android:id="@+id/pb_uso_categoria"
-                style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
-                android:layout_height="8dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:max="100"
-                android:progress="0" />
+                android:progress="0"
+                app:indicatorColor="?attr/colorPrimary"
+                app:trackColor="@color/cinza_divider"
+                app:trackCornerRadius="4dp" />
 
         </LinearLayout>
 
@@ -82,7 +84,7 @@
             android:layout_height="24dp"
             android:layout_marginStart="8dp"
             android:contentDescription="@null"
-            android:src="@android:drawable/arrow_down_float"
+            android:src="@drawable/ic_expand_more"
             android:tint="?attr/colorOnSurfaceVariant" />
 
     </LinearLayout>
