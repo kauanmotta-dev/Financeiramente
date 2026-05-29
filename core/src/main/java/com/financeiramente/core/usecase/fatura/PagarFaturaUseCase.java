@@ -60,7 +60,7 @@ public class PagarFaturaUseCase {
             BigDecimal valorTotalDeclarado = BigDecimal.valueOf(valorFatura);
             BigDecimal valorPagoInformado = BigDecimal.valueOf(valorPago);
 
-            // 1. Delta: diferença entre o extrato declarado e os lançamentos já registrados
+            
             BigDecimal somaExistente = lancamentoRepository.somarPorFatura(faturaId);
             BigDecimal delta = valorTotalDeclarado.subtract(somaExistente);
             if (delta.compareTo(BigDecimal.ZERO) > 0) {
@@ -76,7 +76,7 @@ public class PagarFaturaUseCase {
                 registrarLancamento.executar(encargosInput);
             }
 
-            // 2. Calcular resultado do pagamento
+            
         PagamentoFaturaResult result = FinanceCalculator.calcularPagamentoFatura(
             valorTotalDeclarado,
             valorPagoInformado);
@@ -97,7 +97,7 @@ public class PagarFaturaUseCase {
                     mesAbreviado,
                     competencia.getYear() % 100);
 
-            // 3. Lançamento de pagamento (débito na conta corrente — não vinculado à fatura)
+            
         BigDecimal valorEfetivamentePago = valorPagoInformado.min(valorTotalDeclarado);
             RegistrarLancamentoInput pagamentoInput = new RegistrarLancamentoInput(
                     valorEfetivamentePago,
@@ -105,12 +105,12 @@ public class PagarFaturaUseCase {
                     hoje,
                     descricaoPagamento,
                     null,
-                    null,   // sem faturaId: não incrementa total da fatura
+                    null,   
                     null,
                     Collections.emptyList(), 1);
             Lancamento lancamentoPagamento = registrarLancamento.executar(pagamentoInput);
 
-            // 4. Atualizar fatura com lancamento_pagamento_id
+            
             long now = System.currentTimeMillis();
             fatura.setValorPago(valorEfetivamentePago);
             fatura.setStatus(result.getStatusResultante());
@@ -118,7 +118,7 @@ public class PagarFaturaUseCase {
             fatura.setAtualizadoEm(now);
             faturaRepository.atualizar(fatura);
 
-            // 5. Rollover na próxima fatura se pagamento parcial
+            
             if (result.getStatusResultante() == StatusFatura.PAGO_PARCIAL) {
                 String proximoMes = YearMonth.parse(fatura.getMes()).plusMonths(1).toString();
                 Fatura proximaFatura = resolverFatura.executarPorMes(fatura.getCartaoId(), proximoMes);

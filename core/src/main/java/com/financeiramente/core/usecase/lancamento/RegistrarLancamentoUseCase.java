@@ -45,7 +45,7 @@ public class RegistrarLancamentoUseCase {
             throw new DomainException("Valor deve ser maior que zero.");
         }
 
-        // Valida que a fatura está aberta (se informada)
+        
         if (input.getFaturaId() != null) {
             Fatura fatura = faturaRepository.buscarPorId(input.getFaturaId())
                     .orElseThrow(() -> new DomainException("Fatura não encontrada."));

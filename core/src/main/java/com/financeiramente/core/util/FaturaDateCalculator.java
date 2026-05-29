@@ -23,7 +23,7 @@ public final class FaturaDateCalculator {
         if (diaFechamento >= 1) {
             date = ym.atDay(Math.min(diaFechamento, ym.lengthOfMonth()));
         } else {
-            // Crosses into the previous month
+            
             YearMonth mesAnterior = ym.minusMonths(1);
             int diaNoMesAnterior = mesAnterior.lengthOfMonth() + diaFechamento;
             date = mesAnterior.atDay(Math.max(1, diaNoMesAnterior));
@@ -46,9 +46,9 @@ public final class FaturaDateCalculator {
         return mesCorrente;
     }
 
-    // ─── Weekend adjusters ────────────────────────────────────────────────────
+    
 
-    /** Due date: if weekend, move to next Monday. */
+    
     private static LocalDate ajustarFimDeSemanaProximoDiaUtil(LocalDate date) {
         DayOfWeek dow = date.getDayOfWeek();
         if (dow == DayOfWeek.SATURDAY) return date.plusDays(2);
@@ -56,7 +56,7 @@ public final class FaturaDateCalculator {
         return date;
     }
 
-    /** Closing date: if weekend, move to previous Friday. */
+    
     private static LocalDate ajustarFimDeSemanaDiaUtilAnterior(LocalDate date) {
         DayOfWeek dow = date.getDayOfWeek();
         if (dow == DayOfWeek.SATURDAY) return date.minusDays(1);

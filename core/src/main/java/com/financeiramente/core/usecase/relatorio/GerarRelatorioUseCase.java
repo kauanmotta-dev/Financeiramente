@@ -15,11 +15,11 @@ import java.util.List;
 import java.util.Map;
 import java.math.BigDecimal;
 
-/**
- * Gera um relatório financeiro aplicando os filtros de FiltroRelatorio.
- * Filtros: período, categoria, tag, tipo.
- * Agrupa despesas por categoria no resultado.
- */
+
+
+
+
+
 public class GerarRelatorioUseCase {
 
     private final LancamentoRepository lancamentoRepository;

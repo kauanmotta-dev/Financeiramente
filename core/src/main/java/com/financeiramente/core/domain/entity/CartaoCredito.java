@@ -63,7 +63,7 @@ public class CartaoCredito {
         private int diasParaFechamento = 10;
         private BigDecimal limite;
         private BandeiraCartao bandeira;
-        private String icone = "\uD83D\uDCB3"; // 💳
+        private String icone = "\uD83D\uDCB3"; 
         private String cor = "#6366F1";
         private boolean ativo = true;
         private long criadoEm = System.currentTimeMillis();

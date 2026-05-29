@@ -13,5 +13,5 @@ public interface CompraCartaoRepository {
     List<CompraCartao> listarPorCartao(String cartaoId);
     List<CompraCartao> listarRecorrentesAtivos();
     boolean existeLancamentoRecorrenteNaFatura(String compraCartaoId, String faturaId);
-    boolean existeLancamentoRecorrenteNoMes(String compraCartaoId, String mes); // mes no formato YYYY-MM
+    boolean existeLancamentoRecorrenteNoMes(String compraCartaoId, String mes); 
 }

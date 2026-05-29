@@ -14,11 +14,11 @@ public class DeletarLancamentoUseCase {
         this.lancamentoRepository = lancamentoRepository;
     }
 
-    /**
-     * Exclui o lançamento.
-     * Se o lançamento for o pagamento de uma fatura, lança {@link LancamentoPagamentoFaturaException}
-     * para que a camada de apresentação possa exibir o aviso adequado.
-     */
+    
+
+
+
+
     public void executar(String lancamentoId) {
         Lancamento lancamento = lancamentoRepository.buscarPorId(lancamentoId)
                 .orElseThrow(() -> new DomainException("Lançamento não encontrado."));
@@ -31,14 +31,14 @@ public class DeletarLancamentoUseCase {
         lancamentoRepository.deletar(lancamento.getId());
     }
 
-    /**
-     * Verifica se o lançamento é o pagamento de uma fatura, retornando o faturaId se for.
-     */
+    
+
+
     public Optional<String> buscarFaturaIdPorLancamentoPagamento(String lancamentoId) {
         return lancamentoRepository.buscarFaturaIdPorLancamentoPagamento(lancamentoId);
     }
 
-    /** Exceção lançada quando se tenta excluir um lançamento que é pagamento de fatura. */
+    
     public static final class LancamentoPagamentoFaturaException extends DomainException {
         private final String faturaId;
 

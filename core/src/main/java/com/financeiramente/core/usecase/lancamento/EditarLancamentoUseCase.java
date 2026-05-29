@@ -48,7 +48,7 @@ public class EditarLancamentoUseCase {
             throw new DomainException("Valor deve ser maior que zero.");
         }
 
-        // Valida que a nova fatura (se diferente da atual) está aberta
+        
         String novaFaturaId = input.getFaturaId();
         String faturaAtualId = existente.getFaturaId();
         boolean trocandoFatura = novaFaturaId != null && !novaFaturaId.equals(faturaAtualId);

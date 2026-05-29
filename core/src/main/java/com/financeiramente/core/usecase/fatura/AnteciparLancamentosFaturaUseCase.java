@@ -8,14 +8,14 @@ import com.financeiramente.core.util.DomainException;
 
 import java.time.YearMonth;
 
-/**
- * Antecipa os lançamentos de uma fatura futura para a fatura corrente (aberta) do mesmo cartão.
- *
- * Regras:
- * - A fatura alvo deve ser "futura" (mes > mês corrente da fatura atual aberta).
- * - Deve existir uma fatura aberta para o cartão.
- * - A fatura futura não pode estar PAGA ou PAGA_PARCIAL.
- */
+
+
+
+
+
+
+
+
 public class AnteciparLancamentosFaturaUseCase {
 
     private final FaturaRepository faturaRepository;
@@ -27,12 +27,12 @@ public class AnteciparLancamentosFaturaUseCase {
         this.lancamentoRepository = lancamentoRepository;
     }
 
-    /**
-     * Move todos os lançamentos da {@code faturaFuturaId} para a fatura aberta atual do mesmo cartão.
-     *
-     * @param faturaFuturaId ID da fatura futura cujos lançamentos serão antecipados.
-     * @return A fatura de destino (a fatura aberta atual).
-     */
+    
+
+
+
+
+
     public Fatura executar(String faturaFuturaId) {
         Fatura faturaFutura = faturaRepository.buscarPorId(faturaFuturaId)
                 .orElseThrow(() -> new DomainException("Fatura não encontrada."));

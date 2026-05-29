@@ -12,15 +12,15 @@ import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.util.List;
 
-/**
- * Máquina de estados da fatura.
- *
- * Transições suportadas:
- *  - ABERTO  → FECHADO (manual)
- *  - FECHADO → ABERTO  (reabrir)
- *  - ABERTO/FECHADO → PAGO/PAGO_PARCIAL (via PagarFaturaUseCase)
- *  - PAGO/PAGO_PARCIAL → FECHADO/ABERTO (reverter pagamento)
- */
+
+
+
+
+
+
+
+
+
 public class AlterarStatusFaturaUseCase {
 
     private final FaturaRepository faturaRepository;
@@ -38,14 +38,14 @@ public class AlterarStatusFaturaUseCase {
         this.transactionManager = transactionManager;
     }
 
-    /**
-     * Altera o status da fatura.
-     *
-     * @param faturaId    ID da fatura
-     * @param novoStatus  Status desejado
-     * @param valorFatura Valor total da fatura (obrigatório apenas para PAGO/PAGO_PARCIAL)
-     * @param valorPago   Valor pago (obrigatório apenas para PAGO/PAGO_PARCIAL)
-     */
+    
+
+
+
+
+
+
+
     public PagamentoFaturaResult executar(String faturaId, StatusFatura novoStatus,
                                           double valorFatura, double valorPago) {
         Fatura fatura = faturaRepository.buscarPorId(faturaId)
@@ -54,20 +54,20 @@ public class AlterarStatusFaturaUseCase {
         StatusFatura statusAtual = fatura.getStatus();
 
         if (statusAtual == novoStatus) {
-            return null; // nenhuma mudança
+            return null; 
         }
 
         if (novoStatus == StatusFatura.PAGO || novoStatus == StatusFatura.PAGO_PARCIAL) {
-            // Já possui pagamento — deve reverter antes
+            
             if (statusAtual == StatusFatura.PAGO || statusAtual == StatusFatura.PAGO_PARCIAL) {
                 throw new DomainException(
                         "Fatura já possui pagamento registrado. Reverta o pagamento antes de registrar um novo.");
             }
-            // Delegar ao PagarFaturaUseCase que cria o lançamento e atualiza a fatura
+            
             return pagarFatura.executar(faturaId, valorFatura, valorPago);
 
         } else if (novoStatus == StatusFatura.FECHADO || novoStatus == StatusFatura.ABERTO) {
-            // Reverter pagamento (se havia algum)
+            
             if (statusAtual == StatusFatura.PAGO || statusAtual == StatusFatura.PAGO_PARCIAL) {
                 transactionManager.executeInTransaction(() -> {
                     String lancamentoPagamentoId = removerLancamentosDerivadosDoPagamento(fatura, statusAtual);
@@ -88,7 +88,7 @@ public class AlterarStatusFaturaUseCase {
                     deletarLancamentoPagamentoSeExistir(lancamentoPagamentoId);
                 });
             } else {
-                // Simples troca de status (ABERTO ↔ FECHADO)
+                
                 long now = System.currentTimeMillis();
                 fatura.setStatus(novoStatus);
                 fatura.setAtualizadoEm(now);
@@ -100,10 +100,10 @@ public class AlterarStatusFaturaUseCase {
         throw new DomainException("Transição de status inválida: " + statusAtual + " → " + novoStatus);
     }
 
-    /**
-     * Reverter pagamento sem trocar status: volta para FECHADO se estava PAGO/PAGO_PARCIAL.
-     * Chamado quando o lançamento de pagamento é excluído manualmente.
-     */
+    
+
+
+
     public void reverterPagamento(String faturaId) {
         executar(faturaId, StatusFatura.FECHADO, 0, 0);
     }
