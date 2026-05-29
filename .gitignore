@@ -1,10 +1,8 @@
-# Binaries
+# Binaries and build outputs
 /build
-/core/build
-/core/bin
-/android/build
-/desktop/build
-/desktop/bin
+**/build/
+**/bin/
+**/*.class
 
 # Gradle wrapper (jar is checked in, but generated files are not)
 .gradle/
@@ -13,12 +11,16 @@
 local.properties
 keystore.properties
 android/keystore/
+*.jks
+*.keystore
 
 # IDE
 .idea/
 *.iml
 *.iws
 *.ipr
+.classpath
+.project
 .DS_Store
 
 # Logs
