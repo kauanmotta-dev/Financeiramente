@@ -6,9 +6,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/**
- * DTO de saída do GerarRelatorioUseCase.
- */
+
+
+
 public class RelatorioResult {
     private final List<Lancamento> lancamentos;
     private final Map<String, BigDecimal> totalPorCategoria;

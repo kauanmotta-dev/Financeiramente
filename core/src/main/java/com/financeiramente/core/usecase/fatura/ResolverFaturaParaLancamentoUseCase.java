@@ -35,7 +35,7 @@ public class ResolverFaturaParaLancamentoUseCase {
                 dataLancamento
         );
 
-        String mesStr = mesCompetencia.toString(); // YYYY-MM
+        String mesStr = mesCompetencia.toString(); 
 
         return faturaRepository.buscarPorCartaoEMes(cartaoId, mesStr)
                 .orElseGet(() -> criarFatura(cartao, mesStr));
@@ -49,7 +49,7 @@ public class ResolverFaturaParaLancamentoUseCase {
             throw new DomainException("Cartão inativo não pode receber lançamentos.");
         }
 
-        YearMonth.parse(mes); // valida formato YYYY-MM
+        YearMonth.parse(mes); 
 
         return faturaRepository.buscarPorCartaoEMes(cartaoId, mes)
                 .orElseGet(() -> criarFatura(cartao, mes));

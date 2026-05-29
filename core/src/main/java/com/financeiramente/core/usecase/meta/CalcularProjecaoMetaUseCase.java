@@ -27,10 +27,10 @@ public class CalcularProjecaoMetaUseCase {
             return Optional.empty();
         }
 
-        // Valor efetivo a atingir descontando o valor inicial já disponível
+        
         BigDecimal valorEfetivo = meta.getValorEfetivo();
         if (valorEfetivo.compareTo(BigDecimal.ZERO) <= 0) {
-            // Valor inicial já cobre o objetivo
+            
             return Optional.of(LocalDate.now());
         }
 

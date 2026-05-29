@@ -61,23 +61,23 @@ public final class FinanceCalculator {
         return LocalDate.now().plusMonths(mesesRestantes);
     }
 
-    /**
-     * Calcula o resultado de um pagamento de fatura.
-     *
-     * @param valorFatura total declarado pelo usuário no extrato do cartão
-     * @param valorPago   valor que o usuário está pagando neste momento
-     * @return PagamentoFaturaResult com status resultante e saldo devedor
-     */
+    
+
+
+
+
+
+
     public static PagamentoFaturaResult calcularPagamentoFatura(BigDecimal valorFatura, BigDecimal valorPago) {
         StatusFatura status = valorPago.compareTo(valorFatura) >= 0 ? StatusFatura.PAGO : StatusFatura.PAGO_PARCIAL;
         BigDecimal saldoDevedor = valorFatura.subtract(valorPago).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_EVEN);
         return new PagamentoFaturaResult(status, saldoDevedor, null);
     }
 
-    /**
-     * Distribui um valor total em N parcelas com soma exata.
-     * A diferença de centavos fica na última parcela.
-     */
+    
+
+
+
     public static BigDecimal[] distribuirParcelas(BigDecimal valorTotal, int numeroParcelas) {
         if (valorTotal.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Valor total deve ser maior que zero.");

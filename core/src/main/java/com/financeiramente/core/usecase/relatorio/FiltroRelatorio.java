@@ -2,10 +2,10 @@ package com.financeiramente.core.usecase.relatorio;
 
 import com.financeiramente.core.domain.vo.TipoLancamento;
 
-/**
- * DTO de entrada para o GerarRelatorioUseCase.
- * Todos os campos são opcionais; null significa "sem filtro".
- */
+
+
+
+
 public class FiltroRelatorio {
     private final String dataInicio;
     private final String dataFim;

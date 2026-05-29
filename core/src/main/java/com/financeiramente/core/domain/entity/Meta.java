@@ -46,7 +46,7 @@ public class Meta {
         this.valorAtual = valorAtual;
     }
 
-    /** Valor efetivo restante considerando o valor inicial já deduzido. */
+    
     public BigDecimal getValorEfetivo() {
         return valorObjetivo.subtract(valorInicial).max(BigDecimal.ZERO);
     }
