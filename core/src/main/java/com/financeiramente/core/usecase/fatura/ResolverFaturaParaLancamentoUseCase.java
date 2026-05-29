@@ -41,6 +41,20 @@ public class ResolverFaturaParaLancamentoUseCase {
                 .orElseGet(() -> criarFatura(cartao, mesStr));
     }
 
+    public Fatura executarPorMes(String cartaoId, String mes) {
+        CartaoCredito cartao = cartaoRepository.buscarPorId(cartaoId)
+                .orElseThrow(() -> new DomainException("Cartão não encontrado."));
+
+        if (!cartao.isAtivo()) {
+            throw new DomainException("Cartão inativo não pode receber lançamentos.");
+        }
+
+        YearMonth.parse(mes); // valida formato YYYY-MM
+
+        return faturaRepository.buscarPorCartaoEMes(cartaoId, mes)
+                .orElseGet(() -> criarFatura(cartao, mes));
+    }
+
     private Fatura criarFatura(CartaoCredito cartao, String mes) {
         String dataFechamento = FaturaDateCalculator.calcularDataFechamento(
                 cartao.getDiaVencimento(), cartao.getDiasParaFechamento(), mes);

@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.financeiramente.android.R;
+import com.google.android.material.card.MaterialCardView;
 import com.financeiramente.android.viewmodel.GastosCategoriaViewModel;
 import com.financeiramente.core.domain.vo.TipoCategoria;
 
@@ -35,7 +36,7 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     private final Context context;
     private final NumberFormat currencyFormat;
     private final Map<String, Boolean> expandedState = new HashMap<>();
-    private final Map<TipoCategoria, Boolean> sectionExpandedState = new HashMap<>();
+    private final Map<String, Boolean> sectionExpandedState = new HashMap<>();
 
     private final List<Item> items = new ArrayList<>();
     private List<GastosCategoriaViewModel.SecaoTipoCategoria> secoes = new ArrayList<>();
@@ -43,19 +44,25 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     private static class Item {
         final int type;
         final String tituloSecao;
+        final String secaoId;
         final TipoCategoria tipoSecao;
+        final boolean investimentos;
         final double valorSecao;
         final double valorTotalSecao;
         final GastosCategoriaViewModel.GastoCategoriaNode categoria;
         final int depth;
 
         private Item(String tituloSecao,
+                     String secaoId,
                      TipoCategoria tipoSecao,
+                     boolean investimentos,
                      double valorSecao,
                      double valorTotalSecao) {
             this.type = TYPE_SECTION;
             this.tituloSecao = tituloSecao;
+            this.secaoId = secaoId;
             this.tipoSecao = tipoSecao;
+            this.investimentos = investimentos;
             this.valorSecao = valorSecao;
             this.valorTotalSecao = valorTotalSecao;
             this.categoria = null;
@@ -65,7 +72,9 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         private Item(GastosCategoriaViewModel.GastoCategoriaNode categoria, int depth) {
             this.type = TYPE_CATEGORIA;
             this.tituloSecao = null;
+            this.secaoId = null;
             this.tipoSecao = null;
+            this.investimentos = false;
             this.valorSecao = 0d;
             this.valorTotalSecao = 0d;
             this.categoria = categoria;
@@ -90,11 +99,13 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 continue;
             }
             items.add(new Item(
-                    getTituloSecao(secao.getTipo()),
+                    getTituloSecao(secao),
+                    secao.getId(),
                     secao.getTipo(),
+                    secao.isInvestimentos(),
                     secao.getValorUtilizadoSecao(),
                     secao.getValorTotalSecao()));
-            if (isSectionExpanded(secao.getTipo())) {
+            if (isSectionExpanded(secao.getId())) {
                 for (GastosCategoriaViewModel.GastoCategoriaNode categoria : secao.getCategorias()) {
                     appendCategoria(categoria, 0);
                 }
@@ -103,8 +114,8 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         notifyDataSetChanged();
     }
 
-    private boolean isSectionExpanded(TipoCategoria tipo) {
-        return Boolean.TRUE.equals(sectionExpandedState.get(tipo));
+    private boolean isSectionExpanded(String secaoId) {
+        return Boolean.TRUE.equals(sectionExpandedState.get(secaoId));
     }
 
     private void appendCategoria(GastosCategoriaViewModel.GastoCategoriaNode categoria, int depth) {
@@ -117,12 +128,19 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
     }
 
-    private String getTituloSecao(TipoCategoria tipo) {
+    private String getTituloSecao(GastosCategoriaViewModel.SecaoTipoCategoria secao) {
+        if (secao.getTitulo() != null && !secao.getTitulo().trim().isEmpty()) {
+            return secao.getTitulo();
+        }
+        TipoCategoria tipo = secao.getTipo();
         if (tipo == TipoCategoria.ESSENCIAL) {
             return context.getString(R.string.gastos_secao_essenciais);
         }
         if (tipo == TipoCategoria.NAO_ESSENCIAL) {
             return context.getString(R.string.gastos_secao_nao_essenciais);
+        }
+        if (tipo == TipoCategoria.SEM_TIPO) {
+            return context.getString(R.string.gastos_secao_sem_categoria);
         }
         return context.getString(R.string.gastos_secao_receitas);
     }
@@ -157,32 +175,60 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     }
 
     private void bindSection(SectionViewHolder holder, Item item) {
-        boolean expanded = isSectionExpanded(item.tipoSecao);
+        boolean expanded = isSectionExpanded(item.secaoId);
         holder.tvTitulo.setText(item.tituloSecao);
 
-        int progresso;
-        if (item.valorTotalSecao > 0d) {
-            progresso = (int) Math.min(100,
-                    Math.round((item.valorSecao / item.valorTotalSecao) * 100));
+        if (item.investimentos) {
             holder.tvResumo.setText(context.getString(
-                    R.string.gastos_secao_resumo,
-                    currencyFormat.format(item.valorSecao),
-                    currencyFormat.format(item.valorTotalSecao),
-                    progresso));
+                R.string.gastos_secao_resumo_investimentos,
+                currencyFormat.format(item.valorSecao)));
+            holder.progressSecao.setVisibility(View.GONE);
+            aplicarEstiloSecao(holder, true);
         } else {
+            int progresso;
+            if (item.valorTotalSecao > 0d) {
+            progresso = (int) Math.min(100,
+                Math.round((item.valorSecao / item.valorTotalSecao) * 100));
+            holder.tvResumo.setText(context.getString(
+                R.string.gastos_secao_resumo,
+                currencyFormat.format(item.valorSecao),
+                currencyFormat.format(item.valorTotalSecao),
+                progresso));
+            } else {
             progresso = item.valorSecao > 0d ? 100 : 0;
             holder.tvResumo.setText(context.getString(
-                    R.string.gastos_secao_resumo_sem_limite,
-                    currencyFormat.format(item.valorSecao)));
-        }
+                R.string.gastos_secao_resumo_sem_limite,
+                currencyFormat.format(item.valorSecao)));
+            }
 
-        holder.progressSecao.setProgress(progresso);
+            holder.progressSecao.setVisibility(View.VISIBLE);
+            holder.progressSecao.setProgress(progresso);
+            aplicarEstiloSecao(holder, false);
+        }
         holder.ivArrow.setRotation(expanded ? 180f : 0f);
         holder.itemView.setOnClickListener(v -> {
-            sectionExpandedState.put(item.tipoSecao, !expanded);
+            sectionExpandedState.put(item.secaoId, !expanded);
             rebuildItems();
         });
     }
+
+        private void aplicarEstiloSecao(SectionViewHolder holder, boolean investimentos) {
+        MaterialCardView cardView = (MaterialCardView) holder.itemView;
+        int strokeColor = ContextCompat.getColor(
+            context,
+            investimentos ? R.color.investimento_destaque : R.color.azul_primary);
+        int backgroundColor = ContextCompat.getColor(
+            context,
+            investimentos ? R.color.investimento_container : R.color.azul_primary_container);
+        int textColor = ContextCompat.getColor(
+            context,
+            investimentos ? R.color.investimento_destaque : R.color.azul_primary_dark);
+        cardView.setStrokeColor(strokeColor);
+        holder.container.setBackgroundColor(backgroundColor);
+        holder.tvTitulo.setTextColor(textColor);
+        holder.tvResumo.setTextColor(textColor);
+        holder.ivArrow.setColorFilter(textColor);
+        }
 
     private void bindCategoria(CategoriaViewHolder holder, Item item) {
         GastosCategoriaViewModel.GastoCategoriaNode categoria = item.categoria;
@@ -206,41 +252,86 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
 
         holder.tvNome.setText(categoria.getNome());
-        boolean isFilha = item.depth > 0;
-        holder.tvInfo.setVisibility(View.GONE);
-        if (isFilha) {
+        if (categoria.isInvestimento()) {
+            holder.tvResumoValores.setText(context.getString(
+                    R.string.gastos_resumo_meta_mes,
+                    currencyFormat.format(categoria.getValorUtilizado())));
+            holder.tvInfo.setVisibility(View.VISIBLE);
+            if (categoria.getValorTotal() > 0d) {
+                holder.tvInfo.setText(context.getString(
+                        R.string.gastos_resumo_meta_total,
+                        currencyFormat.format(categoria.getValorAcumulado()),
+                        currencyFormat.format(categoria.getValorTotal())));
+                holder.progressUso.setVisibility(View.VISIBLE);
+                int progressoMeta = (int) Math.min(100,
+                        Math.round((categoria.getValorAcumulado() / categoria.getValorTotal()) * 100));
+                int corInvestimento = ContextCompat.getColor(context, R.color.investimento_destaque);
+                int corTrilho = ContextCompat.getColor(context, R.color.cinza_divider);
+                holder.progressUso.setProgressTintList(ColorStateList.valueOf(corInvestimento));
+                holder.progressUso.setSecondaryProgressTintList(ColorStateList.valueOf(corInvestimento));
+                holder.progressUso.setProgressBackgroundTintList(ColorStateList.valueOf(corTrilho));
+                holder.progressUso.setSecondaryProgress(0);
+                holder.progressUso.setProgress(progressoMeta);
+            } else {
+                holder.tvInfo.setText(context.getString(
+                        R.string.gastos_resumo_meta_total_sem_objetivo,
+                        currencyFormat.format(categoria.getValorAcumulado())));
+                holder.progressUso.setVisibility(View.GONE);
+            }
+            holder.layoutLegenda.setVisibility(View.GONE);
+            holder.tvResumoValores.setTextColor(ContextCompat.getColor(context, R.color.investimento_destaque));
+        } else {
+            holder.layoutLegenda.setVisibility(View.VISIBLE);
+            holder.progressUso.setVisibility(View.VISIBLE);
             if (categoria.getValorTotal() > 0) {
-                holder.tvResumoValores.setText(String.format(
-                        "%s / %s",
+                holder.tvResumoValores.setText(context.getString(
+                        R.string.gastos_resumo_valores,
                         currencyFormat.format(categoria.getValorUtilizado()),
                         currencyFormat.format(categoria.getValorTotal())));
             } else {
                 holder.tvResumoValores.setText(currencyFormat.format(categoria.getValorUtilizado()));
             }
-        } else {
+
+            holder.tvInfo.setVisibility(View.VISIBLE);
+            holder.tvInfo.setText(context.getString(
+                    R.string.gastos_resumo_credito_debito,
+                    currencyFormat.format(categoria.getValorCreditoUtilizado()),
+                    currencyFormat.format(categoria.getValorNaoCreditoUtilizado())));
+
+            int progressoTotal;
+            int progressoCredito;
+            int progressoParaTom;
+            double valorUtilizado = categoria.getValorUtilizado();
+            double valorCredito = Math.max(0d, categoria.getValorCreditoUtilizado());
             if (categoria.getValorTotal() > 0) {
-                holder.tvResumoValores.setText(String.format(
-                        "%s / %s",
-                        currencyFormat.format(categoria.getValorUtilizado()),
-                        currencyFormat.format(categoria.getValorTotal())));
+                progressoParaTom = (int) Math.round((categoria.getValorUtilizado() / categoria.getValorTotal()) * 100);
+                progressoTotal = Math.min(100, progressoParaTom);
+                progressoCredito = (int) Math.round((valorCredito / categoria.getValorTotal()) * 100);
+                progressoCredito = Math.min(progressoTotal, Math.max(0, progressoCredito));
             } else {
-                holder.tvResumoValores.setText(currencyFormat.format(categoria.getValorUtilizado()));
+                progressoParaTom = categoria.getValorUtilizado() > 0 ? 100 : 0;
+                progressoTotal = progressoParaTom;
+                if (valorUtilizado > 0d) {
+                    progressoCredito = (int) Math.round((valorCredito / valorUtilizado) * 100);
+                } else {
+                    progressoCredito = 0;
+                }
+                progressoCredito = Math.min(progressoTotal, Math.max(0, progressoCredito));
             }
+
+            int corCredito = ContextCompat.getColor(context, R.color.relatorio_credito);
+            int corNaoCredito = ContextCompat.getColor(context, R.color.relatorio_debito);
+            int corTrilho = ContextCompat.getColor(context, R.color.cinza_divider);
+            holder.progressUso.setProgressTintList(ColorStateList.valueOf(corCredito));
+            holder.progressUso.setSecondaryProgressTintList(ColorStateList.valueOf(corNaoCredito));
+            holder.progressUso.setProgressBackgroundTintList(ColorStateList.valueOf(corTrilho));
+            holder.progressUso.setSecondaryProgress(progressoTotal);
+            holder.progressUso.setProgress(progressoCredito);
+            bindLegend(holder);
+            aplicarTomVisualDeUso(holder, progressoParaTom);
         }
 
-        int progresso;
-        int progressoParaTom;
-        if (categoria.getValorTotal() > 0) {
-            progressoParaTom = (int) Math.round((categoria.getValorUtilizado() / categoria.getValorTotal()) * 100);
-            progresso = Math.min(100, progressoParaTom);
-        } else {
-            progressoParaTom = categoria.getValorUtilizado() > 0 ? 100 : 0;
-            progresso = progressoParaTom;
-        }
-        holder.progressUso.setProgress(progresso);
-        aplicarTomVisualDeUso(holder, progressoParaTom);
-
-        if (categoria.possuiFilhas()) {
+        if (!categoria.isInvestimento() && categoria.possuiFilhas()) {
             holder.ivExpandArrow.setVisibility(View.VISIBLE);
             holder.ivExpandArrow.setRotation(Boolean.TRUE.equals(expandedState.get(categoria.getId())) ? 180f : 0f);
             holder.itemView.setOnClickListener(v -> {
@@ -254,7 +345,9 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
 
         String descricaoAcessivel = context.getString(
-                R.string.gastos_acessibilidade_categoria,
+        categoria.isInvestimento()
+            ? R.string.gastos_acessibilidade_meta
+            : R.string.gastos_acessibilidade_categoria,
                 categoria.getNome(),
                 currencyFormat.format(categoria.getValorUtilizado()),
                 currencyFormat.format(categoria.getValorTotal()));
@@ -271,7 +364,13 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             tom = ContextCompat.getColor(context, R.color.verde_success);
         }
         holder.tvResumoValores.setTextColor(tom);
-        holder.progressUso.setProgressTintList(ColorStateList.valueOf(tom));
+    }
+
+    private void bindLegend(CategoriaViewHolder holder) {
+        holder.tvCreditoDot.setTextColor(ContextCompat.getColor(context, R.color.relatorio_credito));
+        holder.tvCreditoLabel.setTextColor(ContextCompat.getColor(context, R.color.cinza_secondary));
+        holder.tvDebitoDot.setTextColor(ContextCompat.getColor(context, R.color.relatorio_debito));
+        holder.tvDebitoLabel.setTextColor(ContextCompat.getColor(context, R.color.cinza_secondary));
     }
 
     @Override
@@ -284,6 +383,7 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     }
 
     static class SectionViewHolder extends RecyclerView.ViewHolder {
+        final View container;
         final TextView tvTitulo;
         final TextView tvResumo;
         final ProgressBar progressSecao;
@@ -291,6 +391,7 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
         SectionViewHolder(@NonNull View itemView) {
             super(itemView);
+            container = itemView.findViewById(R.id.layout_gasto_secao_container);
             tvTitulo = itemView.findViewById(R.id.tv_gasto_secao_titulo);
             tvResumo = itemView.findViewById(R.id.tv_gasto_secao_resumo);
             progressSecao = itemView.findViewById(R.id.pb_gasto_secao);
@@ -303,6 +404,11 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         final TextView tvIcone;
         final TextView tvNome;
         final TextView tvInfo;
+        final View layoutLegenda;
+        final TextView tvCreditoDot;
+        final TextView tvCreditoLabel;
+        final TextView tvDebitoDot;
+        final TextView tvDebitoLabel;
         final TextView tvResumoValores;
         final ProgressBar progressUso;
         final ImageView ivExpandArrow;
@@ -313,6 +419,11 @@ public class GastosCategoriaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             tvIcone = itemView.findViewById(R.id.tv_icone);
             tvNome = itemView.findViewById(R.id.tv_categoria_nome);
             tvInfo = itemView.findViewById(R.id.tv_categoria_info);
+            layoutLegenda = itemView.findViewById(R.id.layout_categoria_legenda);
+            tvCreditoDot = itemView.findViewById(R.id.tv_credito_dot);
+            tvCreditoLabel = itemView.findViewById(R.id.tv_credito_label);
+            tvDebitoDot = itemView.findViewById(R.id.tv_debito_dot);
+            tvDebitoLabel = itemView.findViewById(R.id.tv_debito_label);
             tvResumoValores = itemView.findViewById(R.id.tv_resumo_valores);
             progressUso = itemView.findViewById(R.id.pb_uso_categoria);
             ivExpandArrow = itemView.findViewById(R.id.iv_expand_arrow);

@@ -7,6 +7,7 @@ import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
 import com.financeiramente.core.repository.TagRepository;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -34,7 +35,7 @@ public class GerarRelatorioUseCase {
     }
 
     public RelatorioResult executar(FiltroRelatorio filtro) {
-        List<Lancamento> lancamentos = lancamentoRepository.listarPorPeriodoComFiltros(
+        List<Lancamento> lancamentosOriginais = lancamentoRepository.listarPorPeriodoComFiltros(
             filtro.getDataInicio(),
             filtro.getDataFim(),
             filtro.getCategoriaId(),
@@ -42,15 +43,28 @@ public class GerarRelatorioUseCase {
             filtro.getTagId()
         );
 
+        List<Lancamento> lancamentos = new ArrayList<>();
         BigDecimal totalReceitas = BigDecimal.ZERO;
         BigDecimal totalDespesas = BigDecimal.ZERO;
-        Map<String, BigDecimal> totaisPorCategoriaId = lancamentoRepository.somarDespesasPorCategoriaEPeriodo(
-            filtro.getDataInicio(),
-            filtro.getDataFim(),
-            filtro.getCategoriaId(),
-            filtro.getTipo(),
-            filtro.getTagId()
-        );
+        Map<String, BigDecimal> totaisPorCategoriaId = new LinkedHashMap<>();
+
+        for (Lancamento lancamento : lancamentosOriginais) {
+            if (ehLancamentoDerivadoDeFatura(lancamento)) {
+                continue;
+            }
+
+            lancamentos.add(lancamento);
+
+            if (lancamento.getTipo() == TipoLancamento.RECEITA) {
+                totalReceitas = totalReceitas.add(lancamento.getValor());
+            } else {
+                totalDespesas = totalDespesas.add(lancamento.getValor());
+                if (lancamento.getCategoriaId() != null) {
+                    totaisPorCategoriaId.merge(lancamento.getCategoriaId(), lancamento.getValor(), BigDecimal::add);
+                }
+            }
+        }
+
         Map<String, String> categoriaIdParaNome = carregarCategoriasPorId(totaisPorCategoriaId);
         Map<String, BigDecimal> totalPorCategoria = new LinkedHashMap<>();
 
@@ -60,15 +74,22 @@ public class GerarRelatorioUseCase {
             totalPorCategoria.put(nomeCategoria, entry.getValue());
         }
 
-        for (Lancamento l : lancamentos) {
-            if (l.getTipo() == TipoLancamento.RECEITA) {
-                totalReceitas = totalReceitas.add(l.getValor());
-            } else {
-                totalDespesas = totalDespesas.add(l.getValor());
-            }
+        return new RelatorioResult(lancamentos, totalReceitas, totalDespesas, totalPorCategoria);
+    }
+
+    private boolean ehLancamentoDerivadoDeFatura(Lancamento lancamento) {
+        if (lancamentoRepository.buscarFaturaIdPorLancamentoPagamento(lancamento.getId()).isPresent()) {
+            return true;
         }
 
-        return new RelatorioResult(lancamentos, totalReceitas, totalDespesas, totalPorCategoria);
+        String descricao = lancamento.getDescricao();
+        if (descricao == null) {
+            return false;
+        }
+
+        String normalizada = descricao.trim().toLowerCase();
+        return "ajuste de fatura".equals(normalizada)
+            || normalizada.startsWith("saldo anterior (");
     }
 
     private Map<String, String> carregarCategoriasPorId(Map<String, BigDecimal> totaisPorCategoriaId) {

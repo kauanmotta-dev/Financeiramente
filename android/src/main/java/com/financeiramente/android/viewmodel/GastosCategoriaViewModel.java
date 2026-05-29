@@ -8,11 +8,16 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.financeiramente.android.ui.common.CategoriaVisualFallback;
+import com.financeiramente.core.domain.entity.AporteMeta;
 import com.financeiramente.core.domain.entity.Categoria;
+import com.financeiramente.core.domain.entity.Lancamento;
+import com.financeiramente.core.domain.entity.Meta;
 import com.financeiramente.core.domain.vo.TipoCategoria;
 import com.financeiramente.core.domain.vo.TipoLancamento;
+import com.financeiramente.core.repository.AporteMetaRepository;
 import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
+import com.financeiramente.core.repository.MetaRepository;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -29,29 +34,52 @@ import java.util.concurrent.Executors;
 
 public class GastosCategoriaViewModel extends ViewModel {
 
+    private static final String SECAO_ID_INVESTIMENTOS = "investimentos";
+
     public enum ModoExibicao {
         GASTOS,
         RECEBIDOS
     }
 
     public static class SecaoTipoCategoria {
+        private final String id;
         private final TipoCategoria tipo;
+        private final String titulo;
+        private final boolean investimentos;
         private final List<GastoCategoriaNode> categorias;
         private final double valorUtilizadoSecao;
         private final double valorTotalSecao;
 
-        public SecaoTipoCategoria(TipoCategoria tipo,
+        public SecaoTipoCategoria(String id,
+                                  TipoCategoria tipo,
+                                  String titulo,
+                                  boolean investimentos,
                                   List<GastoCategoriaNode> categorias,
                                   double valorUtilizadoSecao,
                                   double valorTotalSecao) {
+            this.id = id;
             this.tipo = tipo;
+            this.titulo = titulo;
+            this.investimentos = investimentos;
             this.categorias = categorias;
             this.valorUtilizadoSecao = valorUtilizadoSecao;
             this.valorTotalSecao = valorTotalSecao;
         }
 
+        public String getId() {
+            return id;
+        }
+
         public TipoCategoria getTipo() {
             return tipo;
+        }
+
+        public String getTitulo() {
+            return titulo;
+        }
+
+        public boolean isInvestimentos() {
+            return investimentos;
         }
 
         public List<GastoCategoriaNode> getCategorias() {
@@ -75,6 +103,10 @@ public class GastosCategoriaViewModel extends ViewModel {
         private final TipoCategoria tipo;
         private final double valorTotal;
         private final double valorUtilizado;
+        private final double valorCreditoUtilizado;
+        private final double valorNaoCreditoUtilizado;
+        private final boolean investimento;
+        private final double valorAcumulado;
         private final List<GastoCategoriaNode> filhas;
 
         public GastoCategoriaNode(String id,
@@ -84,6 +116,10 @@ public class GastosCategoriaViewModel extends ViewModel {
                                   TipoCategoria tipo,
                                   double valorTotal,
                                   double valorUtilizado,
+                                  double valorCreditoUtilizado,
+                                  double valorNaoCreditoUtilizado,
+                                  boolean investimento,
+                                  double valorAcumulado,
                                   List<GastoCategoriaNode> filhas) {
             this.id = id;
             this.nome = nome;
@@ -92,6 +128,10 @@ public class GastosCategoriaViewModel extends ViewModel {
             this.tipo = tipo;
             this.valorTotal = valorTotal;
             this.valorUtilizado = valorUtilizado;
+            this.valorCreditoUtilizado = valorCreditoUtilizado;
+            this.valorNaoCreditoUtilizado = valorNaoCreditoUtilizado;
+            this.investimento = investimento;
+            this.valorAcumulado = valorAcumulado;
             this.filhas = filhas;
         }
 
@@ -123,6 +163,22 @@ public class GastosCategoriaViewModel extends ViewModel {
             return valorUtilizado;
         }
 
+        public double getValorCreditoUtilizado() {
+            return valorCreditoUtilizado;
+        }
+
+        public double getValorNaoCreditoUtilizado() {
+            return valorNaoCreditoUtilizado;
+        }
+
+        public boolean isInvestimento() {
+            return investimento;
+        }
+
+        public double getValorAcumulado() {
+            return valorAcumulado;
+        }
+
         public List<GastoCategoriaNode> getFilhas() {
             return filhas;
         }
@@ -136,16 +192,32 @@ public class GastosCategoriaViewModel extends ViewModel {
         final GastoCategoriaNode node;
         final double total;
         final double utilizado;
+        final double creditoUtilizado;
+        final double naoCreditoUtilizado;
 
-        NodeTotals(GastoCategoriaNode node, double total, double utilizado) {
+        NodeTotals(GastoCategoriaNode node,
+                   double total,
+                   double utilizado,
+                   double creditoUtilizado,
+                   double naoCreditoUtilizado) {
             this.node = node;
             this.total = total;
             this.utilizado = utilizado;
+            this.creditoUtilizado = creditoUtilizado;
+            this.naoCreditoUtilizado = naoCreditoUtilizado;
         }
+    }
+
+    private static class UtilizadoCategoria {
+        double utilizado;
+        double creditoUtilizado;
+        double naoCreditoUtilizado;
     }
 
     private final CategoriaRepository categoriaRepository;
     private final LancamentoRepository lancamentoRepository;
+    private final MetaRepository metaRepository;
+    private final AporteMetaRepository aporteMetaRepository;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -154,6 +226,7 @@ public class GastosCategoriaViewModel extends ViewModel {
     private final MutableLiveData<Double> totalRecebido = new MutableLiveData<>(0d);
     private final MutableLiveData<Double> totalGasto = new MutableLiveData<>(0d);
     private final MutableLiveData<Double> totalPrevistoGasto = new MutableLiveData<>(0d);
+    private final MutableLiveData<Double> totalInvestido = new MutableLiveData<>(0d);
     private final MutableLiveData<String> erro = new MutableLiveData<>();
 
     private final List<SecaoTipoCategoria> secoesCalculadas = new ArrayList<>();
@@ -162,9 +235,13 @@ public class GastosCategoriaViewModel extends ViewModel {
     private ModoExibicao modoExibicao = ModoExibicao.GASTOS;
 
     public GastosCategoriaViewModel(CategoriaRepository categoriaRepository,
-                                    LancamentoRepository lancamentoRepository) {
+                                    LancamentoRepository lancamentoRepository,
+                                    MetaRepository metaRepository,
+                                    AporteMetaRepository aporteMetaRepository) {
         this.categoriaRepository = categoriaRepository;
         this.lancamentoRepository = lancamentoRepository;
+        this.metaRepository = metaRepository;
+        this.aporteMetaRepository = aporteMetaRepository;
 
         LocalDate hoje = LocalDate.now();
         this.ano = hoje.getYear();
@@ -191,6 +268,10 @@ public class GastosCategoriaViewModel extends ViewModel {
 
     public LiveData<Double> getTotalPrevistoGasto() {
         return totalPrevistoGasto;
+    }
+
+    public LiveData<Double> getTotalInvestido() {
+        return totalInvestido;
     }
 
     public LiveData<String> getErro() {
@@ -243,21 +324,45 @@ public class GastosCategoriaViewModel extends ViewModel {
                     filhas.sort(Comparator.comparingInt(Categoria::getOrdem));
                 }
 
-                Map<String, Double> utilizadoPorCategoria = new HashMap<>();
-                for (Categoria categoria : todas) {
-                    double utilizado = lancamentoRepository.somarPorCategoria(
-                            categoria.getId(), ano, mes).doubleValue();
-                    utilizadoPorCategoria.put(categoria.getId(), utilizado);
+                Map<String, UtilizadoCategoria> utilizadoPorCategoria = new HashMap<>();
+                List<Lancamento> lancamentosMes = lancamentoRepository.listarPorMes(ano, mes);
+                for (Lancamento lancamento : lancamentosMes) {
+                    if (ehLancamentoDerivadoDeFatura(lancamento)) {
+                        continue;
+                    }
+
+                    String categoriaId = lancamento.getCategoriaId();
+                    if (categoriaId == null || categoriaId.trim().isEmpty()) {
+                        continue;
+                    }
+                    UtilizadoCategoria utilizado = utilizadoPorCategoria.computeIfAbsent(
+                            categoriaId, key -> new UtilizadoCategoria());
+                    double valor = lancamento.getValor().doubleValue();
+                    utilizado.utilizado += valor;
+
+                    boolean gastoCredito = lancamento.getTipo() == TipoLancamento.DESPESA
+                            && lancamento.getCompraCartaoId() != null
+                            && !lancamento.getCompraCartaoId().trim().isEmpty();
+                    if (gastoCredito) {
+                        utilizado.creditoUtilizado += valor;
+                    } else {
+                        utilizado.naoCreditoUtilizado += valor;
+                    }
                 }
 
                 List<GastoCategoriaNode> essenciais = new ArrayList<>();
                 List<GastoCategoriaNode> naoEssenciais = new ArrayList<>();
+                List<GastoCategoriaNode> semCategoria = new ArrayList<>();
                 List<GastoCategoriaNode> receitas = new ArrayList<>();
+                List<GastoCategoriaNode> investimentos = new ArrayList<>();
                 double totalEssenciais = 0d;
                 double totalNaoEssenciais = 0d;
+                double totalSemCategoria = 0d;
                 double totalReceitas = 0d;
+                double totalInvestidoMes = 0d;
                 double limiteEssenciais = 0d;
                 double limiteNaoEssenciais = 0d;
+                double limiteSemCategoria = 0d;
                 double limiteReceitas = 0d;
 
                 raizes.sort(Comparator.comparingInt(Categoria::getOrdem));
@@ -271,6 +376,10 @@ public class GastosCategoriaViewModel extends ViewModel {
                         naoEssenciais.add(totals.node);
                         totalNaoEssenciais += totals.utilizado;
                         limiteNaoEssenciais += totals.total;
+                    } else if (raiz.getTipo() == TipoCategoria.SEM_TIPO) {
+                        semCategoria.add(totals.node);
+                        totalSemCategoria += totals.utilizado;
+                        limiteSemCategoria += totals.total;
                     } else if (raiz.getTipo() == TipoCategoria.RECEITA) {
                         receitas.add(totals.node);
                         totalReceitas += totals.utilizado;
@@ -278,27 +387,93 @@ public class GastosCategoriaViewModel extends ViewModel {
                     }
                 }
 
+                List<Meta> metasAtivas = metaRepository.listarAtivas();
+                if (metasAtivas != null) {
+                    metasAtivas.sort(Comparator.comparing(Meta::getNome, String.CASE_INSENSITIVE_ORDER));
+                    String prefixoMes = String.format(Locale.US, "%04d-%02d", ano, mes);
+                    for (Meta meta : metasAtivas) {
+                        double investidoMesMeta = 0d;
+                        List<AporteMeta> aportes = aporteMetaRepository.listarPorMeta(meta.getId());
+                        if (aportes != null) {
+                            for (AporteMeta aporte : aportes) {
+                                String data = aporte.getData();
+                                if (data != null && data.startsWith(prefixoMes)) {
+                                    investidoMesMeta += aporte.getValor().doubleValue();
+                                }
+                            }
+                        }
+
+                        double valorObjetivo = meta.getValorObjetivo() != null
+                                ? meta.getValorObjetivo().doubleValue() : 0d;
+                        double valorAtual = meta.getValorAtual() != null
+                                ? meta.getValorAtual().doubleValue() : 0d;
+                        investimentos.add(new GastoCategoriaNode(
+                                meta.getId(),
+                                meta.getNome(),
+                                "🎯",
+                                "#FB923C",
+                                TipoCategoria.RECEITA,
+                                valorObjetivo,
+                                investidoMesMeta,
+                                0d,
+                                0d,
+                                true,
+                                valorAtual,
+                                Collections.emptyList()));
+                        totalInvestidoMes += investidoMesMeta;
+                    }
+                }
+
                 List<SecaoTipoCategoria> secoesLocal = new ArrayList<>();
                 if (!essenciais.isEmpty()) {
                     secoesLocal.add(new SecaoTipoCategoria(
+                            TipoCategoria.ESSENCIAL.name(),
                             TipoCategoria.ESSENCIAL,
+                            null,
+                            false,
                             essenciais,
                             totalEssenciais,
                             limiteEssenciais));
                 }
                 if (!naoEssenciais.isEmpty()) {
                     secoesLocal.add(new SecaoTipoCategoria(
+                            TipoCategoria.NAO_ESSENCIAL.name(),
                             TipoCategoria.NAO_ESSENCIAL,
+                            null,
+                            false,
                             naoEssenciais,
                             totalNaoEssenciais,
                             limiteNaoEssenciais));
                 }
+                if (!semCategoria.isEmpty()) {
+                    secoesLocal.add(new SecaoTipoCategoria(
+                            TipoCategoria.SEM_TIPO.name(),
+                            TipoCategoria.SEM_TIPO,
+                            null,
+                            false,
+                            semCategoria,
+                            totalSemCategoria,
+                            limiteSemCategoria));
+                }
                 if (!receitas.isEmpty()) {
                     secoesLocal.add(new SecaoTipoCategoria(
+                            TipoCategoria.RECEITA.name(),
                             TipoCategoria.RECEITA,
+                            null,
+                            false,
                             receitas,
                             totalReceitas,
                             limiteReceitas));
+                }
+                if (!investimentos.isEmpty()) {
+                    secoesLocal.add(new SecaoTipoCategoria(
+                            SECAO_ID_INVESTIMENTOS,
+                            TipoCategoria.RECEITA,
+                            "Investimentos",
+                            true,
+                            investimentos,
+                            totalInvestidoMes,
+                            0d));
                 }
 
                 double recebidoMes = lancamentoRepository.somarPorTipoEMes(
@@ -306,6 +481,7 @@ public class GastosCategoriaViewModel extends ViewModel {
                 double gastoMes = lancamentoRepository.somarPorTipoEMes(
                         TipoLancamento.DESPESA, ano, mes).doubleValue();
                 double totalPrevistoMes = limiteEssenciais + limiteNaoEssenciais;
+                double totalInvestidoMesFinal = totalInvestidoMes;
 
                 mainHandler.post(() -> {
                     secoesCalculadas.clear();
@@ -313,6 +489,7 @@ public class GastosCategoriaViewModel extends ViewModel {
                     totalRecebido.setValue(recebidoMes);
                     totalGasto.setValue(gastoMes);
                     totalPrevistoGasto.setValue(totalPrevistoMes);
+                    totalInvestido.setValue(totalInvestidoMesFinal);
                     publicarSecoesPorModo();
                 });
             } catch (Exception e) {
@@ -324,10 +501,13 @@ public class GastosCategoriaViewModel extends ViewModel {
     private void publicarSecoesPorModo() {
         List<SecaoTipoCategoria> filtradas = new ArrayList<>();
         for (SecaoTipoCategoria secao : secoesCalculadas) {
-            if (modoExibicao == ModoExibicao.GASTOS && secao.getTipo() == TipoCategoria.RECEITA) {
+            if (modoExibicao == ModoExibicao.GASTOS
+                    && (secao.getTipo() == TipoCategoria.RECEITA || secao.isInvestimentos())) {
                 continue;
             }
-            if (modoExibicao == ModoExibicao.RECEBIDOS && secao.getTipo() != TipoCategoria.RECEITA) {
+            if (modoExibicao == ModoExibicao.RECEBIDOS
+                    && secao.getTipo() != TipoCategoria.RECEITA
+                    && !secao.isInvestimentos()) {
                 continue;
             }
             filtradas.add(secao);
@@ -335,22 +515,43 @@ public class GastosCategoriaViewModel extends ViewModel {
         secoes.setValue(filtradas);
     }
 
+    private boolean ehLancamentoDerivadoDeFatura(Lancamento lancamento) {
+        if (lancamentoRepository.buscarFaturaIdPorLancamentoPagamento(lancamento.getId()).isPresent()) {
+            return true;
+        }
+
+        String descricao = lancamento.getDescricao();
+        if (descricao == null) {
+            return false;
+        }
+
+        String normalizada = descricao.trim().toLowerCase(Locale.ROOT);
+        return "ajuste de fatura".equals(normalizada)
+                || normalizada.startsWith("saldo anterior (")
+                || normalizada.startsWith("pagamento ");
+    }
+
     private NodeTotals construirNo(Categoria categoria,
                                    Map<String, List<Categoria>> filhasPorPai,
-                                   Map<String, Double> utilizadoPorCategoria,
+                                   Map<String, UtilizadoCategoria> utilizadoPorCategoria,
                                    String nomePai) {
         List<Categoria> filhas = filhasPorPai.getOrDefault(categoria.getId(), Collections.emptyList());
         List<GastoCategoriaNode> filhasNo = new ArrayList<>();
 
         double limiteProprio = categoria.getLimiteMensal() != null ? categoria.getLimiteMensal().doubleValue() : 0d;
         double somaLimitesFilhas = 0d;
-        double utilizadoAgregado = utilizadoPorCategoria.getOrDefault(categoria.getId(), 0d);
+        UtilizadoCategoria utilizadoDireto = utilizadoPorCategoria.get(categoria.getId());
+        double utilizadoAgregado = utilizadoDireto != null ? utilizadoDireto.utilizado : 0d;
+        double creditoAgregado = utilizadoDireto != null ? utilizadoDireto.creditoUtilizado : 0d;
+        double naoCreditoAgregado = utilizadoDireto != null ? utilizadoDireto.naoCreditoUtilizado : 0d;
 
         for (Categoria filha : filhas) {
             NodeTotals filhaTotals = construirNo(filha, filhasPorPai, utilizadoPorCategoria, categoria.getNome());
             filhasNo.add(filhaTotals.node);
             somaLimitesFilhas += filhaTotals.total;
             utilizadoAgregado += filhaTotals.utilizado;
+            creditoAgregado += filhaTotals.creditoUtilizado;
+            naoCreditoAgregado += filhaTotals.naoCreditoUtilizado;
         }
 
         // Regra de negócio: limite efetivo é o limite da própria categoria,
@@ -365,9 +566,17 @@ public class GastosCategoriaViewModel extends ViewModel {
                 categoria.getTipo(),
                 totalAgregado,
                 utilizadoAgregado,
+                creditoAgregado,
+                naoCreditoAgregado,
+                false,
+                0d,
                 filhasNo);
 
-        return new NodeTotals(node, totalAgregado, utilizadoAgregado);
+            return new NodeTotals(node,
+                totalAgregado,
+                utilizadoAgregado,
+                creditoAgregado,
+                naoCreditoAgregado);
     }
 
     private void atualizarCompetenciaLabel() {

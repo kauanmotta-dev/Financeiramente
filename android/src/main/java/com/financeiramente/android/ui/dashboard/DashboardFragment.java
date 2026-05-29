@@ -113,10 +113,8 @@ public class DashboardFragment extends Fragment {
         viewModel.getSaldoDashboard().observe(getViewLifecycleOwner(), resultado -> {
             atualizarTopo(resultado);
             atualizarAvisos(resultado);
-            if (!carregamentoInicialConcluido) {
-                carregamentoInicialConcluido = true;
-                mostrarLoadingInicial(false);
-            }
+            carregamentoInicialConcluido = true;
+            mostrarLoadingInicial(false);
         });
         viewModel.getCartoesLimite().observe(getViewLifecycleOwner(), this::renderizarCartoesLimite);
         viewModel.getPercentualMetas().observe(getViewLifecycleOwner(), percentual -> {
@@ -150,7 +148,12 @@ public class DashboardFragment extends Fragment {
                                 v -> confirmarExclusaoLancamento(lancId));
                     }
                     snackbar.show();
+                viewModel.carregarDashboard();
                 });
+
+        getParentFragmentManager().setFragmentResultListener(
+            "cartao_form_saved", getViewLifecycleOwner(),
+            (requestKey, bundle) -> viewModel.carregarDashboard());
     }
 
     @Override
@@ -372,7 +375,11 @@ public class DashboardFragment extends Fragment {
             card.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.cinza_surface));
             card.setClickable(true);
             card.setFocusable(true);
-            card.setOnClickListener(v -> Navigation.findNavController(requireView()).navigate(R.id.nav_cartoes));
+            card.setOnClickListener(v -> {
+                Bundle args = new Bundle();
+                args.putInt("sourceScreen", R.id.nav_dashboard);
+                Navigation.findNavController(requireView()).navigate(R.id.nav_cartoes, args);
+            });
 
             LinearLayout conteudo = new LinearLayout(requireContext());
             conteudo.setOrientation(LinearLayout.VERTICAL);
@@ -395,15 +402,24 @@ public class DashboardFragment extends Fragment {
             pbUso.setTrackThickness(dp(6));
             pbUso.setTrackCornerRadius(dp(3));
             pbUso.setTrackColor(ContextCompat.getColor(requireContext(), R.color.cinza_divider));
-            pbUso.setIndicatorColor(ContextCompat.getColor(requireContext(), R.color.verde_success));
-            pbUso.setProgress((int) Math.min(100.0, Math.max(0.0, cartao.getPercentualUso())));
+            int pctUso = (int) Math.min(100.0, Math.max(0.0, cartao.getPercentualUso()));
+            aplicarCoresProgresso(pbUso, pctUso);
+            pbUso.setProgress(pctUso);
             LinearLayout.LayoutParams pbParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             pbParams.topMargin = dp(8);
             pbUso.setLayoutParams(pbParams);
 
             TextView tvPercentual = new TextView(requireContext());
             tvPercentual.setText(String.format(Locale.getDefault(), "%.0f%% usado", cartao.getPercentualUso()));
-            tvPercentual.setTextColor(ContextCompat.getColor(requireContext(), R.color.cinza_secondary));
+            int corPercentual;
+            if (pctUso < 50) {
+                corPercentual = ContextCompat.getColor(requireContext(), R.color.verde_success);
+            } else if (pctUso <= 75) {
+                corPercentual = ContextCompat.getColor(requireContext(), R.color.laranja_warning);
+            } else {
+                corPercentual = ContextCompat.getColor(requireContext(), R.color.vermelho_error);
+            }
+            tvPercentual.setTextColor(corPercentual);
             tvPercentual.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f);
             LinearLayout.LayoutParams percentualParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             percentualParams.topMargin = dp(4);

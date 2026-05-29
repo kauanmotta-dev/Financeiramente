@@ -10,10 +10,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.github.mikephil.charting.charts.HorizontalBarChart;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import androidx.annotation.NonNull;
@@ -37,13 +35,9 @@ import com.financeiramente.core.usecase.relatorio.FiltroRelatorio;
 import com.financeiramente.core.usecase.relatorio.RelatorioResult;
 import com.financeiramente.core.util.FinanceCalculator;
 import com.github.mikephil.charting.animation.Easing;
-import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.data.BarData;
-import com.github.mikephil.charting.data.BarDataSet;
-import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -51,13 +45,15 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
-import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -65,6 +61,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 public class RelatoriosFragment extends Fragment {
 
@@ -92,22 +89,24 @@ public class RelatoriosFragment extends Fragment {
 
     private TextView tvTotalReceitas, tvTotalDespesas, tvSaldo, tvResumoPercentual;
     private LinearProgressIndicator pbResumoPercentual;
-    private LinearLayout layoutCategorias;
 
-    private PieChart pieChart;
-    private HorizontalBarChart horizontalBarChart;
-    private BarChart barChart;
-    private LineChart lineChart;
-    private LinearLayout layoutPieLegenda;
-    private MaterialButtonToggleGroup toggleChartTipo;
-
-    private Map<String, BigDecimal> ultimoTotalPorCategoria = null;
+    private PieChart pieChartTipoCategoria;
+    private PieChart pieChartCategorias;
+    private PieChart pieChartTags;
+    private LineChart lineChartEvolucao;
+    private LinearLayout layoutPieLegendaTipoCategoria;
+    private LinearLayout layoutPieLegendaCategorias;
+    private LinearLayout layoutPieLegendaTags;
+    private Chip chipEvolucaoGastos;
+    private Chip chipEvolucaoReceitas;
 
     private RelatorioResult ultimoResultadoBruto = null;
     private List<Categoria> listaCategorias = new ArrayList<>();
     private List<Tag> listaTags = new ArrayList<>();
     private Map<String, Categoria> categoriaPorId = new LinkedHashMap<>();
     private Map<String, List<Tag>> tagsPorLancamento = new LinkedHashMap<>();
+    private List<Lancamento> ultimoLancamentosFiltrados = new ArrayList<>();
+    private BigDecimal totalInvestidoPeriodo = BigDecimal.ZERO;
     private int modoAtual = MODO_MES;
 
     @Nullable
@@ -126,7 +125,9 @@ public class RelatoriosFragment extends Fragment {
                 ctx.getGerarRelatorioUseCase(),
                 ctx.getCoreServices().getCategoriaRepository(),
                 ctx.getCoreServices().getTagRepository(),
-                ctx.getCoreServices().getLancamentoRepository());
+            ctx.getCoreServices().getLancamentoRepository(),
+            ctx.getCoreServices().getMetaRepository(),
+            ctx.getCoreServices().getAporteMetaRepository());
         viewModel = new ViewModelProvider(this, factory).get(RelatoriosViewModel.class);
 
         bindViews(view);
@@ -138,11 +139,11 @@ public class RelatoriosFragment extends Fragment {
         });
         configurarChipsPeriodo();
         configurarBotaoFiltrar(view);
-        setupPieChart();
-        setupHorizontalBarChart();
-        setupBarChart();
+        setupPieChart(pieChartTipoCategoria, getString(R.string.relatorio_distribuicao_tipo_categoria));
+        setupPieChart(pieChartCategorias, getString(R.string.relatorio_distribuicao_categorias));
+        setupPieChart(pieChartTags, getString(R.string.relatorio_distribuicao_tags));
         setupLineChart();
-        configurarToggleChart();
+        configurarFiltrosEvolucao();
         observarViewModel();
     }
 
@@ -156,13 +157,15 @@ public class RelatoriosFragment extends Fragment {
         tvSaldo              = view.findViewById(R.id.tv_saldo);
         tvResumoPercentual   = view.findViewById(R.id.tv_resumo_percentual);
         pbResumoPercentual   = view.findViewById(R.id.pb_resumo_percentual);
-        layoutCategorias     = view.findViewById(R.id.layout_categorias);
-        pieChart             = view.findViewById(R.id.pie_chart);
-        horizontalBarChart   = view.findViewById(R.id.horizontal_bar_chart);
-        barChart             = view.findViewById(R.id.bar_chart);
-        lineChart            = view.findViewById(R.id.line_chart);
-        layoutPieLegenda     = view.findViewById(R.id.layout_pie_legenda);
-        toggleChartTipo      = view.findViewById(R.id.toggle_chart_tipo);
+        pieChartTipoCategoria = view.findViewById(R.id.pie_chart_tipo_categoria);
+        pieChartCategorias    = view.findViewById(R.id.pie_chart_categorias);
+        pieChartTags          = view.findViewById(R.id.pie_chart_tags);
+        lineChartEvolucao     = view.findViewById(R.id.line_chart_evolucao);
+        layoutPieLegendaTipoCategoria = view.findViewById(R.id.layout_pie_legenda_tipo_categoria);
+        layoutPieLegendaCategorias    = view.findViewById(R.id.layout_pie_legenda_categorias);
+        layoutPieLegendaTags          = view.findViewById(R.id.layout_pie_legenda_tags);
+        chipEvolucaoGastos    = view.findViewById(R.id.chip_evolucao_gastos);
+        chipEvolucaoReceitas  = view.findViewById(R.id.chip_evolucao_receitas);
     }
 
     private void configurarChipsPeriodo() {
@@ -300,154 +303,81 @@ public class RelatoriosFragment extends Fragment {
 
     // ─── Chart Setup ─────────────────────────────────────────────────────────
 
-    /** 3.6 — configure chart type toggle */
-    private void configurarToggleChart() {
-        toggleChartTipo.check(R.id.btn_chart_pizza);
-        toggleChartTipo.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-            if (!isChecked) return;
-            if (checkedId == R.id.btn_chart_pizza) {
-                pieChart.setVisibility(View.VISIBLE);
-                horizontalBarChart.setVisibility(View.GONE);
-            } else {
-                pieChart.setVisibility(View.GONE);
-                horizontalBarChart.setVisibility(View.VISIBLE);
-                if (ultimoTotalPorCategoria != null) {
-                    atualizarHorizontalBarChart(ultimoTotalPorCategoria);
+    private void configurarFiltrosEvolucao() {
+        View.OnClickListener refresh = v -> {
+            if (!chipEvolucaoGastos.isChecked() && !chipEvolucaoReceitas.isChecked()) {
+                if (v == chipEvolucaoGastos) {
+                    chipEvolucaoGastos.setChecked(true);
+                } else {
+                    chipEvolucaoReceitas.setChecked(true);
                 }
+                return;
             }
-        });
+            atualizarLineChartEvolucao(ultimoLancamentosFiltrados);
+        };
+        chipEvolucaoGastos.setOnClickListener(refresh);
+        chipEvolucaoReceitas.setOnClickListener(refresh);
     }
 
-    private void setupPieChart() {
-        pieChart.getDescription().setEnabled(false);
-        pieChart.setHoleRadius(55f);
-        pieChart.setTransparentCircleRadius(60f);
-        pieChart.setDrawHoleEnabled(true);
-        pieChart.setDrawCenterText(true);
-        pieChart.setCenterText("Gastos\npor categoria");
-        pieChart.setCenterTextSize(11f);
-        pieChart.getLegend().setEnabled(false);
-        pieChart.setEntryLabelTextSize(0f);
-        pieChart.setRotationEnabled(false);
-        pieChart.setNoDataText(getString(R.string.lancamentos_vazio));
-    }
-
-    private void setupHorizontalBarChart() {
-        horizontalBarChart.getDescription().setEnabled(false);
-        horizontalBarChart.getLegend().setEnabled(false);
-        horizontalBarChart.setDrawGridBackground(false);
-        horizontalBarChart.getAxisRight().setEnabled(false);
-        horizontalBarChart.setExtraLeftOffset(6f);
-        horizontalBarChart.setExtraRightOffset(12f);
-        horizontalBarChart.getAxisLeft().setAxisMinimum(0f);
-        horizontalBarChart.getAxisLeft().setDrawGridLines(true);
-        horizontalBarChart.getAxisLeft().setGridColor(0x33000000);
-        horizontalBarChart.getXAxis().setDrawGridLines(false);
-        horizontalBarChart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
-        horizontalBarChart.getXAxis().setGranularity(1f);
-        horizontalBarChart.getXAxis().setTextSize(11f);
-        horizontalBarChart.setNoDataText(getString(R.string.lancamentos_vazio));
-        horizontalBarChart.setFitBars(true);
-    }
-
-    private void setupBarChart() {
-        barChart.getDescription().setEnabled(false);
-        barChart.getLegend().setEnabled(false);
-        barChart.setFitBars(true);
-        barChart.setDrawGridBackground(false);
-        barChart.getAxisRight().setEnabled(false);
-        XAxis xAxisBar = barChart.getXAxis();
-        xAxisBar.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxisBar.setDrawGridLines(false);
-        xAxisBar.setGranularity(1f);
-        xAxisBar.setCenterAxisLabels(true);
-        barChart.getAxisLeft().setAxisMinimum(0f);
-        barChart.getAxisLeft().setGridColor(0x33000000);
-        barChart.setNoDataText(getString(R.string.lancamentos_vazio));
+    private void setupPieChart(PieChart chart, String centerText) {
+        chart.getDescription().setEnabled(false);
+        chart.setHoleRadius(55f);
+        chart.setTransparentCircleRadius(60f);
+        chart.setDrawHoleEnabled(true);
+        chart.setDrawCenterText(true);
+        chart.setCenterText(centerText);
+        chart.setCenterTextSize(10f);
+        chart.getLegend().setEnabled(false);
+        chart.setEntryLabelTextSize(0f);
+        chart.setRotationEnabled(false);
+        chart.setNoDataText(getString(R.string.lancamentos_vazio));
     }
 
     private void setupLineChart() {
-        lineChart.getDescription().setEnabled(false);
-        lineChart.getLegend().setEnabled(false);
-        lineChart.setDrawGridBackground(false);
-        lineChart.getAxisRight().setEnabled(false);
-        XAxis xAxisLine = lineChart.getXAxis();
+        lineChartEvolucao.getDescription().setEnabled(false);
+        lineChartEvolucao.getLegend().setEnabled(true);
+        lineChartEvolucao.setDrawGridBackground(false);
+        lineChartEvolucao.getAxisRight().setEnabled(false);
+        XAxis xAxisLine = lineChartEvolucao.getXAxis();
         xAxisLine.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxisLine.setDrawGridLines(false);
         xAxisLine.setGranularity(1f);
-        lineChart.getAxisLeft().setGridColor(0x33000000);
-        lineChart.setNoDataText(getString(R.string.lancamentos_vazio));
+        xAxisLine.setLabelRotationAngle(-30f);
+        lineChartEvolucao.getAxisLeft().setAxisMinimum(0f);
+        lineChartEvolucao.getAxisLeft().setGridColor(0x33000000);
+        lineChartEvolucao.setNoDataText(getString(R.string.lancamentos_vazio));
     }
 
     // ─── Chart Population ────────────────────────────────────────────────────
 
-    private void atualizarHorizontalBarChart(Map<String, BigDecimal> totalPorCategoria) {
-        if (totalPorCategoria == null || totalPorCategoria.isEmpty()) {
-            horizontalBarChart.clear();
-            horizontalBarChart.invalidate();
+    private void atualizarPieChart(PieChart chart,
+                                   LinearLayout legenda,
+                                   Map<String, BigDecimal> distribuicao,
+                                   String centerText) {
+        legenda.removeAllViews();
+        if (distribuicao == null || distribuicao.isEmpty()) {
+            chart.clear();
+            chart.invalidate();
             return;
         }
 
-        List<BarEntry> entries = new ArrayList<>();
-        List<String> labels    = new ArrayList<>();
-        List<Integer> colors   = new ArrayList<>();
-        int idx = 0;
-        for (Map.Entry<String, BigDecimal> entry : totalPorCategoria.entrySet()) {
-            entries.add(new BarEntry(idx, entry.getValue().floatValue()));
-            labels.add(entry.getKey());
-            colors.add(PIE_COLORS[idx % PIE_COLORS.length]);
-            idx++;
-        }
-
-        BarDataSet dataSet = new BarDataSet(entries, "");
-        dataSet.setColors(colors);
-        dataSet.setDrawValues(true);
-        dataSet.setValueTextSize(10f);
-
-        BarData data = new BarData(dataSet);
-        data.setBarWidth(0.6f);
-        horizontalBarChart.setData(data);
-        horizontalBarChart.getXAxis().setValueFormatter(new ValueFormatter() {
-            @Override
-            public String getFormattedValue(float value) {
-                int index = Math.round(value);
-                if (index < 0 || index >= labels.size()) return "";
-                String label = labels.get(index);
-                return label.length() > 18 ? label.substring(0, 18) + "…" : label;
-            }
-        });
-        horizontalBarChart.getXAxis().setLabelCount(labels.size());
-        horizontalBarChart.animateX(500);
-        horizontalBarChart.invalidate();
-    }
-
-    private void atualizarPieChart(Map<String, BigDecimal> totalPorCategoria) {
-        ultimoTotalPorCategoria = totalPorCategoria;
-        layoutPieLegenda.removeAllViews();
-        if (totalPorCategoria == null || totalPorCategoria.isEmpty()) {
-            pieChart.clear();
-            pieChart.invalidate();
-            horizontalBarChart.clear();
-            horizontalBarChart.invalidate();
-            return;
-        }
+        chart.setCenterText(centerText);
 
         List<PieEntry> entries = new ArrayList<>();
         List<Integer> colors = new ArrayList<>();
         int idx = 0;
-
-        for (Map.Entry<String, BigDecimal> entry : totalPorCategoria.entrySet()) {
+        for (Map.Entry<String, BigDecimal> entry : distribuicao.entrySet()) {
             entries.add(new PieEntry(entry.getValue().floatValue(), ""));
             int color = PIE_COLORS[idx % PIE_COLORS.length];
             colors.add(color);
 
             View row = LayoutInflater.from(requireContext())
-                    .inflate(R.layout.item_pie_legenda, layoutPieLegenda, false);
+                    .inflate(R.layout.item_pie_legenda, legenda, false);
             setOvalBackground(row.findViewById(R.id.view_dot), color);
             ((TextView) row.findViewById(R.id.tv_legenda_nome)).setText(entry.getKey());
             ((TextView) row.findViewById(R.id.tv_legenda_percentual)).setText(
-                    String.format(Locale.getDefault(), "R$ %.2f", entry.getValue()));
-            layoutPieLegenda.addView(row);
+                    formatarMoeda(entry.getValue()));
+            legenda.addView(row);
             idx++;
         }
 
@@ -457,71 +387,88 @@ public class RelatoriosFragment extends Fragment {
         dataSet.setSelectionShift(5f);
         dataSet.setDrawValues(false);
 
-        pieChart.setData(new PieData(dataSet));
-        pieChart.animateY(800, Easing.EaseInOutQuad);
-        pieChart.invalidate();
-
-        // also update the horizontal bar chart (pre-populate for when user toggles)
-        atualizarHorizontalBarChart(totalPorCategoria);
+        chart.setData(new PieData(dataSet));
+        chart.animateY(800, Easing.EaseInOutQuad);
+        chart.invalidate();
     }
 
-    private void atualizarBarChart(float[] receitas, float[] despesas, String[] labels) {
-        List<BarEntry> receitaEntries = new ArrayList<>();
-        List<BarEntry> despesaEntries = new ArrayList<>();
-        for (int i = 0; i < receitas.length; i++) {
-            receitaEntries.add(new BarEntry(i, receitas[i]));
-            despesaEntries.add(new BarEntry(i, despesas[i]));
+    private void atualizarLineChartEvolucao(List<Lancamento> lancamentos) {
+        if (lancamentos == null || lancamentos.isEmpty()) {
+            lineChartEvolucao.clear();
+            lineChartEvolucao.invalidate();
+            return;
         }
 
-        BarDataSet receitaSet = new BarDataSet(receitaEntries, "Receita");
-        receitaSet.setColor(ContextCompat.getColor(requireContext(), R.color.verde_success));
-        receitaSet.setDrawValues(false);
-
-        BarDataSet despesaSet = new BarDataSet(despesaEntries, "Despesa");
-        despesaSet.setColor(ContextCompat.getColor(requireContext(), R.color.vermelho_error));
-        despesaSet.setDrawValues(false);
-
-        float groupSpace = 0.3f;
-        float barSpace   = 0.05f;
-        float barWidth   = 0.3f;
-
-        BarData data = new BarData(receitaSet, despesaSet);
-        data.setBarWidth(barWidth);
-
-        barChart.setData(data);
-        barChart.groupBars(0f, groupSpace, barSpace);
-        barChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labels));
-        barChart.getXAxis().setAxisMinimum(0f);
-        barChart.getXAxis().setAxisMaximum(data.getGroupWidth(groupSpace, barSpace) * labels.length);
-        barChart.animateXY(600, 600);
-        barChart.invalidate();
-    }
-
-    private void atualizarLineChart(float[] receitas, float[] despesas, String[] labels) {
-        List<Entry> entries = new ArrayList<>();
-        for (int i = 0; i < receitas.length; i++) {
-            entries.add(new Entry(i, receitas[i] - despesas[i]));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM", Locale.getDefault());
+        Map<LocalDate, BigDecimal> receitasPorDia = new TreeMap<>();
+        Map<LocalDate, BigDecimal> despesasPorDia = new TreeMap<>();
+        for (Lancamento lancamento : lancamentos) {
+            LocalDate data = parseDataLancamento(lancamento.getData());
+            if (data == null) continue;
+            if (lancamento.getTipo() == TipoLancamento.RECEITA) {
+                receitasPorDia.merge(data, lancamento.getValor(), BigDecimal::add);
+            } else {
+                despesasPorDia.merge(data, lancamento.getValor(), BigDecimal::add);
+            }
         }
 
-        int primaryColor = ContextCompat.getColor(requireContext(), R.color.azul_primary);
-        LineDataSet dataSet = new LineDataSet(entries, "Resultado");
-        dataSet.setColor(primaryColor);
-        dataSet.setLineWidth(2f);
-        dataSet.setCircleColor(primaryColor);
-        dataSet.setCircleRadius(4f);
-        dataSet.setCircleHoleColor(ContextCompat.getColor(requireContext(), R.color.white));
-        dataSet.setCircleHoleRadius(2f);
-        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-        dataSet.setCubicIntensity(0.2f);
-        dataSet.setDrawFilled(true);
-        dataSet.setFillColor(primaryColor);
-        dataSet.setFillAlpha(30);
-        dataSet.setDrawValues(false);
+        List<LocalDate> datas = new ArrayList<>();
+        datas.addAll(receitasPorDia.keySet());
+        for (LocalDate data : despesasPorDia.keySet()) {
+            if (!datas.contains(data)) datas.add(data);
+        }
+        datas.sort(LocalDate::compareTo);
 
-        lineChart.setData(new LineData(dataSet));
-        lineChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labels));
-        lineChart.animateX(600);
-        lineChart.invalidate();
+        if (datas.isEmpty()) {
+            lineChartEvolucao.clear();
+            lineChartEvolucao.invalidate();
+            return;
+        }
+
+        List<Entry> entradasReceitas = new ArrayList<>();
+        List<Entry> entradasDespesas = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+        for (int i = 0; i < datas.size(); i++) {
+            LocalDate data = datas.get(i);
+            labels.add(data.format(formatter));
+            entradasReceitas.add(new Entry(i,
+                    receitasPorDia.getOrDefault(data, BigDecimal.ZERO).floatValue()));
+            entradasDespesas.add(new Entry(i,
+                    despesasPorDia.getOrDefault(data, BigDecimal.ZERO).floatValue()));
+        }
+
+        List<ILineDataSet> dataSets = new ArrayList<>();
+        if (chipEvolucaoReceitas.isChecked()) {
+            LineDataSet receitasSet = new LineDataSet(entradasReceitas, getString(R.string.relatorio_receitas));
+            receitasSet.setColor(ContextCompat.getColor(requireContext(), R.color.verde_success));
+            receitasSet.setCircleColor(ContextCompat.getColor(requireContext(), R.color.verde_success));
+            receitasSet.setLineWidth(2f);
+            receitasSet.setDrawValues(false);
+            receitasSet.setCircleRadius(3f);
+            dataSets.add(receitasSet);
+        }
+
+        if (chipEvolucaoGastos.isChecked()) {
+            LineDataSet despesasSet = new LineDataSet(entradasDespesas, getString(R.string.relatorio_gastos));
+            despesasSet.setColor(ContextCompat.getColor(requireContext(), R.color.vermelho_error));
+            despesasSet.setCircleColor(ContextCompat.getColor(requireContext(), R.color.vermelho_error));
+            despesasSet.setLineWidth(2f);
+            despesasSet.setDrawValues(false);
+            despesasSet.setCircleRadius(3f);
+            dataSets.add(despesasSet);
+        }
+
+        if (dataSets.isEmpty()) {
+            lineChartEvolucao.clear();
+            lineChartEvolucao.invalidate();
+            return;
+        }
+
+        lineChartEvolucao.setData(new LineData(dataSets));
+        lineChartEvolucao.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labels));
+        lineChartEvolucao.getXAxis().setLabelCount(Math.min(labels.size(), 6), true);
+        lineChartEvolucao.animateX(500);
+        lineChartEvolucao.invalidate();
     }
 
     // ─── Observers & Filter ──────────────────────────────────────────────────
@@ -539,22 +486,13 @@ public class RelatoriosFragment extends Fragment {
             tagsPorLancamento = map != null ? map : new LinkedHashMap<>();
             renderResultadoFiltrado();
         });
+        viewModel.getTotalInvestidoPeriodo().observe(getViewLifecycleOwner(), total -> {
+            totalInvestidoPeriodo = total != null ? total : BigDecimal.ZERO;
+            renderResultadoFiltrado();
+        });
         viewModel.getErro().observe(getViewLifecycleOwner(), msg -> {
             if (msg != null) Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
         });
-        viewModel.getReceitasMensais().observe(getViewLifecycleOwner(), r -> atualizarChartsHistorico());
-        viewModel.getDespesasMensais().observe(getViewLifecycleOwner(), d -> atualizarChartsHistorico());
-        viewModel.getLabelsMeses().observe(getViewLifecycleOwner(), l -> atualizarChartsHistorico());
-    }
-
-    private void atualizarChartsHistorico() {
-        float[]  rec    = viewModel.getReceitasMensais().getValue();
-        float[]  desp   = viewModel.getDespesasMensais().getValue();
-        String[] labels = viewModel.getLabelsMeses().getValue();
-        if (rec != null && desp != null && labels != null) {
-            atualizarBarChart(rec, desp, labels);
-            atualizarLineChart(rec, desp, labels);
-        }
     }
 
     private void aplicarFiltro() {
@@ -602,36 +540,31 @@ public class RelatoriosFragment extends Fragment {
         pbResumoPercentual.setProgressCompat(percentual, true);
 
         BigDecimal saldo = res.getSaldo();
-        tvSaldo.setText(String.format(Locale.getDefault(), "R$ %.2f", saldo));
+        tvSaldo.setText(formatarMoeda(saldo));
         tvSaldo.setTextColor(saldo.compareTo(BigDecimal.ZERO) >= 0 ? 0xFF2E7D32 : 0xFFC62828);
 
-        atualizarPieChart(res.getTotalPorCategoria());
+        ultimoLancamentosFiltrados = res.getLancamentos() != null
+            ? res.getLancamentos() : new ArrayList<>();
 
-        layoutCategorias.removeAllViews();
-        for (Map.Entry<String, BigDecimal> entry : res.getTotalPorCategoria().entrySet()) {
-            LinearLayout row = new LinearLayout(requireContext());
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            rowParams.setMargins(0, 2, 0, 2);
-            row.setLayoutParams(rowParams);
+        atualizarPieChart(
+            pieChartTipoCategoria,
+            layoutPieLegendaTipoCategoria,
+            criarDistribuicaoTipoCategoria(ultimoLancamentosFiltrados),
+            "Essenciais x Não essenciais");
 
-            TextView tvNome = new TextView(requireContext());
-            tvNome.setLayoutParams(new LinearLayout.LayoutParams(
-                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-            tvNome.setText(entry.getKey());
-                tvNome.setTextColor(ContextCompat.getColor(requireContext(), R.color.cinza_on_surface));
+        atualizarPieChart(
+            pieChartCategorias,
+            layoutPieLegendaCategorias,
+            res.getTotalPorCategoria(),
+            "Categorias");
 
-            TextView tvValor = new TextView(requireContext());
-            tvValor.setText(String.format(Locale.getDefault(), "R$ %.2f", entry.getValue()));
-            tvValor.setTextColor(0xFFC62828);
+        atualizarPieChart(
+            pieChartTags,
+            layoutPieLegendaTags,
+            criarDistribuicaoTags(ultimoLancamentosFiltrados),
+            "Tags");
 
-            row.addView(tvNome);
-            row.addView(tvValor);
-            layoutCategorias.addView(row);
-        }
-
+        atualizarLineChartEvolucao(ultimoLancamentosFiltrados);
     }
 
     private void renderResultadoFiltrado() {
@@ -642,6 +575,7 @@ public class RelatoriosFragment extends Fragment {
     private RelatorioResult aplicarFiltrosLocais(RelatorioResult original) {
         List<Lancamento> filtrados = new ArrayList<>();
         for (Lancamento lancamento : original.getLancamentos()) {
+            if (ehLancamentoDerivadoDeFatura(lancamento)) continue;
             if (!matchesTipoCategoriaSelecionado(lancamento)) continue;
             if (!matchesCategoriasSelecionadas(lancamento)) continue;
             if (!matchesTagsSelecionadas(lancamento)) continue;
@@ -669,6 +603,82 @@ public class RelatoriosFragment extends Fragment {
         }
 
         return new RelatorioResult(filtrados, receitas, despesas, totalPorCategoria);
+    }
+
+    private Map<String, BigDecimal> criarDistribuicaoTipoCategoria(List<Lancamento> lancamentos) {
+        Map<String, BigDecimal> distribuicao = new LinkedHashMap<>();
+        distribuicao.put(getString(R.string.categoria_tipo_essencial), BigDecimal.ZERO);
+        distribuicao.put(getString(R.string.categoria_tipo_nao_essencial), BigDecimal.ZERO);
+        distribuicao.put(getString(R.string.relatorio_sem_categoria), BigDecimal.ZERO);
+
+        for (Lancamento lancamento : lancamentos) {
+            if (lancamento.getTipo() != TipoLancamento.DESPESA) continue;
+            if (ehLancamentoDerivadoDeFatura(lancamento)) continue;
+            Categoria raiz = encontrarCategoriaRaiz(lancamento.getCategoriaId());
+            if (raiz == null || raiz.getTipo() == null || raiz.getTipo() == TipoCategoria.RECEITA
+                    || raiz.getTipo() == TipoCategoria.SEM_TIPO) {
+                distribuicao.merge(getString(R.string.relatorio_sem_categoria), lancamento.getValor(), BigDecimal::add);
+            } else if (raiz.getTipo() == TipoCategoria.ESSENCIAL) {
+                distribuicao.merge(getString(R.string.categoria_tipo_essencial), lancamento.getValor(), BigDecimal::add);
+            } else {
+                distribuicao.merge(getString(R.string.categoria_tipo_nao_essencial), lancamento.getValor(), BigDecimal::add);
+            }
+        }
+
+        if (totalInvestidoPeriodo.compareTo(BigDecimal.ZERO) > 0) {
+            distribuicao.put(getString(R.string.relatorio_investido), totalInvestidoPeriodo);
+        }
+
+        distribuicao.entrySet().removeIf(entry -> entry.getValue().compareTo(BigDecimal.ZERO) <= 0);
+        return distribuicao;
+    }
+
+    private boolean ehLancamentoDerivadoDeFatura(Lancamento lancamento) {
+        String descricao = lancamento.getDescricao();
+        if (descricao == null) {
+            return false;
+        }
+
+        String normalizada = descricao.trim().toLowerCase(Locale.ROOT);
+        return normalizada.startsWith("pagamento ")
+            || "ajuste de fatura".equals(normalizada)
+            || normalizada.startsWith("saldo anterior (");
+    }
+
+    private Map<String, BigDecimal> criarDistribuicaoTags(List<Lancamento> lancamentos) {
+        Map<String, BigDecimal> distribuicao = new LinkedHashMap<>();
+        for (Lancamento lancamento : lancamentos) {
+            if (lancamento.getTipo() != TipoLancamento.DESPESA) continue;
+            List<Tag> tags = tagsPorLancamento.get(lancamento.getId());
+            if (tags == null || tags.isEmpty()) {
+                distribuicao.merge(getString(R.string.relatorio_sem_tag), lancamento.getValor(), BigDecimal::add);
+                continue;
+            }
+            BigDecimal valorRateado = lancamento.getValor().divide(
+                    BigDecimal.valueOf(tags.size()),
+                    2,
+                    RoundingMode.HALF_UP);
+            for (Tag tag : tags) {
+                String nomeTag = tag.getEmoji() + " " + tag.getNome();
+                distribuicao.merge(nomeTag, valorRateado, BigDecimal::add);
+            }
+        }
+
+        distribuicao.entrySet().removeIf(entry -> entry.getValue().compareTo(BigDecimal.ZERO) <= 0);
+        return distribuicao;
+    }
+
+    private String formatarMoeda(BigDecimal valor) {
+        return String.format(Locale.getDefault(), "R$ %.2f", valor);
+    }
+
+    private LocalDate parseDataLancamento(String data) {
+        if (data == null || data.trim().isEmpty()) return null;
+        try {
+            return LocalDate.parse(data.trim());
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private boolean matchesCategoriasSelecionadas(Lancamento lancamento) {

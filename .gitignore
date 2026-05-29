@@ -11,6 +11,8 @@
 
 # Local configuration
 local.properties
+keystore.properties
+android/keystore/
 
 # IDE
 .idea/

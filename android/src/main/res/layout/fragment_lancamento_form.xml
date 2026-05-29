@@ -47,7 +47,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/fechar"
                 android:padding="8dp"
-                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:src="@drawable/ic_close"
                 android:tint="?attr/colorOnSurfaceVariant" />
 
         </LinearLayout>
@@ -122,9 +122,10 @@
             <!-- Toggle Parcelado / À Vista (visível quando cartão selecionado) -->
             <com.google.android.material.button.MaterialButtonToggleGroup
                 android:id="@+id/toggle_parcelamento"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:layout_marginTop="8dp"
                 android:visibility="gone"
                 app:singleSelection="true"
@@ -147,48 +148,32 @@
                     android:text="@string/lancamento_parcelado"
                     android:textSize="12sp" />
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_recorrente"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="@string/lancamento_recorrente"
+                    android:textSize="12sp" />
+
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
-            <!-- Campo de Qtd. Parcelas (visível apenas no modo parcelado) -->
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/til_parcelas"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:layout_marginTop="10dp"
-                android:hint="@string/lancamento_qtd_parcelas"
-                android:visibility="gone">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_parcelas"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number"
-                    android:maxLines="1" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- Valor por parcela calculado automaticamente -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/til_valor_parcela"
+                android:id="@+id/til_dia_recorrencia"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
                 android:layout_marginTop="8dp"
-                android:hint="@string/lancamento_valor_parcela"
+                android:hint="@string/lancamento_dia_recorrencia"
                 android:visibility="gone">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_valor_parcela"
+                    android:id="@+id/et_dia_recorrencia"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:focusable="false"
-                    android:clickable="false"
-                    android:cursorVisible="false"
+                    android:inputType="number"
                     android:maxLines="1" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -200,10 +185,12 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_toggle_categorias"
             style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
             android:layout_marginTop="12dp"
+            android:gravity="start|center_vertical"
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:minHeight="0dp"
@@ -234,10 +221,12 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_toggle_tags"
             style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
             android:layout_marginTop="10dp"
+            android:gravity="start|center_vertical"
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:minHeight="0dp"
@@ -285,6 +274,50 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Campo de Qtd. Parcelas (visível apenas no modo parcelado) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_parcelas"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="8dp"
+            android:hint="@string/lancamento_qtd_parcelas"
+            android:visibility="gone">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_parcelas"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLines="1" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Valor total calculado automaticamente: valor da parcela x quantidade -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_valor_parcela"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="8dp"
+            android:hint="@string/lancamento_valor_total"
+            android:visibility="gone">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_valor_parcela"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusable="false"
+                android:clickable="false"
+                android:cursorVisible="false"
+                android:maxLines="1" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
         <!-- ══════ SEÇÃO COMPLETA (visível apenas no modo expandido) ══════ -->
         <LinearLayout
             android:id="@+id/layout_detalhes_completos"
@@ -324,7 +357,7 @@
                 android:layout_marginTop="12dp"
                 android:hint="@string/lancamento_data"
                 app:endIconMode="custom"
-                app:endIconDrawable="@android:drawable/ic_menu_today">
+                app:endIconDrawable="@drawable/ic_calendar_today">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_data"

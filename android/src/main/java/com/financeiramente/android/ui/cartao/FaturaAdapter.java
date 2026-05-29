@@ -26,11 +26,22 @@ public class FaturaAdapter extends RecyclerView.Adapter<FaturaAdapter.ViewHolder
         void onFaturaClick(Fatura fatura);
     }
 
+    public interface OnFaturaLongClickListener {
+        void onFaturaLongClick(Fatura fatura);
+    }
+
     private List<Fatura> faturas = new ArrayList<>();
     private final OnFaturaClickListener listener;
+    private final OnFaturaLongClickListener longClickListener;
 
     public FaturaAdapter(OnFaturaClickListener listener) {
         this.listener = listener;
+        this.longClickListener = null;
+    }
+
+    public FaturaAdapter(OnFaturaClickListener listener, OnFaturaLongClickListener longClickListener) {
+        this.listener = listener;
+        this.longClickListener = longClickListener;
     }
 
     public void submitList(List<Fatura> list) {
@@ -81,6 +92,12 @@ public class FaturaAdapter extends RecyclerView.Adapter<FaturaAdapter.ViewHolder
 
             applyStatusBadge(itemView.getContext(), fatura.getStatus());
             itemView.setOnClickListener(v -> listener.onFaturaClick(fatura));
+            if (longClickListener != null) {
+                itemView.setOnLongClickListener(v -> {
+                    longClickListener.onFaturaLongClick(fatura);
+                    return true;
+                });
+            }
         }
 
         private void applyStatusBadge(Context ctx, StatusFatura status) {

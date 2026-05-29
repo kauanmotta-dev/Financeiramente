@@ -10,6 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -18,12 +20,16 @@ import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.CartaoListViewModel;
 import com.financeiramente.android.viewmodel.CartaoListViewModelFactory;
+import com.financeiramente.android.viewmodel.CartaoListViewModel.CartaoComUtilizacao;
 import com.financeiramente.core.domain.entity.CartaoCredito;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
 
 public class CartaoListFragment extends Fragment {
+
+    private static final String ARG_SOURCE_SCREEN = "sourceScreen";
+    private static final String ARG_SOURCE_TAB = "sourceTab";
 
     private CartaoListViewModel viewModel;
     private CartaoAdapter adapter;
@@ -49,37 +55,38 @@ public class CartaoListFragment extends Fragment {
 
         RecyclerView rv = view.findViewById(R.id.rv_cartoes);
         tvVazio = view.findViewById(R.id.tv_cartoes_vazio);
-        FloatingActionButton fab = view.findViewById(R.id.fab_novo_cartao);
+        MaterialButton btnNovoCartao = view.findViewById(R.id.btn_novo_cartao);
 
-        view.findViewById(R.id.btn_back_cartao_list).setOnClickListener(v -> {
-            if (!Navigation.findNavController(view).navigateUp()) {
-                Navigation.findNavController(view).navigate(R.id.nav_dashboard);
-            }
-        });
+        view.findViewById(R.id.btn_back_cartao_list).setOnClickListener(v -> voltarParaOrigem(view));
 
         adapter = new CartaoAdapter(new CartaoAdapter.OnCartaoClickListener() {
             @Override
-            public void onCartaoClick(CartaoCredito cartao) {
+            public void onCartaoClick(CartaoComUtilizacao item) {
                 Bundle args = new Bundle();
-                args.putString("cartaoId", cartao.getId());
+                args.putString("cartaoId", item.getCartao().getId());
                 Navigation.findNavController(view)
                         .navigate(R.id.action_cartaoListFragment_to_faturaListFragment, args);
             }
 
             @Override
-            public void onCartaoLongClick(CartaoCredito cartao) {
-                mostrarMenuContextual(view, cartao);
+            public void onCartaoLongClick(CartaoComUtilizacao item) {
+                mostrarMenuContextual(view, item.getCartao());
             }
         });
 
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
         rv.setAdapter(adapter);
 
-        fab.setOnClickListener(v ->
+        btnNovoCartao.setOnClickListener(v ->
                 Navigation.findNavController(view)
                         .navigate(R.id.action_cartaoListFragment_to_cartaoFormFragment));
 
         observarViewModel(view);
+
+        getParentFragmentManager().setFragmentResultListener(
+            "cartao_form_saved",
+            getViewLifecycleOwner(),
+            (requestKey, result) -> viewModel.carregar());
     }
 
     @Override
@@ -125,5 +132,54 @@ public class CartaoListFragment extends Fragment {
                 .setPositiveButton(R.string.confirmar, (d, w) -> viewModel.desativar(cartao.getId()))
                 .setNegativeButton(R.string.cancelar, null)
                 .show();
+    }
+
+    private void voltarParaOrigem(View view) {
+        NavController navController = Navigation.findNavController(view);
+
+        // Prioriza retorno para a tela imediatamente anterior no back stack.
+        if (navController.navigateUp()) {
+            return;
+        }
+
+        int sourceScreen = getArguments() != null
+                ? getArguments().getInt(ARG_SOURCE_SCREEN, R.id.nav_dashboard)
+                : R.id.nav_dashboard;
+
+        if (sourceScreen == R.id.lancamentosListFragment) {
+            Bundle args = new Bundle();
+            int sourceTab = getArguments() != null
+                    ? getArguments().getInt(ARG_SOURCE_TAB, R.id.nav_dashboard)
+                    : R.id.nav_dashboard;
+            args.putInt(ARG_SOURCE_TAB,
+                    sourceTab == R.id.nav_gastos ? R.id.nav_gastos : R.id.nav_dashboard);
+            navController.navigate(
+                    R.id.lancamentosListFragment,
+                    args,
+                    new NavOptions.Builder()
+                            .setLaunchSingleTop(true)
+                            .setPopUpTo(R.id.nav_graph, false)
+                            .build());
+            return;
+        }
+
+        if (sourceScreen == R.id.nav_dashboard || sourceScreen == R.id.nav_configuracoes) {
+            navController.navigate(
+                    sourceScreen,
+                    null,
+                    new NavOptions.Builder()
+                            .setLaunchSingleTop(true)
+                            .setPopUpTo(R.id.nav_graph, false)
+                            .build());
+            return;
+        }
+
+        navController.navigate(
+                R.id.nav_dashboard,
+                null,
+                new NavOptions.Builder()
+                        .setLaunchSingleTop(true)
+                        .setPopUpTo(R.id.nav_graph, false)
+                        .build());
     }
 }

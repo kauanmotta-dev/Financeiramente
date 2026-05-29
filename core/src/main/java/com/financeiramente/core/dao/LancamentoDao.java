@@ -178,8 +178,14 @@ public class LancamentoDao implements LancamentoRepository {
     @Override
     public BigDecimal somarPorTipoEMes(TipoLancamento tipo, int ano, int mes) {
         String prefix = String.format("%04d-%02d", ano, mes);
+        StringBuilder sql = new StringBuilder(
+            "SELECT COALESCE(SUM(l.valor), 0) AS total FROM lancamento l WHERE l.tipo=? AND substr(l.data,1,7)=?"
+        );
+        if (tipo == TipoLancamento.DESPESA) {
+            sql.append(" AND NOT EXISTS (SELECT 1 FROM fatura f WHERE f.lancamento_pagamento_id = l.id)");
+        }
         Optional<BigDecimal> result = db.queryOne(
-            "SELECT COALESCE(SUM(valor), 0) AS total FROM lancamento WHERE tipo=? AND substr(data,1,7)=?",
+            sql.toString(),
             row -> MonetaryValues.fromDouble(row.getDouble("total")),
             tipo.name().toLowerCase(), prefix
         );
@@ -225,6 +231,31 @@ public class LancamentoDao implements LancamentoRepository {
     }
 
     @Override
+    public boolean existePorCompraCartaoEmFaturaPaga(String compraCartaoId) {
+        Optional<Integer> result = db.queryOne(
+            "SELECT COUNT(*) AS cnt " +
+            "FROM lancamento l " +
+            "JOIN fatura f ON f.id = l.fatura_id " +
+            "WHERE l.compra_cartao_id=? AND f.status IN ('pago','pago_parcial')",
+            row -> row.getInt("cnt"),
+            compraCartaoId
+        );
+        return result.orElse(0) > 0;
+    }
+
+    @Override
+    public void deletarPorCompraCartaoEmFaturaNaoPaga(String compraCartaoId) {
+        db.execute(
+            "DELETE FROM lancamento " +
+            "WHERE compra_cartao_id=? AND (" +
+            "fatura_id IS NULL OR " +
+            "fatura_id IN (SELECT id FROM fatura WHERE status NOT IN ('pago','pago_parcial'))" +
+            ")",
+            compraCartaoId
+        );
+    }
+
+    @Override
     public BigDecimal somarPorFatura(String faturaId) {
         Optional<BigDecimal> result = db.queryOne(
             "SELECT COALESCE(SUM(valor), 0) AS total FROM lancamento WHERE fatura_id=?",
@@ -248,8 +279,9 @@ public class LancamentoDao implements LancamentoRepository {
     public BigDecimal somarDespesasSemFaturaPorMes(int ano, int mes) {
         String prefix = String.format("%04d-%02d", ano, mes);
         Optional<BigDecimal> result = db.queryOne(
-            "SELECT COALESCE(SUM(valor), 0) AS total FROM lancamento " +
-            "WHERE tipo='despesa' AND fatura_id IS NULL AND substr(data,1,7)=?",
+            "SELECT COALESCE(SUM(l.valor), 0) AS total FROM lancamento l " +
+            "WHERE l.tipo='despesa' AND l.fatura_id IS NULL AND substr(l.data,1,7)=? " +
+            "AND NOT EXISTS (SELECT 1 FROM fatura f WHERE f.lancamento_pagamento_id = l.id)",
             row -> MonetaryValues.fromDouble(row.getDouble("total")),
             prefix
         );
@@ -262,7 +294,8 @@ public class LancamentoDao implements LancamentoRepository {
         Optional<BigDecimal> result = db.queryOne(
             "SELECT COALESCE(SUM(l.valor), 0) AS total " +
             "FROM lancamento l JOIN categoria c ON l.categoria_id = c.id " +
-            "WHERE c.tipo=? AND l.tipo='despesa' AND substr(l.data,1,7)=?",
+            "WHERE c.tipo=? AND l.tipo='despesa' AND substr(l.data,1,7)=? " +
+            "AND NOT EXISTS (SELECT 1 FROM fatura f WHERE f.lancamento_pagamento_id = l.id)",
             row -> MonetaryValues.fromDouble(row.getDouble("total")),
             tipo.name().toLowerCase(), prefix
         );
@@ -289,7 +322,8 @@ public class LancamentoDao implements LancamentoRepository {
             sql.append("LEFT JOIN lancamento_tag lt ON lt.lancamento_id = l.id ");
         }
 
-        sql.append("WHERE l.tipo='despesa' AND l.categoria_id IS NOT NULL AND l.data BETWEEN ? AND ?");
+        sql.append("WHERE l.tipo='despesa' AND l.categoria_id IS NOT NULL AND l.data BETWEEN ? AND ? ");
+        sql.append("AND NOT EXISTS (SELECT 1 FROM fatura f WHERE f.lancamento_pagamento_id = l.id)");
         args.add(dataInicio);
         args.add(dataFim);
 
@@ -356,6 +390,23 @@ public class LancamentoDao implements LancamentoRepository {
             categoriaId, prefix
         );
         return result.orElse(0);
+    }
+
+    @Override
+    public Optional<String> buscarFaturaIdPorLancamentoPagamento(String lancamentoId) {
+        return db.queryOne(
+            "SELECT id FROM fatura WHERE lancamento_pagamento_id=? LIMIT 1",
+            row -> row.getString("id"),
+            lancamentoId
+        );
+    }
+
+    @Override
+    public void transferirLancamentosDeFatura(String deFaturaId, String paraFaturaId) {
+        db.execute(
+            "UPDATE lancamento SET fatura_id=? WHERE fatura_id=?",
+            paraFaturaId, deFaturaId
+        );
     }
 
     private String aplicarPagina(String sql, Pagina pagina) {

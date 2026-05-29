@@ -12,6 +12,7 @@ import com.financeiramente.core.domain.entity.Lancamento;
 import com.financeiramente.core.domain.entity.Tag;
 import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.TagRepository;
+import com.financeiramente.core.usecase.fatura.AlterarStatusFaturaUseCase;
 import com.financeiramente.core.usecase.lancamento.DeletarLancamentoUseCase;
 import com.financeiramente.core.usecase.lancamento.ListarLancamentosUseCase;
 
@@ -29,6 +30,7 @@ public class LancamentosListViewModel extends ViewModel {
     private final DeletarLancamentoUseCase deletar;
     private final CategoriaRepository categoriaRepository;
     private final TagRepository tagRepository;
+    private final AlterarStatusFaturaUseCase alterarStatusFatura;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -37,6 +39,9 @@ public class LancamentosListViewModel extends ViewModel {
     private final MutableLiveData<Map<String, Categoria>> categorias = new MutableLiveData<>(Collections.emptyMap());
     private final MutableLiveData<Map<String, List<Tag>>> tagsMap = new MutableLiveData<>(Collections.emptyMap());
     private final MutableLiveData<String> erro = new MutableLiveData<>();
+    /** Emitido quando o lançamento a excluir é pagamento de fatura. Value = faturaId. */
+    private final MutableLiveData<String> lancamentoPagamentoFaturaId = new MutableLiveData<>();
+    private String pendingDeleteLancamentoId;
 
     private int ano;
     private int mes;
@@ -44,11 +49,13 @@ public class LancamentosListViewModel extends ViewModel {
     public LancamentosListViewModel(ListarLancamentosUseCase listar,
                                     DeletarLancamentoUseCase deletar,
                                     CategoriaRepository categoriaRepository,
-                                    TagRepository tagRepository) {
+                                    TagRepository tagRepository,
+                                    AlterarStatusFaturaUseCase alterarStatusFatura) {
         this.listar = listar;
         this.deletar = deletar;
         this.categoriaRepository = categoriaRepository;
         this.tagRepository = tagRepository;
+        this.alterarStatusFatura = alterarStatusFatura;
         LocalDate hoje = LocalDate.now();
         this.ano = hoje.getYear();
         this.mes = hoje.getMonthValue();
@@ -85,6 +92,26 @@ public class LancamentosListViewModel extends ViewModel {
                 deletar.executar(id);
                 List<Lancamento> lista = listar.porMes(ano, mes);
                 mainHandler.post(() -> lancamentos.setValue(lista));
+            } catch (DeletarLancamentoUseCase.LancamentoPagamentoFaturaException ex) {
+                pendingDeleteLancamentoId = id;
+                mainHandler.post(() -> lancamentoPagamentoFaturaId.setValue(ex.getFaturaId()));
+            } catch (Exception e) {
+                mainHandler.post(() -> erro.setValue(e.getMessage()));
+            }
+        });
+    }
+
+    /** Chamado quando o usuário confirma a exclusão do pagamento (revertendo o status da fatura). */
+    public void confirmarDeletarPagamento() {
+        String faturaId = lancamentoPagamentoFaturaId.getValue();
+        if (faturaId == null) return;
+        executor.execute(() -> {
+            try {
+                alterarStatusFatura.reverterPagamento(faturaId);
+                lancamentoPagamentoFaturaId.postValue(null);
+                pendingDeleteLancamentoId = null;
+                List<Lancamento> lista = listar.porMes(ano, mes);
+                mainHandler.post(() -> lancamentos.setValue(lista));
             } catch (Exception e) {
                 mainHandler.post(() -> erro.setValue(e.getMessage()));
             }
@@ -104,6 +131,7 @@ public class LancamentosListViewModel extends ViewModel {
     public LiveData<Map<String, Categoria>> getCategorias() { return categorias; }
     public LiveData<Map<String, List<Tag>>> getTagsMap() { return tagsMap; }
     public LiveData<String> getErro() { return erro; }
+    public LiveData<String> getLancamentoPagamentoFaturaId() { return lancamentoPagamentoFaturaId; }
 
     @Override
     protected void onCleared() {

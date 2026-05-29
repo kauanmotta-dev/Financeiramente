@@ -76,7 +76,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/editar"
             android:padding="6dp"
-            android:src="@android:drawable/ic_menu_edit"
+            android:src="@drawable/ic_edit"
             android:tint="?attr/colorOnSurfaceVariant" />
 
     </LinearLayout>

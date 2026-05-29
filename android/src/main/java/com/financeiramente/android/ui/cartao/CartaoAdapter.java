@@ -7,9 +7,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.financeiramente.android.R;
+import com.financeiramente.android.viewmodel.CartaoListViewModel.CartaoComUtilizacao;
 import com.financeiramente.core.domain.entity.CartaoCredito;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
@@ -20,18 +22,18 @@ import java.util.Locale;
 public class CartaoAdapter extends RecyclerView.Adapter<CartaoAdapter.ViewHolder> {
 
     public interface OnCartaoClickListener {
-        void onCartaoClick(CartaoCredito cartao);
-        void onCartaoLongClick(CartaoCredito cartao);
+        void onCartaoClick(CartaoComUtilizacao item);
+        void onCartaoLongClick(CartaoComUtilizacao item);
     }
 
-    private List<CartaoCredito> cartoes = new ArrayList<>();
+    private List<CartaoComUtilizacao> cartoes = new ArrayList<>();
     private final OnCartaoClickListener listener;
 
     public CartaoAdapter(OnCartaoClickListener listener) {
         this.listener = listener;
     }
 
-    public void submitList(List<CartaoCredito> list) {
+    public void submitList(List<CartaoComUtilizacao> list) {
         this.cartoes = list != null ? new ArrayList<>(list) : new ArrayList<>();
         notifyDataSetChanged();
     }
@@ -46,8 +48,8 @@ public class CartaoAdapter extends RecyclerView.Adapter<CartaoAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        CartaoCredito cartao = cartoes.get(position);
-        holder.bind(cartao);
+        CartaoComUtilizacao item = cartoes.get(position);
+        holder.bind(item);
     }
 
     @Override
@@ -75,7 +77,8 @@ public class CartaoAdapter extends RecyclerView.Adapter<CartaoAdapter.ViewHolder
             tvVencimento = itemView.findViewById(R.id.tv_cartao_vencimento);
         }
 
-        void bind(CartaoCredito cartao) {
+        void bind(CartaoComUtilizacao item) {
+            CartaoCredito cartao = item.getCartao();
             tvIcone.setText(cartao.getIcone());
             tvNome.setText(cartao.getNome());
             tvBandeira.setText(cartao.getBandeira() != null ? cartao.getBandeira().name() : "");
@@ -83,10 +86,36 @@ public class CartaoAdapter extends RecyclerView.Adapter<CartaoAdapter.ViewHolder
                     "Vencimento: dia %d", cartao.getDiaVencimento()));
 
             if (cartao.getLimite() != null && cartao.getLimite().doubleValue() > 0) {
-                tvLimiteTotal.setText(String.format(Locale.getDefault(), "Limite: R$ %.2f", cartao.getLimite()));
+                double limite = cartao.getLimite().doubleValue();
+                double utilizado = item.getUtilizado();
+                int pct = (int) Math.min(100.0, item.getPercentualUso());
+
+                tvLimiteTotal.setText(String.format(Locale.getDefault(), "Limite: R$ %.2f", limite));
+                tvUtilizado.setText(String.format(Locale.getDefault(), "Utilizado: R$ %.2f", utilizado));
                 tvLimiteTotal.setVisibility(View.VISIBLE);
                 tvUtilizado.setVisibility(View.VISIBLE);
                 pbLimite.setVisibility(View.VISIBLE);
+
+                // Cor dinâmica: verde < 50%, laranja 50-75%, vermelho > 75%
+                int corIndicador;
+                if (pct < 50) {
+                    corIndicador = ContextCompat.getColor(itemView.getContext(), R.color.verde_success);
+                } else if (pct <= 75) {
+                    corIndicador = ContextCompat.getColor(itemView.getContext(), R.color.laranja_warning);
+                } else {
+                    corIndicador = ContextCompat.getColor(itemView.getContext(), R.color.vermelho_error);
+                }
+                pbLimite.setIndicatorColor(corIndicador);
+                pbLimite.setTrackColor(ContextCompat.getColor(itemView.getContext(), R.color.cinza_divider));
+                pbLimite.setProgressCompat(pct, false);
+
+                double disponivel = limite - utilizado;
+                tvLimiteDisponivel.setText(String.format(Locale.getDefault(), "R$ %.2f", disponivel));
+                tvLimiteDisponivel.setTextColor(
+                        pct >= 75
+                        ? ContextCompat.getColor(itemView.getContext(), R.color.vermelho_error)
+                        : ContextCompat.getColor(itemView.getContext(), R.color.verde_success));
+                tvLimiteDisponivel.setVisibility(View.VISIBLE);
             } else {
                 tvLimiteTotal.setVisibility(View.GONE);
                 tvUtilizado.setVisibility(View.GONE);
@@ -94,14 +123,9 @@ public class CartaoAdapter extends RecyclerView.Adapter<CartaoAdapter.ViewHolder
                 tvLimiteDisponivel.setVisibility(View.GONE);
             }
 
-            try {
-                itemView.getBackground();
-                // Set card color accent via stroke
-            } catch (Exception ignored) {}
-
-            itemView.setOnClickListener(v -> listener.onCartaoClick(cartao));
+            itemView.setOnClickListener(v -> listener.onCartaoClick(item));
             itemView.setOnLongClickListener(v -> {
-                listener.onCartaoLongClick(cartao);
+                listener.onCartaoLongClick(item);
                 return true;
             });
         }

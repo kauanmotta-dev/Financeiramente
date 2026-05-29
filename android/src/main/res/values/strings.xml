@@ -210,28 +210,46 @@
     <string name="relatorio_resumo_recebido">Recebido %s</string>
     <string name="relatorio_resumo_gastos">Gastos %s</string>
     <string name="relatorio_resumo_percentual">%d%%</string>
+    <string name="relatorio_distribuicao_tipo_categoria">Distribuição: essenciais, não essenciais, sem categoria e investido</string>
+    <string name="relatorio_distribuicao_categorias">Distribuição entre categorias</string>
+    <string name="relatorio_distribuicao_tags">Distribuição entre tags</string>
+    <string name="relatorio_evolucao">Evolução</string>
+    <string name="relatorio_gastos">Gastos</string>
+    <string name="relatorio_receitas">Receitas</string>
+    <string name="relatorio_investido">Investido</string>
+    <string name="relatorio_sem_categoria">Sem categoria</string>
+    <string name="relatorio_sem_tag">Sem tag</string>
 
     <string name="gastos_secao_essenciais">Despesas Essenciais</string>
     <string name="gastos_secao_nao_essenciais">Despesas Não Essenciais</string>
+    <string name="gastos_secao_sem_categoria">Despesas Sem Categoria</string>
     <string name="gastos_secao_receitas">Receitas</string>
+    <string name="gastos_secao_investimentos">Investimentos</string>
     <string name="gastos_secao_com_valor">%1$s%2$s  •  %3$s</string>
     <string name="gastos_secao_resumo">Usado %1$s de %2$s (%3$d%%)</string>
     <string name="gastos_secao_resumo_sem_limite">Usado %1$s</string>
+    <string name="gastos_secao_resumo_investimentos">Investido %1$s no mês</string>
     <string name="gastos_utilizado">Utilizado</string>
     <string name="gastos_total">Total da categoria</string>
     <string name="gastos_total_recebido">Total recebido</string>
     <string name="gastos_total_gasto">Total gasto</string>
     <string name="gastos_total_previsto">Total previsto</string>
+    <string name="gastos_total_investido">Total investido</string>
     <string name="gastos_modo_gastos">Gastos</string>
     <string name="gastos_modo_recebido">Recebido</string>
     <string name="gastos_abrir_relatorios">Ver relatórios</string>
     <string name="gastos_abrir_graficos">Ver gráficos</string>
     <string name="gastos_resumo_valores">%1$s / %2$s</string>
+    <string name="gastos_resumo_credito_debito">Crédito %1$s • Débito/Outros %2$s</string>
+    <string name="gastos_resumo_meta_mes">Investido no mês %1$s</string>
+    <string name="gastos_resumo_meta_total">Acumulado %1$s de %2$s</string>
+    <string name="gastos_resumo_meta_total_sem_objetivo">Acumulado %1$s</string>
     <string name="gastos_resumo_mae">Limite %1$s • Usado %2$s</string>
     <string name="gastos_mes_anterior">Mês anterior</string>
     <string name="gastos_proximo_mes">Próximo mês</string>
     <string name="gastos_sem_subcategorias">Sem subcategorias</string>
     <string name="gastos_acessibilidade_categoria">Categoria %1$s. Utilizado: %2$s. Total: %3$s.</string>
+    <string name="gastos_acessibilidade_meta">Meta %1$s. Investido no mês: %2$s. Objetivo: %3$s.</string>
 
     <!-- Épico 8 — Empty States -->
     <string name="empty_lancamentos_title">Sem lançamentos aqui</string>
@@ -283,7 +301,12 @@
     <string name="fatura_status_aberto">Aberta</string>
     <string name="fatura_status_fechado">Fechada</string>
     <string name="fatura_status_pago">Paga</string>
-    <string name="fatura_status_pago_parcial">Pag. Parcial</string>
+    <string name="fatura_status_pago_parcial">Paga parcialmente</string>
+    <string name="fatura_alterar_status">Alterar status da fatura</string>
+    <string name="fatura_valor_total_hint">Valor total da fatura (R$)</string>
+    <string name="fatura_valor_pago_hint">Valor pago (R$)</string>
+    <string name="fatura_valor_pago_parcial_hint">Valor pago parcialmente (R$)</string>
+    <string name="fatura_valor_invalido">Valor inválido. Verifique os campos.</string>
     <string name="fatura_pagar">Pagar Fatura</string>
     <string name="fatura_vence_em">Vencimento: %s</string>
     <string name="fatura_fecha_em">Fechamento: %s</string>
@@ -292,13 +315,44 @@
     <string name="fatura_sem_lancamentos">Nenhum lançamento nesta fatura</string>
     <string name="fatura_detalhe_titulo">Fatura %s</string>
     <string name="fatura_detalhe">Detalhe da fatura</string>
+    <string name="faturas_ir_para_compras">Ir para compras no cartão</string>
     <string name="fatura_paga_total">Fatura paga com sucesso!</string>
     <string name="fatura_paga_parcial">Pagamento registrado. Saldo devedor: %s</string>
+    <string name="fatura_alterar_status_msg">Deseja alterar o status desta fatura?</string>
+    <string name="fatura_marcar_como_aberta">Marcar como aberta</string>
+    <string name="fatura_marcar_como_fechada">Marcar como fechada</string>
+    <string name="fatura_abrir">Abrir fatura</string>
+    <string name="fatura_fechar">Fechar fatura</string>
+    <string name="fatura_marcar_como_paga">Marcar como paga</string>
+    <string name="fatura_marcar_como_paga_parcialmente">Marcar como paga parcialmente</string>
+    <string name="fatura_reverter_pagamento">Excluir pagamento da fatura</string>
+    <string name="fatura_reabrir_ou_fechar">Voltar fatura para aberta ou fechada</string>
+    <string name="fatura_voltar_para_aberta">Voltar para Aberta</string>
+    <string name="fatura_voltar_para_fechada">Voltar para Fechada</string>
+    <string name="fatura_reverter_pagamento_msg">Isso excluirá o lançamento de pagamento, o ajuste de fatura e qualquer saldo anterior criado na próxima fatura. Deseja continuar?</string>
+    <string name="fatura_ver_detalhe">Ver detalhes</string>
+    <string name="fatura_antecipar_lancamentos">Antecipar lançamentos</string>
+    <string name="fatura_antecipar_msg">Os lançamentos desta fatura futura serão movidos para a fatura aberta atual do cartão. Deseja continuar?</string>
+    <string name="fatura_lancamentos_antecipados">Lançamentos antecipados com sucesso!</string>
+    <string name="fatura_pagamento_excluido_aviso_titulo">Excluir pagamento de fatura</string>
+    <string name="fatura_pagamento_excluido_aviso_msg">Este lançamento é o pagamento de uma fatura. Excluir irá reverter o status da fatura para Fechada. Deseja continuar?</string>
+    <string name="fatura_acao_titulo">O que você quer fazer?</string>
+    <string name="fatura_acao_excluir_compra_cartao">Excluir compra do cartão</string>
+    <string name="fatura_acao_editar_compra_cartao">Editar compra do cartão</string>
+    <string name="fatura_acao_editar_lancamento">Editar lançamento</string>
+    <string name="fatura_acao_adiantar_lancamento">Adiantar lançamento</string>
+    <string name="fatura_acao_adiantar_lancamento_msg">Este lançamento será movido para a fatura aberta atual do cartão. Deseja continuar?</string>
+    <string name="fatura_acao_adiantar_indisponivel">Só é possível adiantar lançamento de fatura futura e não paga.</string>
+    <string name="fatura_lancamento_sem_edicao">Lançamentos desta fatura não podem ser alterados. Use apenas as ações permitidas.</string>
+    <string name="lancamento_ver_cartoes">Ver cartões</string>
+    <string name="gastos_legenda_credito">Crédito</string>
+    <string name="gastos_legenda_debito">Débito</string>
     <!-- Pagamento de fatura -->
     <string name="pagar_fatura_valor_extrato">Valor do extrato (R$)</string>
     <string name="pagar_fatura_valor_pago">Valor pago (R$)</string>
     <string name="pagar_fatura_preview">Se pagar R$%1$.2f: %2$s</string>
     <string name="pagar_fatura_saldo_devedor">Saldo devedor: R$%.2f</string>
+    <string name="fatura_valor_pago_label">Pago: %1$s</string>
     <!-- Lançamento com cartão -->
     <string name="lancamento_pagar_cartao">Pagar com cartão</string>
     <string name="lancamento_selecionar_cartao">Selecionar cartão</string>
@@ -309,9 +363,12 @@
 
     <!-- Parcelamento / confirmação de lançamento -->
     <string name="lancamento_parcelado">Parcelado</string>
+    <string name="lancamento_recorrente">Recorrente</string>
     <string name="lancamento_a_vista">À vista</string>
     <string name="lancamento_qtd_parcelas">Quantidade de parcelas</string>
-    <string name="lancamento_valor_parcela">Valor da parcela</string>
+    <string name="lancamento_valor_parcela">Valor da parcela (R$)</string>
+    <string name="lancamento_valor_total">Valor total da compra (R$)</string>
+    <string name="lancamento_dia_recorrencia">Dia da recorrência (1-28)</string>
     <string name="lancamento_confirmar_titulo">Confirmar lançamento</string>
     <string name="lancamento_conf_label_valor">Valor:</string>
     <string name="lancamento_conf_label_tipo">Tipo:</string>
@@ -320,6 +377,8 @@
     <string name="lancamento_conf_label_tags">Tags:</string>
     <string name="lancamento_conf_label_cartao">Cartão:</string>
     <string name="lancamento_conf_label_parcelas">Parcelas:</string>
+    <string name="lancamento_conf_label_recorrencia">Recorrência:</string>
+    <string name="lancamento_conf_valor_recorrencia">Dia %1$d</string>
     <string name="lancamento_conf_label_descricao">Descrição:</string>
     <!-- Sem Categoria -->
     <string name="sem_categoria">Sem Categoria</string>
@@ -328,15 +387,24 @@
     <string name="meta_valor_inicial_hint">Montante já disponível antes dos aportes</string>
     <!-- Lançamentos: seção cartões -->
     <string name="lancamentos_cartoes_titulo">Cartões</string>
-    <string name="recorrencias_cartao_titulo">Cobranças recorrentes</string>
-    <string name="recorrencias_cartao_vazio">Nenhuma cobrança recorrente ativa neste cartão.</string>
+    <string name="compras_cartao_titulo">Compras no Crédito</string>
+    <string name="compras_cartao_subtitulo">Acompanhe compras parceladas e recorrentes em uma visão mais clara.</string>
+    <string name="compras_cartao_secao_recorrentes">Recorrentes</string>
+    <string name="compras_cartao_secao_parceladas">Parceladas</string>
+    <string name="compras_cartao_resumo_recorrentes">Lista de cobranças recorrentes ativas.</string>
+    <string name="compras_cartao_resumo_parceladas">Parcelas futuras e compras em andamento.</string>
+    <string name="compras_cartao_resumo_formatado">%1$d %2$s</string>
+    <string name="compras_cartao_vazio_recorrentes">Nenhuma compra recorrente neste cartão.</string>
+    <string name="compras_cartao_vazio_parceladas">Nenhuma compra parcelada neste cartão.</string>
+    <string name="recorrencias_cartao_titulo">Compras no cartão</string>
+    <string name="recorrencias_cartao_vazio">Nenhuma compra no cartão neste cartão.</string>
     <string name="recorrencia_cartao_detalhes">Dia %1$d • %2$s</string>
-    <string name="cancelar_recorrencia_cartao_titulo">Cancelar recorrência</string>
-    <string name="cancelar_recorrencia_cartao_mensagem">Deseja cancelar "%s"? As cobranças futuras serão interrompidas.</string>
+    <string name="recorrencia_cartao_detalhes_com_data">%1$s • Dia %2$d • %3$s</string>
     <string name="excluir_compra_cartao_titulo">Excluir compra no cartão</string>
     <string name="excluir_compra_cartao_mensagem">Escolha se deseja excluir apenas esta cobrança ou toda a compra parcelada/recorrente.</string>
     <string name="excluir_esta_parcela">Excluir só esta cobrança</string>
     <string name="excluir_todas_parcelas">Excluir compra inteira</string>
     <string name="compra_cartao_excluida">Compra no cartão excluída</string>
+    <string name="editar_compra_cartao">Editar compra no cartão</string>
 
 </resources>

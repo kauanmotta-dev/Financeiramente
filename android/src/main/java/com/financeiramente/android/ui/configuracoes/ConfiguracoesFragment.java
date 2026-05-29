@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+import androidx.navigation.NavOptions;
 
 import com.financeiramente.android.R;
 
@@ -24,19 +25,25 @@ public class ConfiguracoesFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        view.findViewById(R.id.btn_back_configuracoes).setOnClickListener(v -> {
-            if (!Navigation.findNavController(v).navigateUp()) {
-                Navigation.findNavController(v).navigate(R.id.nav_dashboard);
-            }
-        });
+        view.findViewById(R.id.btn_back_configuracoes).setOnClickListener(v ->
+            Navigation.findNavController(v).navigate(
+                R.id.nav_dashboard,
+                null,
+                new NavOptions.Builder()
+                    .setLaunchSingleTop(true)
+                    .setPopUpTo(R.id.nav_graph, false)
+                    .build()));
         view.findViewById(R.id.btn_categorias).setOnClickListener(v ->
                 Navigation.findNavController(v)
                         .navigate(R.id.action_configuracoesFragment_to_categoriasFragment));
         view.findViewById(R.id.btn_tags).setOnClickListener(v ->
             Navigation.findNavController(v)
                 .navigate(R.id.action_configuracoesFragment_to_tagsFragment));
-        view.findViewById(R.id.btn_cartoes).setOnClickListener(v ->
-                Navigation.findNavController(v)
-                        .navigate(R.id.action_configuracoesFragment_to_nav_cartoes));
+        view.findViewById(R.id.btn_cartoes).setOnClickListener(v -> {
+            Bundle args = new Bundle();
+            args.putInt("sourceScreen", R.id.nav_configuracoes);
+            Navigation.findNavController(v)
+                .navigate(R.id.action_configuracoesFragment_to_nav_cartoes, args);
+        });
     }
 }

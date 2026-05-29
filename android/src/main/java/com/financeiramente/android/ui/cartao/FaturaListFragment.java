@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -12,28 +11,26 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.financeiramente.android.R;
 import com.financeiramente.android.app.AppContext;
 import com.financeiramente.android.viewmodel.FaturaListViewModel;
 import com.financeiramente.android.viewmodel.FaturaListViewModelFactory;
-import com.financeiramente.core.domain.entity.CompraCartao;
-import com.financeiramente.core.domain.entity.Fatura;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class FaturaListFragment extends Fragment {
 
     private FaturaListViewModel viewModel;
-    private FaturaAdapter adapter;
+    private FaturaPagerAdapter pagerAdapter;
+    private ViewPager2 vpFaturas;
     private TextView tvVazio;
-    private TextView tvRecorrentesVazio;
-    private LinearLayout layoutRecorrentes;
+    private boolean posicionadoNoMesAtual = false;
 
     @Nullable
     @Override
@@ -49,26 +46,36 @@ public class FaturaListFragment extends Fragment {
         AppContext ctx = AppContext.get(requireContext());
         FaturaListViewModelFactory factory = new FaturaListViewModelFactory(
                 ctx.getCoreServices().getFaturaRepository(),
-            ctx.getAtualizarStatusFaturasUseCase(),
-            ctx.getListarComprasCartaoUseCase(),
-            ctx.getCancelarRecorrenciaCartaoUseCase());
+            ctx.getCoreServices().getLancamentoRepository(),
+                ctx.getAtualizarStatusFaturasUseCase(),
+                ctx.getAlterarStatusFaturaUseCase(),
+                ctx.getListarComprasCartaoUseCase(),
+                ctx.getCancelarRecorrenciaCartaoUseCase(),
+                ctx.getDeletarCompraCartaoUseCase());
         viewModel = new ViewModelProvider(this, factory).get(FaturaListViewModel.class);
 
         String cartaoId = getArguments() != null ? getArguments().getString("cartaoId") : null;
         tvVazio = view.findViewById(R.id.tv_faturas_vazio);
-        tvRecorrentesVazio = view.findViewById(R.id.tv_recorrentes_vazio);
-        layoutRecorrentes = view.findViewById(R.id.layout_recorrentes_lista);
+
         view.findViewById(R.id.btn_voltar_fatura_list).setOnClickListener(
                 v -> Navigation.findNavController(view).navigateUp());
 
-        adapter = new FaturaAdapter(fatura -> abrirDetalhe(view, fatura));
-        RecyclerView rv = view.findViewById(R.id.rv_faturas);
-        rv.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rv.setAdapter(adapter);
+        view.findViewById(R.id.btn_ir_compras_cartao).setOnClickListener(v -> {
+            Bundle args = new Bundle();
+            args.putString("cartaoId", cartaoId);
+            Navigation.findNavController(view)
+                    .navigate(R.id.action_faturaListFragment_to_compraCartaoListFragment, args);
+        });
+
+        pagerAdapter = new FaturaPagerAdapter(fatura -> abrirDetalhe(view, fatura));
+        vpFaturas = view.findViewById(R.id.vp_faturas);
+        vpFaturas.setAdapter(pagerAdapter);
+        vpFaturas.setOffscreenPageLimit(2);
 
         observarViewModel(view);
 
         if (cartaoId != null) {
+            posicionadoNoMesAtual = false;
             viewModel.init(cartaoId);
         }
     }
@@ -76,67 +83,68 @@ public class FaturaListFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        posicionadoNoMesAtual = false;
         if (viewModel != null) viewModel.carregar();
     }
 
-    private void abrirDetalhe(View view, Fatura fatura) {
+    private void abrirDetalhe(View view, FaturaListViewModel.FaturaResumo resumo) {
         Bundle args = new Bundle();
-        args.putString("faturaId", fatura.getId());
+        args.putString("faturaId", resumo.getFatura().getId());
         Navigation.findNavController(view)
                 .navigate(R.id.action_faturaListFragment_to_faturaDetalheFragment, args);
     }
 
     private void observarViewModel(View view) {
         viewModel.getFaturas().observe(getViewLifecycleOwner(), faturas -> {
-            adapter.submitList(faturas);
-            tvVazio.setVisibility(faturas == null || faturas.isEmpty() ? View.VISIBLE : View.GONE);
-        });
+            boolean vazio = faturas == null || faturas.isEmpty();
+            tvVazio.setVisibility(vazio ? View.VISIBLE : View.GONE);
+            vpFaturas.setVisibility(vazio ? View.GONE : View.VISIBLE);
 
-        viewModel.getCobrancasRecorrentes().observe(getViewLifecycleOwner(), this::renderRecorrentes);
+            if (!vazio) {
+                List<FaturaListViewModel.FaturaResumo> ordenadas = new ArrayList<>(faturas);
+                ordenadas.sort(Comparator.comparing(this::toYearMonthOrMin));
+                pagerAdapter.submitList(ordenadas);
+                posicionarNoMesAtual(ordenadas);
+            }
+        });
 
         viewModel.getErro().observe(getViewLifecycleOwner(), msg -> {
             if (msg != null) Snackbar.make(view, msg, Snackbar.LENGTH_LONG).show();
         });
     }
 
-    private void renderRecorrentes(List<CompraCartao> recorrentes) {
-        if (layoutRecorrentes == null || tvRecorrentesVazio == null) {
-            return;
+    private void posicionarNoMesAtual(List<FaturaListViewModel.FaturaResumo> faturas) {
+        if (posicionadoNoMesAtual) return;
+        int idx = indexOfMesAtualOuProximo(faturas);
+        if (idx < 0) {
+            idx = pagerAdapter.indexOfCurrentMonth();
         }
-        layoutRecorrentes.removeAllViews();
-        if (recorrentes == null || recorrentes.isEmpty()) {
-            tvRecorrentesVazio.setVisibility(View.VISIBLE);
-            return;
+        if (idx < 0) {
+            idx = faturas.size() - 1;
         }
-
-        tvRecorrentesVazio.setVisibility(View.GONE);
-        for (CompraCartao compra : recorrentes) {
-            View item = LayoutInflater.from(requireContext())
-                    .inflate(R.layout.item_recorrencia_cartao, layoutRecorrentes, false);
-
-            TextView tvDescricao = item.findViewById(R.id.tv_recorrencia_descricao);
-            TextView tvDetalhes = item.findViewById(R.id.tv_recorrencia_detalhes);
-            MaterialButton btnCancelar = item.findViewById(R.id.btn_cancelar_recorrencia);
-
-            tvDescricao.setText(compra.getDescricao());
-            String detalhes = getString(
-                    R.string.recorrencia_cartao_detalhes,
-                    compra.getDiaRecorrencia(),
-                    String.format(java.util.Locale.getDefault(), "R$ %.2f", compra.getValorTotal()));
-            tvDetalhes.setText(detalhes);
-
-            btnCancelar.setOnClickListener(v -> confirmarCancelamento(compra));
-            layoutRecorrentes.addView(item);
-        }
+        vpFaturas.setCurrentItem(idx, false);
+        posicionadoNoMesAtual = true;
     }
 
-    private void confirmarCancelamento(CompraCartao compra) {
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.cancelar_recorrencia_cartao_titulo)
-                .setMessage(getString(R.string.cancelar_recorrencia_cartao_mensagem, compra.getDescricao()))
-                .setPositiveButton(R.string.confirmar,
-                        (dialog, which) -> viewModel.cancelarRecorrencia(compra.getId()))
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
+    private int indexOfMesAtualOuProximo(List<FaturaListViewModel.FaturaResumo> faturas) {
+        YearMonth mesAtual = YearMonth.now();
+        for (int i = 0; i < faturas.size(); i++) {
+            try {
+                YearMonth mesFatura = YearMonth.parse(faturas.get(i).getFatura().getMes());
+                if (!mesFatura.isBefore(mesAtual)) {
+                    return i;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return -1;
+    }
+
+    private YearMonth toYearMonthOrMin(FaturaListViewModel.FaturaResumo resumo) {
+        try {
+            return YearMonth.parse(resumo.getFatura().getMes());
+        } catch (Exception e) {
+            return YearMonth.of(1900, 1);
+        }
     }
 }

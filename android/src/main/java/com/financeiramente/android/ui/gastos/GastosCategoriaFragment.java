@@ -45,6 +45,7 @@ public class GastosCategoriaFragment extends Fragment {
     private double totalRecebidoAtual = 0d;
     private double totalGastoAtual = 0d;
     private double totalPrevistoAtual = 0d;
+    private double totalInvestidoAtual = 0d;
     private GastosCategoriaViewModel.ModoExibicao modoAtual = GastosCategoriaViewModel.ModoExibicao.GASTOS;
 
     @Nullable
@@ -61,7 +62,9 @@ public class GastosCategoriaFragment extends Fragment {
         AppContext appContext = AppContext.get(requireContext());
         GastosCategoriaViewModelFactory factory = new GastosCategoriaViewModelFactory(
                 appContext.getCoreServices().getCategoriaRepository(),
-                appContext.getCoreServices().getLancamentoRepository());
+            appContext.getCoreServices().getLancamentoRepository(),
+            appContext.getCoreServices().getMetaRepository(),
+            appContext.getCoreServices().getAporteMetaRepository());
         viewModel = new ViewModelProvider(this, factory).get(GastosCategoriaViewModel.class);
 
         tvCompetencia = view.findViewById(R.id.tv_competencia);
@@ -150,6 +153,11 @@ public class GastosCategoriaFragment extends Fragment {
             atualizarResumoModo();
         });
 
+        viewModel.getTotalInvestido().observe(getViewLifecycleOwner(), valor -> {
+            totalInvestidoAtual = valor != null ? valor : 0d;
+            atualizarResumoModo();
+        });
+
         viewModel.getErro().observe(getViewLifecycleOwner(), msg -> {
             if (msg != null && !msg.trim().isEmpty()) {
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
@@ -203,7 +211,10 @@ public class GastosCategoriaFragment extends Fragment {
             tvTotalPrimarioLabel.setText(R.string.gastos_total_recebido);
             tvTotalRecebido.setText(currencyFormat.format(totalRecebidoAtual));
             tvTotalRecebido.setTextColor(ContextCompat.getColor(requireContext(), R.color.verde_success));
-            layoutTotalSecundario.setVisibility(View.GONE);
+            tvTotalSecundarioLabel.setText(R.string.gastos_total_investido);
+            tvTotalGasto.setText(currencyFormat.format(totalInvestidoAtual));
+            tvTotalGasto.setTextColor(ContextCompat.getColor(requireContext(), R.color.investimento_destaque));
+            layoutTotalSecundario.setVisibility(View.VISIBLE);
             return;
         }
 

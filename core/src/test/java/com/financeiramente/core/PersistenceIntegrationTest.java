@@ -75,7 +75,7 @@ class PersistenceIntegrationTest {
 
         int totalDepois = categoriaDao.listarTodas().size();
         assertEquals(totalAntes, totalDepois);
-        assertEquals(2, driver.getSchemaVersion());
+        assertEquals(3, driver.getSchemaVersion());
     }
 
     @Test

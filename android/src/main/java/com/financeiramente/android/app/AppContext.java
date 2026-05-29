@@ -7,6 +7,8 @@ import com.financeiramente.android.db.AndroidDatabaseDriver;
 import com.financeiramente.android.logging.AndroidAppLogger;
 import com.financeiramente.core.bootstrap.CoreBootstrap;
 import com.financeiramente.core.bootstrap.CoreServices;
+import com.financeiramente.core.usecase.fatura.AlterarStatusFaturaUseCase;
+import com.financeiramente.core.usecase.fatura.AnteciparLancamentosFaturaUseCase;
 import com.financeiramente.core.usecase.fatura.AtualizarStatusFaturasUseCase;
 import com.financeiramente.core.usecase.saldo.CalcularSaldoDashboardUseCase;
 import com.financeiramente.core.usecase.meta.CalcularTotalAportesMesUseCase;
@@ -144,4 +146,6 @@ public class AppContext {
         return coreServices.getAtualizarStatusFaturasUseCase();
     }
     public PagarFaturaUseCase getPagarFaturaUseCase() { return coreServices.getPagarFaturaUseCase(); }
+    public AlterarStatusFaturaUseCase getAlterarStatusFaturaUseCase() { return coreServices.getAlterarStatusFaturaUseCase(); }
+    public AnteciparLancamentosFaturaUseCase getAnteciparLancamentosUseCase() { return coreServices.getAnteciparLancamentosUseCase(); }
 }

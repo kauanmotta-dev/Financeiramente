@@ -45,6 +45,8 @@ public interface LancamentoRepository {
 
     List<Lancamento> listarPorCompraCartao(String compraCartaoId);
     List<Lancamento> listarPorCompraCartao(String compraCartaoId, Pagina pagina);
+    boolean existePorCompraCartaoEmFaturaPaga(String compraCartaoId);
+    void deletarPorCompraCartaoEmFaturaNaoPaga(String compraCartaoId);
     BigDecimal somarPorTipoEMes(TipoLancamento tipo, int ano, int mes);
     BigDecimal somarPorCategoria(String categoriaId, int ano, int mes);
     BigDecimal somarPorFatura(String faturaId);
@@ -60,4 +62,10 @@ public interface LancamentoRepository {
     int contarPorMes(int ano, int mes);
     int contarPorPeriodo(String dataInicio, String dataFim);
     int contarPorCategoria(String categoriaId, int ano, int mes);
+
+    /** Retorna o faturaId referenciado em fatura.lancamento_pagamento_id para este lançamento, se existir. */
+    Optional<String> buscarFaturaIdPorLancamentoPagamento(String lancamentoId);
+
+    /** Move todos os lançamentos de uma fatura para outra (antecipação). */
+    void transferirLancamentosDeFatura(String deFaturaId, String paraFaturaId);
 }
