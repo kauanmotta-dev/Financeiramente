@@ -69,6 +69,8 @@ public class MetasFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        carregamentoInicialConcluido = false;
+
         AppContext ctx = AppContext.get(requireContext());
         MetasViewModelFactory factory = new MetasViewModelFactory(
                 ctx.getCriarMetaUseCase(),

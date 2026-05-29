@@ -50,9 +50,13 @@ public class CompraCartao {
     public long getAtualizadoEm() { return atualizadoEm; }
     public void setAtualizadoEm(long atualizadoEm) { this.atualizadoEm = atualizadoEm; }
 
-    public void cancelarRecorrencia(long atualizadoEm) {
+    public void desativar(long atualizadoEm) {
         this.ativo = false;
         this.atualizadoEm = atualizadoEm;
+    }
+
+    public void cancelarRecorrencia(long atualizadoEm) {
+        desativar(atualizadoEm);
     }
 
     public static Builder builder(String id) { return new Builder(id); }

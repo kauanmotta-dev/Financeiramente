@@ -12,6 +12,8 @@ import com.financeiramente.core.repository.CartaoCreditoRepository;
 import com.financeiramente.core.repository.FaturaRepository;
 import com.financeiramente.core.usecase.cartao.DesativarCartaoCreditoUseCase;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,7 +27,7 @@ public class CartaoListViewModel extends ViewModel {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-    private final MutableLiveData<List<CartaoCredito>> cartoes = new MutableLiveData<>();
+    private final MutableLiveData<List<CartaoComUtilizacao>> cartoes = new MutableLiveData<>();
     private final MutableLiveData<String> erro = new MutableLiveData<>();
     private final MutableLiveData<Boolean> sucesso = new MutableLiveData<>();
 
@@ -42,7 +44,18 @@ public class CartaoListViewModel extends ViewModel {
         executor.execute(() -> {
             try {
                 List<CartaoCredito> lista = cartaoRepository.listarAtivos();
-                mainHandler.post(() -> cartoes.setValue(lista));
+                List<CartaoComUtilizacao> comUtil = new ArrayList<>();
+                for (CartaoCredito c : lista) {
+                    double limite = c.getLimite() != null ? c.getLimite().doubleValue() : 0.0;
+                    double utilizado = 0.0;
+                    double pct = 0.0;
+                    if (limite > 0.0) {
+                        utilizado = faturaRepository.somarTotalUtilizadoPorCartao(c.getId()).doubleValue();
+                        pct = Math.min(100.0, (utilizado / limite) * 100.0);
+                    }
+                    comUtil.add(new CartaoComUtilizacao(c, utilizado, pct));
+                }
+                mainHandler.post(() -> cartoes.setValue(comUtil));
             } catch (Exception e) {
                 mainHandler.post(() -> erro.setValue(e.getMessage()));
             }
@@ -54,8 +67,19 @@ public class CartaoListViewModel extends ViewModel {
             try {
                 desativarCartao.executar(cartaoId);
                 List<CartaoCredito> lista = cartaoRepository.listarAtivos();
+                List<CartaoComUtilizacao> comUtil = new ArrayList<>();
+                for (CartaoCredito c : lista) {
+                    double limite = c.getLimite() != null ? c.getLimite().doubleValue() : 0.0;
+                    double utilizado = 0.0;
+                    double pct = 0.0;
+                    if (limite > 0.0) {
+                        utilizado = faturaRepository.somarTotalUtilizadoPorCartao(c.getId()).doubleValue();
+                        pct = Math.min(100.0, (utilizado / limite) * 100.0);
+                    }
+                    comUtil.add(new CartaoComUtilizacao(c, utilizado, pct));
+                }
                 mainHandler.post(() -> {
-                    cartoes.setValue(lista);
+                    cartoes.setValue(comUtil);
                     sucesso.setValue(true);
                 });
             } catch (Exception e) {
@@ -64,15 +88,23 @@ public class CartaoListViewModel extends ViewModel {
         });
     }
 
-    public double getLimiteUtilizado(String cartaoId) {
-        try {
-            return faturaRepository.somarTotalUtilizadoPorCartao(cartaoId).doubleValue();
-        } catch (Exception e) {
-            return 0.0;
-        }
-    }
-
-    public LiveData<List<CartaoCredito>> getCartoes() { return cartoes; }
+    public LiveData<List<CartaoComUtilizacao>> getCartoes() { return cartoes; }
     public LiveData<String> getErro() { return erro; }
     public LiveData<Boolean> getSucesso() { return sucesso; }
+
+    public static final class CartaoComUtilizacao {
+        private final CartaoCredito cartao;
+        private final double utilizado;
+        private final double percentualUso;
+
+        public CartaoComUtilizacao(CartaoCredito cartao, double utilizado, double percentualUso) {
+            this.cartao = cartao;
+            this.utilizado = utilizado;
+            this.percentualUso = percentualUso;
+        }
+
+        public CartaoCredito getCartao() { return cartao; }
+        public double getUtilizado() { return utilizado; }
+        public double getPercentualUso() { return percentualUso; }
+    }
 }

@@ -31,6 +31,15 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNav;
     private FloatingActionButton fabNovoLancamento;
     private View navHostContainer;
+    private boolean fabPermitidoNaTelaAtual = true;
+    private float gestureStartX;
+    private float gestureStartY;
+
+    private static final float SWIPE_MIN_DISTANCE_DP = 80f;
+    private static final float SWIPE_MAX_OFFPATH_DP = 96f;
+
+    private static final int[] ORDEM_ABAS = {R.id.nav_metas, R.id.nav_dashboard, R.id.nav_gastos};
+    private int indiceAbaAtual = 1; // começa no dashboard
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,11 +64,31 @@ public class MainActivity extends AppCompatActivity {
         fabNovoLancamento = findViewById(R.id.fab_novo_lancamento);
         configurarBottomNavigation(bottomNav);
         configurarFabGlobal();
+        navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            int destinationId = destination.getId();
+            fabPermitidoNaTelaAtual = destinationId != R.id.nav_configuracoes
+                    && destinationId != R.id.nav_cartoes
+                    && destinationId != R.id.nav_dashboard
+                    && destinationId != R.id.nav_metas
+                    && destinationId != R.id.metaDetalheFragment
+                    && destinationId != R.id.categoriasFragment
+                    && destinationId != R.id.tagsFragment
+                    && destinationId != R.id.nav_relatorios
+                    && destinationId != R.id.nav_gastos
+                    && destinationId != R.id.lancamentosListFragment
+                    && destinationId != R.id.lancamentoFormFragment
+                    && destinationId != R.id.faturaListFragment
+                    && destinationId != R.id.compraCartaoListFragment
+                    && destinationId != R.id.faturaDetalheFragment;
+            aplicarVisibilidadeFab(true);
+        });
         configurarInsetsEComportamentoTeclado();
     }
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
+        tratarSwipeEntreAbas(ev);
+
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
             View focused = getCurrentFocus();
             if (focused instanceof EditText) {
@@ -78,19 +107,100 @@ public class MainActivity extends AppCompatActivity {
         return super.dispatchTouchEvent(ev);
     }
 
+    private void tratarSwipeEntreAbas(MotionEvent ev) {
+        if (ev == null || navController == null || bottomNav == null) {
+            return;
+        }
+
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            gestureStartX = ev.getX();
+            gestureStartY = ev.getY();
+            return;
+        }
+
+        if (ev.getAction() != MotionEvent.ACTION_UP || !podeNavegarPorSwipe()) {
+            return;
+        }
+
+        float dx = ev.getX() - gestureStartX;
+        float dy = ev.getY() - gestureStartY;
+        float minDistancePx = dpToPx(SWIPE_MIN_DISTANCE_DP);
+        float maxOffpathPx = dpToPx(SWIPE_MAX_OFFPATH_DP);
+
+        if (Math.abs(dx) < minDistancePx || Math.abs(dy) > maxOffpathPx) {
+            return;
+        }
+
+        int[] ordemAbas = ORDEM_ABAS;
+        int abaAtual = bottomNav.getSelectedItemId();
+        int indiceAtual = -1;
+        for (int i = 0; i < ordemAbas.length; i++) {
+            if (ordemAbas[i] == abaAtual) {
+                indiceAtual = i;
+                break;
+            }
+        }
+
+        if (indiceAtual < 0) {
+            return;
+        }
+
+        int proximoIndice = dx < 0 ? indiceAtual + 1 : indiceAtual - 1;
+        if (proximoIndice < 0 || proximoIndice >= ordemAbas.length) {
+            return;
+        }
+
+        bottomNav.setSelectedItemId(ordemAbas[proximoIndice]);
+    }
+
+    private boolean podeNavegarPorSwipe() {
+        NavDestination destinoAtual = navController.getCurrentDestination();
+        if (destinoAtual == null) {
+            return false;
+        }
+
+        int id = destinoAtual.getId();
+        return id == R.id.nav_metas
+                || id == R.id.nav_dashboard
+                || id == R.id.nav_gastos;
+    }
+
+    private float dpToPx(float dp) {
+        return dp * getResources().getDisplayMetrics().density;
+    }
+
+    private int getIndiceAba(int itemId) {
+        for (int i = 0; i < ORDEM_ABAS.length; i++) {
+            if (ORDEM_ABAS[i] == itemId) return i;
+        }
+        return -1;
+    }
+
     private void configurarBottomNavigation(BottomNavigationView bottomNav) {
         bottomNav.setOnItemSelectedListener(item -> {
             int destinoRaiz = item.getItemId();
             NavDestination destinoAtual = navController.getCurrentDestination();
+            Bundle argsAtuais = navController.getCurrentBackStackEntry() != null
+                    ? navController.getCurrentBackStackEntry().getArguments() : null;
+            int abaAtual = destinoAtual != null ? resolverAbaSelecionada(destinoAtual, argsAtuais) : 0;
 
-            if (destinoAtual != null && destinoAtual.getId() == destinoRaiz) {
+            if (destinoAtual != null && (destinoAtual.getId() == destinoRaiz || abaAtual == destinoRaiz)) {
                 return true;
             }
+
+            int indiceDestino = getIndiceAba(destinoRaiz);
+            int enterAnim = indiceDestino >= indiceAbaAtual
+                    ? R.anim.slide_in_from_right : R.anim.slide_in_from_left;
+            int exitAnim = indiceDestino >= indiceAbaAtual
+                    ? R.anim.slide_out_to_left : R.anim.slide_out_to_right;
+            if (indiceDestino >= 0) indiceAbaAtual = indiceDestino;
 
             NavOptions navOptions = new NavOptions.Builder()
                     .setLaunchSingleTop(true)
                     .setRestoreState(false)
                     .setPopUpTo(navController.getGraph().getId(), false, false)
+                    .setEnterAnim(enterAnim)
+                    .setExitAnim(exitAnim)
                     .build();
 
             navController.navigate(destinoRaiz, null, navOptions);
@@ -107,6 +217,11 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
+            int idx = getIndiceAba(selectedItemId);
+            if (idx >= 0) {
+                indiceAbaAtual = idx;
+            }
+
             if (bottomNav.getSelectedItemId() != selectedItemId) {
                 bottomNav.getMenu().findItem(selectedItemId).setChecked(true);
             }
@@ -118,6 +233,16 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         fabNovoLancamento.setOnClickListener(v -> abrirFormularioNovoLancamento());
+    }
+
+    private void aplicarVisibilidadeFab(boolean baseVisivel) {
+        if (fabNovoLancamento == null) {
+            return;
+        }
+        int visibility = (baseVisivel && fabPermitidoNaTelaAtual) ? View.VISIBLE : View.GONE;
+        if (fabNovoLancamento.getVisibility() != visibility) {
+            fabNovoLancamento.setVisibility(visibility);
+        }
     }
 
     private void configurarInsetsEComportamentoTeclado() {
@@ -169,7 +294,7 @@ public class MainActivity extends AppCompatActivity {
             bottomNav.setVisibility(visibility);
         }
         if (fabNovoLancamento != null && fabNovoLancamento.getVisibility() != visibility) {
-            fabNovoLancamento.setVisibility(visibility);
+            aplicarVisibilidadeFab(visible);
         }
     }
 
@@ -201,6 +326,7 @@ public class MainActivity extends AppCompatActivity {
                 || destinationId == R.id.nav_cartoes
                 || destinationId == R.id.cartaoFormFragment
                 || destinationId == R.id.faturaListFragment
+                || destinationId == R.id.compraCartaoListFragment
                 || destinationId == R.id.faturaDetalheFragment) {
             return R.id.nav_dashboard;
         }

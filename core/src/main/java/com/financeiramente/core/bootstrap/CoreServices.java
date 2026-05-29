@@ -8,6 +8,8 @@ import com.financeiramente.core.repository.FaturaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
 import com.financeiramente.core.repository.MetaRepository;
 import com.financeiramente.core.repository.TagRepository;
+import com.financeiramente.core.usecase.fatura.AlterarStatusFaturaUseCase;
+import com.financeiramente.core.usecase.fatura.AnteciparLancamentosFaturaUseCase;
 import com.financeiramente.core.usecase.fatura.AtualizarStatusFaturasUseCase;
 import com.financeiramente.core.usecase.fatura.PagarFaturaUseCase;
 import com.financeiramente.core.usecase.fatura.ResolverFaturaParaLancamentoUseCase;
@@ -20,6 +22,7 @@ import com.financeiramente.core.usecase.cartao.DesativarCartaoCreditoUseCase;
 import com.financeiramente.core.usecase.cartao.EditarCartaoCreditoUseCase;
 import com.financeiramente.core.usecase.lancamento.DeletarLancamentoUseCase;
 import com.financeiramente.core.usecase.lancamento.DeletarCompraCartaoUseCase;
+import com.financeiramente.core.usecase.lancamento.EditarCompraCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.EditarLancamentoUseCase;
 import com.financeiramente.core.usecase.lancamento.GerarCobrancasRecorrentesCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.ListarLancamentosUseCase;
@@ -72,6 +75,7 @@ public class CoreServices {
     private final DesativarCartaoCreditoUseCase desativarCartaoCreditoUseCase;
     private final ResolverFaturaParaLancamentoUseCase resolverFaturaParaLancamentoUseCase;
     private final RegistrarCompraCartaoUseCase registrarCompraCartaoUseCase;
+    private final EditarCompraCartaoUseCase editarCompraCartaoUseCase;
     private final DeletarCompraCartaoUseCase deletarCompraCartaoUseCase;
     private final GerarCobrancasRecorrentesCartaoUseCase gerarCobrancasRecorrentesCartaoUseCase;
     private final CancelarRecorrenciaCartaoUseCase cancelarRecorrenciaCartaoUseCase;
@@ -79,6 +83,8 @@ public class CoreServices {
     private final RegistrarLancamentoCartaoUseCase registrarLancamentoCartaoUseCase;
     private final AtualizarStatusFaturasUseCase atualizarStatusFaturasUseCase;
     private final PagarFaturaUseCase pagarFaturaUseCase;
+    private final AlterarStatusFaturaUseCase alterarStatusFaturaUseCase;
+    private final AnteciparLancamentosFaturaUseCase anteciparLancamentosUseCase;
 
     CoreServices(
             CategoriaRepository categoriaRepository,
@@ -111,13 +117,16 @@ public class CoreServices {
             DesativarCartaoCreditoUseCase desativarCartaoCreditoUseCase,
             ResolverFaturaParaLancamentoUseCase resolverFaturaParaLancamentoUseCase,
             RegistrarCompraCartaoUseCase registrarCompraCartaoUseCase,
+            EditarCompraCartaoUseCase editarCompraCartaoUseCase,
             DeletarCompraCartaoUseCase deletarCompraCartaoUseCase,
             GerarCobrancasRecorrentesCartaoUseCase gerarCobrancasRecorrentesCartaoUseCase,
             CancelarRecorrenciaCartaoUseCase cancelarRecorrenciaCartaoUseCase,
             ListarComprasCartaoUseCase listarComprasCartaoUseCase,
             RegistrarLancamentoCartaoUseCase registrarLancamentoCartaoUseCase,
             AtualizarStatusFaturasUseCase atualizarStatusFaturasUseCase,
-            PagarFaturaUseCase pagarFaturaUseCase) {
+            PagarFaturaUseCase pagarFaturaUseCase,
+            AlterarStatusFaturaUseCase alterarStatusFaturaUseCase,
+            AnteciparLancamentosFaturaUseCase anteciparLancamentosUseCase) {
         this.categoriaRepository = categoriaRepository;
         this.lancamentoRepository = lancamentoRepository;
         this.tagRepository = tagRepository;
@@ -148,6 +157,7 @@ public class CoreServices {
         this.desativarCartaoCreditoUseCase = desativarCartaoCreditoUseCase;
         this.resolverFaturaParaLancamentoUseCase = resolverFaturaParaLancamentoUseCase;
         this.registrarCompraCartaoUseCase = registrarCompraCartaoUseCase;
+        this.editarCompraCartaoUseCase = editarCompraCartaoUseCase;
         this.deletarCompraCartaoUseCase = deletarCompraCartaoUseCase;
         this.gerarCobrancasRecorrentesCartaoUseCase = gerarCobrancasRecorrentesCartaoUseCase;
         this.cancelarRecorrenciaCartaoUseCase = cancelarRecorrenciaCartaoUseCase;
@@ -155,6 +165,8 @@ public class CoreServices {
         this.registrarLancamentoCartaoUseCase = registrarLancamentoCartaoUseCase;
         this.atualizarStatusFaturasUseCase = atualizarStatusFaturasUseCase;
         this.pagarFaturaUseCase = pagarFaturaUseCase;
+        this.alterarStatusFaturaUseCase = alterarStatusFaturaUseCase;
+        this.anteciparLancamentosUseCase = anteciparLancamentosUseCase;
     }
 
     public CategoriaRepository getCategoriaRepository() { return categoriaRepository; }
@@ -188,6 +200,7 @@ public class CoreServices {
     public DesativarCartaoCreditoUseCase getDesativarCartaoCreditoUseCase() { return desativarCartaoCreditoUseCase; }
     public ResolverFaturaParaLancamentoUseCase getResolverFaturaParaLancamentoUseCase() { return resolverFaturaParaLancamentoUseCase; }
     public RegistrarCompraCartaoUseCase getRegistrarCompraCartaoUseCase() { return registrarCompraCartaoUseCase; }
+    public EditarCompraCartaoUseCase getEditarCompraCartaoUseCase() { return editarCompraCartaoUseCase; }
     public DeletarCompraCartaoUseCase getDeletarCompraCartaoUseCase() { return deletarCompraCartaoUseCase; }
     public GerarCobrancasRecorrentesCartaoUseCase getGerarCobrancasRecorrentesCartaoUseCase() {
         return gerarCobrancasRecorrentesCartaoUseCase;
@@ -199,4 +212,6 @@ public class CoreServices {
     public RegistrarLancamentoCartaoUseCase getRegistrarLancamentoCartaoUseCase() { return registrarLancamentoCartaoUseCase; }
     public AtualizarStatusFaturasUseCase getAtualizarStatusFaturasUseCase() { return atualizarStatusFaturasUseCase; }
     public PagarFaturaUseCase getPagarFaturaUseCase() { return pagarFaturaUseCase; }
+    public AlterarStatusFaturaUseCase getAlterarStatusFaturaUseCase() { return alterarStatusFaturaUseCase; }
+    public AnteciparLancamentosFaturaUseCase getAnteciparLancamentosUseCase() { return anteciparLancamentosUseCase; }
 }

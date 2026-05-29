@@ -67,42 +67,14 @@
                     android:layout_height="wrap_content"
                     android:text="@string/lancamento_despesa" />
 
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_lancamentos_cartoes"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/lancamentos_cartoes_titulo" />
+
             </com.google.android.material.chip.ChipGroup>
-
-        </HorizontalScrollView>
-
-        <!-- Seção de cartões de crédito -->
-        <TextView
-            android:id="@+id/tv_cartoes_titulo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="4dp"
-            android:text="@string/lancamentos_cartoes_titulo"
-            android:textSize="12sp"
-            android:textAllCaps="true"
-            android:letterSpacing="0.08"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:visibility="gone" />
-
-        <HorizontalScrollView
-            android:id="@+id/hsv_cartoes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="8dp"
-            android:paddingTop="4dp"
-            android:scrollbars="none"
-            android:visibility="gone">
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/cg_lancamentos_cartoes"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:singleSelection="true"
-                app:selectionRequired="false"
-                app:chipSpacingHorizontal="8dp" />
 
         </HorizontalScrollView>
 

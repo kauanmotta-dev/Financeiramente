@@ -32,6 +32,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.math.BigDecimal;
+import java.time.YearMonth;
 
 public class FaturaDetalheFragment extends Fragment {
 
@@ -44,6 +45,7 @@ public class FaturaDetalheFragment extends Fragment {
     private TextView tvFechamento;
     private TextView tvVencimento;
     private MaterialButton btnPagar;
+    private MaterialButton btnEditarFatura;
     private String faturaId;
 
     @Nullable
@@ -65,7 +67,9 @@ public class FaturaDetalheFragment extends Fragment {
                 ctx.getCoreServices().getLancamentoRepository(),
                 ctx.getCoreServices().getCategoriaRepository(),
                 ctx.getPagarFaturaUseCase(),
-                ctx.getAtualizarStatusFaturasUseCase());
+                ctx.getAtualizarStatusFaturasUseCase(),
+                ctx.getAlterarStatusFaturaUseCase(),
+                ctx.getAnteciparLancamentosUseCase());
         viewModel = new ViewModelProvider(this, factory).get(FaturaDetalheViewModel.class);
 
         tvTitulo = view.findViewById(R.id.tv_fatura_detalhe_titulo);
@@ -74,15 +78,16 @@ public class FaturaDetalheFragment extends Fragment {
         tvFechamento = view.findViewById(R.id.tv_detalhe_fechamento);
         tvVencimento = view.findViewById(R.id.tv_detalhe_vencimento);
         btnPagar = view.findViewById(R.id.btn_pagar_fatura);
+        btnEditarFatura = view.findViewById(R.id.btn_editar_fatura);
 
         view.findViewById(R.id.btn_voltar_fatura_detalhe).setOnClickListener(
                 v -> Navigation.findNavController(view).navigateUp());
 
-        btnPagar.setOnClickListener(v -> abrirPagarFatura());
+        // Listener set dynamically in observarViewModel based on fatura status
 
         adapter = new LancamentoAdapter(
-            lancamento -> { },
-            this::mostrarOpcoesExclusaoLancamento);
+            this::mostrarAcoesLancamento,
+            this::mostrarAcoesLancamento);
         RecyclerView rv = view.findViewById(R.id.rv_lancamentos_fatura);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
         rv.setAdapter(adapter);
@@ -119,9 +124,66 @@ public class FaturaDetalheFragment extends Fragment {
 
             applyStatusBadge(requireContext(), fatura.getStatus());
 
-            boolean podePagar = fatura.getStatus() == StatusFatura.ABERTO
-                    || fatura.getStatus() == StatusFatura.FECHADO;
-            btnPagar.setVisibility(podePagar ? View.VISIBLE : View.GONE);
+            YearMonth mesFatura = null;
+            try {
+                mesFatura = YearMonth.parse(fatura.getMes());
+            } catch (Exception ignored) { }
+
+            YearMonth mesAtual = YearMonth.now();
+            boolean isFuturo = mesFatura != null && mesFatura.isAfter(mesAtual);
+            boolean isFaturaAtual = Boolean.TRUE.equals(viewModel.getEhFaturaAtual().getValue());
+
+            boolean podePagar = !isFuturo && (fatura.getStatus() == StatusFatura.ABERTO
+                    || fatura.getStatus() == StatusFatura.FECHADO);
+            boolean podeReverter = fatura.getStatus() == StatusFatura.PAGO
+                    || fatura.getStatus() == StatusFatura.PAGO_PARCIAL;
+
+            if (isFaturaAtual && fatura.getStatus() == StatusFatura.ABERTO) {
+                btnPagar.setVisibility(View.VISIBLE);
+                btnPagar.setEnabled(true);
+                btnPagar.setText(R.string.fatura_pagar);
+                btnPagar.setOnClickListener(v -> abrirPagarFatura());
+                btnEditarFatura.setVisibility(View.VISIBLE);
+                btnEditarFatura.setText(R.string.fatura_fechar);
+                btnEditarFatura.setOnClickListener(v -> confirmarAlteracaoStatus(StatusFatura.FECHADO));
+            } else if (isFaturaAtual && fatura.getStatus() == StatusFatura.FECHADO) {
+                btnPagar.setVisibility(View.VISIBLE);
+                btnPagar.setEnabled(true);
+                btnPagar.setText(R.string.fatura_pagar);
+                btnPagar.setOnClickListener(v -> abrirPagarFatura());
+                btnEditarFatura.setVisibility(View.VISIBLE);
+                btnEditarFatura.setText(R.string.fatura_abrir);
+                btnEditarFatura.setOnClickListener(v -> confirmarAlteracaoStatus(StatusFatura.ABERTO));
+            } else if (isFuturo) {
+                btnPagar.setVisibility(View.VISIBLE);
+                btnPagar.setEnabled(true);
+                btnPagar.setText(R.string.fatura_antecipar_lancamentos);
+                btnPagar.setOnClickListener(v -> confirmarAntecipar());
+                btnEditarFatura.setVisibility(View.VISIBLE);
+                btnEditarFatura.setText(R.string.fatura_alterar_status);
+                btnEditarFatura.setOnClickListener(v -> mostrarOpcoesAlterarStatus(fatura));
+            } else if (podePagar) {
+                btnPagar.setVisibility(View.VISIBLE);
+                btnPagar.setEnabled(true);
+                btnPagar.setText(R.string.fatura_pagar);
+                btnPagar.setOnClickListener(v -> abrirPagarFatura());
+                btnEditarFatura.setVisibility(View.VISIBLE);
+                btnEditarFatura.setText(R.string.fatura_alterar_status);
+                btnEditarFatura.setOnClickListener(v -> mostrarOpcoesAlterarStatus(fatura));
+            } else if (podeReverter) {
+                btnPagar.setVisibility(View.VISIBLE);
+                btnPagar.setEnabled(false);
+                btnPagar.setText(fatura.getStatus() == StatusFatura.PAGO
+                        ? R.string.fatura_status_pago
+                        : R.string.fatura_status_pago_parcial);
+                btnPagar.setOnClickListener(null);
+                btnEditarFatura.setVisibility(View.VISIBLE);
+                btnEditarFatura.setText(R.string.fatura_alterar_status);
+                btnEditarFatura.setOnClickListener(v -> mostrarOpcoesAlterarStatus(fatura));
+            } else {
+                btnPagar.setVisibility(View.GONE);
+                btnEditarFatura.setVisibility(View.GONE);
+            }
 
             java.util.Map<String, com.financeiramente.core.domain.entity.Categoria> catsMap =
                     viewModel.getCategoriasMap().getValue();
@@ -152,12 +214,31 @@ public class FaturaDetalheFragment extends Fragment {
                     msg = getString(R.string.fatura_paga_total);
                 }
                 Snackbar.make(requireView(), msg, Snackbar.LENGTH_LONG).show();
+                viewModel.limparResultadoPagamento();
             }
+        });
+
+        viewModel.getFaturaAntecipadaId().observe(getViewLifecycleOwner(), destFaturaId -> {
+            if (destFaturaId == null) return;
+            Snackbar.make(requireView(), R.string.fatura_lancamentos_antecipados, Snackbar.LENGTH_SHORT).show();
+            viewModel.carregar();
+            viewModel.limparEventoFaturaAntecipada();
+        });
+
+        viewModel.getFaturaAntecipadaExcluida().observe(getViewLifecycleOwner(), excluida -> {
+            if (excluida == null || !excluida) return;
+            Snackbar.make(requireView(), R.string.fatura_lancamentos_antecipados, Snackbar.LENGTH_SHORT).show();
+            Navigation.findNavController(requireView()).navigateUp();
+            viewModel.limparEventoFaturaAntecipadaExcluida();
         });
 
         viewModel.getErro().observe(getViewLifecycleOwner(), msg -> {
             if (msg != null) Snackbar.make(view, msg, Snackbar.LENGTH_LONG).show();
         });
+
+        getParentFragmentManager().setFragmentResultListener(
+                "lancamento_salvo", getViewLifecycleOwner(),
+                (requestKey, bundle) -> viewModel.carregar());
     }
 
     private void abrirPagarFatura() {
@@ -168,8 +249,59 @@ public class FaturaDetalheFragment extends Fragment {
         PagarFaturaBottomSheet sheet = new PagarFaturaBottomSheet();
         sheet.setArguments(args);
         sheet.setOnPagoListener((valorFatura, valorPago) ->
-                viewModel.pagar(valorFatura, valorPago));
+                viewModel.alterarStatus(com.financeiramente.core.domain.vo.StatusFatura.PAGO, valorFatura, valorPago));
         sheet.show(getChildFragmentManager(), "pagar_fatura");
+    }
+
+    private void mostrarOpcoesAlterarStatus(Fatura fatura) {
+        java.util.List<CharSequence> opcoes = new ArrayList<>();
+        java.util.List<Runnable> acoes = new ArrayList<>();
+
+        if (fatura.getStatus() == StatusFatura.ABERTO || fatura.getStatus() == StatusFatura.FECHADO) {
+            opcoes.add(getString(R.string.fatura_marcar_como_paga));
+            acoes.add(this::abrirPagarFatura);
+
+            opcoes.add(getString(R.string.fatura_marcar_como_paga_parcialmente));
+            acoes.add(this::abrirPagarFatura);
+        }
+
+        if (fatura.getStatus() != StatusFatura.ABERTO) {
+            opcoes.add(getString(R.string.fatura_marcar_como_aberta));
+            acoes.add(() -> confirmarAlteracaoStatus(StatusFatura.ABERTO));
+        }
+
+        if (fatura.getStatus() != StatusFatura.FECHADO) {
+            opcoes.add(getString(R.string.fatura_marcar_como_fechada));
+            acoes.add(() -> confirmarAlteracaoStatus(StatusFatura.FECHADO));
+        }
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.fatura_alterar_status)
+                .setItems(opcoes.toArray(new CharSequence[0]), (dialog, which) -> {
+                    if (which >= 0 && which < acoes.size()) {
+                        acoes.get(which).run();
+                    }
+                })
+                .show();
+    }
+
+    private void confirmarAlteracaoStatus(StatusFatura statusDestino) {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.fatura_alterar_status)
+                .setMessage(R.string.fatura_alterar_status_msg)
+                .setPositiveButton(R.string.confirmar, (d, w) ->
+                        viewModel.alterarStatus(statusDestino, 0, 0))
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void confirmarAntecipar() {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.fatura_antecipar_lancamentos)
+                .setMessage(R.string.fatura_antecipar_msg)
+                .setPositiveButton(R.string.confirmar, (d, w) -> viewModel.anteciparLancamentos())
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     private void applyStatusBadge(Context ctx, StatusFatura status) {
@@ -203,104 +335,69 @@ public class FaturaDetalheFragment extends Fragment {
         tvStatusBadge.getBackground().setTint(bgColor);
     }
 
-    private boolean mostrarOpcoesExclusaoLancamento(Lancamento lancamento) {
+    private boolean mostrarAcoesLancamento(Lancamento lancamento) {
         if (lancamento == null) {
             return false;
         }
 
-        if (lancamento.getCompraCartaoId() == null || lancamento.getCompraCartaoId().trim().isEmpty()) {
-            confirmarExclusaoApenasLancamento(lancamento);
+        final boolean podeAdiantar = podeAnteciparLancamento();
+        if (!podeAdiantar) {
+            Snackbar.make(requireView(), R.string.fatura_lancamento_sem_edicao, Snackbar.LENGTH_LONG).show();
             return true;
         }
 
         CharSequence[] opcoes = new CharSequence[] {
-                getString(R.string.excluir_esta_parcela),
-                getString(R.string.excluir_todas_parcelas)
+                getString(R.string.fatura_acao_adiantar_lancamento)
         };
 
         new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.excluir_compra_cartao_titulo)
-                .setMessage(R.string.excluir_compra_cartao_mensagem)
+                .setTitle(R.string.fatura_acao_titulo)
                 .setItems(opcoes, (dialog, which) -> {
                     if (which == 0) {
-                        confirmarExclusaoApenasLancamento(lancamento);
-                    } else if (which == 1) {
-                        confirmarExclusaoCompraInteira(lancamento.getCompraCartaoId());
+                        confirmarAnteciparLancamento(lancamento);
                     }
                 })
                 .show();
         return true;
     }
 
-    private void confirmarExclusaoApenasLancamento(Lancamento lancamento) {
+    private void confirmarAnteciparLancamento(Lancamento lancamento) {
+        if (!podeAnteciparLancamento()) {
+            Snackbar.make(requireView(), R.string.fatura_acao_adiantar_indisponivel, Snackbar.LENGTH_LONG).show();
+            return;
+        }
         new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.excluir_lancamento)
-                .setMessage(getString(R.string.confirmar_exclusao_lancamento, lancamento.getDescricao()))
-                .setPositiveButton(R.string.excluir,
-                        (dialog, which) -> excluirLancamento(lancamento.getId()))
+                .setTitle(R.string.fatura_acao_adiantar_lancamento)
+                .setMessage(R.string.fatura_acao_adiantar_lancamento_msg)
+                .setPositiveButton(R.string.confirmar, (d, w) -> viewModel.anteciparLancamento(lancamento.getId()))
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
 
-    private void confirmarExclusaoCompraInteira(String compraCartaoId) {
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.excluir_compra_cartao_titulo)
-                .setMessage(R.string.excluir_compra_cartao_mensagem)
-                .setPositiveButton(R.string.excluir,
-                        (dialog, which) -> excluirCompraCartao(compraCartaoId))
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
+    private boolean podeAnteciparLancamento() {
+        FaturaDetalheResult result = viewModel.getDetalhe().getValue();
+        if (result == null || result.getFatura() == null) {
+            return false;
+        }
+        Fatura fatura = result.getFatura();
+        if (fatura.getStatus() == StatusFatura.PAGO || fatura.getStatus() == StatusFatura.PAGO_PARCIAL) {
+            return false;
+        }
+        try {
+            return YearMonth.parse(fatura.getMes()).isAfter(YearMonth.now());
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
-    private void excluirLancamento(String lancamentoId) {
-        new Thread(() -> {
-            try {
-                AppContext.get(requireContext()).getDeletarLancamentoUseCase().executar(lancamentoId);
-                if (getActivity() == null) {
-                    return;
-                }
-                getActivity().runOnUiThread(() -> {
-                    if (isAdded()) {
-                        viewModel.carregar();
-                        Snackbar.make(requireView(), R.string.lancamento_excluido, Snackbar.LENGTH_LONG).show();
-                    }
-                });
-            } catch (Exception e) {
-                if (getActivity() == null) {
-                    return;
-                }
-                getActivity().runOnUiThread(() -> {
-                    if (isAdded()) {
-                        Snackbar.make(requireView(), e.getMessage(), Snackbar.LENGTH_LONG).show();
-                    }
-                });
-            }
-        }).start();
+    private void abrirEdicaoLancamento(String lancamentoId) {
+        if (!isAdded()) {
+            return;
+        }
+        Bundle args = new Bundle();
+        args.putString("lancamentoId", lancamentoId);
+        args.putInt("sourceTab", R.id.nav_dashboard);
+        Navigation.findNavController(requireView()).navigate(R.id.lancamentoFormFragment, args);
     }
 
-    private void excluirCompraCartao(String compraCartaoId) {
-        new Thread(() -> {
-            try {
-                AppContext.get(requireContext()).getDeletarCompraCartaoUseCase().executar(compraCartaoId);
-                if (getActivity() == null) {
-                    return;
-                }
-                getActivity().runOnUiThread(() -> {
-                    if (isAdded()) {
-                        viewModel.carregar();
-                        Snackbar.make(requireView(), R.string.compra_cartao_excluida, Snackbar.LENGTH_LONG).show();
-                    }
-                });
-            } catch (Exception e) {
-                if (getActivity() == null) {
-                    return;
-                }
-                getActivity().runOnUiThread(() -> {
-                    if (isAdded()) {
-                        Snackbar.make(requireView(), e.getMessage(), Snackbar.LENGTH_LONG).show();
-                    }
-                });
-            }
-        }).start();
-    }
 }

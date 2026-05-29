@@ -33,11 +33,18 @@
         android:padding="@dimen/spacing_md">
 
         <!-- Filtros de período — ChipGroup M3 -->
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chip_group_periodo"
+        <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
+            android:scrollbars="none"
+            android:overScrollMode="never">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_periodo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:singleLine="true"
             app:singleSelection="true"
             app:selectionRequired="true">
 
@@ -71,6 +78,8 @@
                 android:text="@string/relatorio_personalizado" />
 
         </com.google.android.material.chip.ChipGroup>
+
+        </HorizontalScrollView>
 
         <!-- Datas customizadas (visível só no modo personalizado) -->
         <LinearLayout
@@ -124,7 +133,7 @@
             android:layout_gravity="end"
             android:layout_marginBottom="16dp"
             android:text="@string/relatorio_filtrar"
-            app:icon="@android:drawable/ic_menu_search" />
+            app:icon="@drawable/ic_search" />
 
         <!-- Resumo financeiro -->
         <com.google.android.material.card.MaterialCardView
@@ -222,7 +231,7 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Card: Distribuição por Categoria (PieChart / HorizontalBarChart toggle) -->
+        <!-- Card: Distribuição por tipo de despesa -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -238,69 +247,21 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Row: title + toggle -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingBottom="8dp">
+                    android:text="@string/relatorio_distribuicao_tipo_categoria"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:paddingBottom="8dp" />
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/relatorio_distribuicao"
-                        android:textStyle="bold"
-                        android:textSize="16sp" />
-
-                    <!-- 3.6 — Toggle Pizza ↔ Barras -->
-                    <com.google.android.material.button.MaterialButtonToggleGroup
-                        android:id="@+id/toggle_chart_tipo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="true"
-                        app:selectionRequired="true">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_chart_pizza"
-                            style="@style/Widget.Material3.Button.TonalButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="32dp"
-                            android:text="@string/relatorio_chart_pizza"
-                            android:textSize="11sp"
-                            android:paddingStart="10dp"
-                            android:paddingEnd="10dp" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_chart_barras"
-                            style="@style/Widget.Material3.Button.TonalButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="32dp"
-                            android:text="@string/relatorio_chart_barras"
-                            android:textSize="11sp"
-                            android:paddingStart="10dp"
-                            android:paddingEnd="10dp" />
-
-                    </com.google.android.material.button.MaterialButtonToggleGroup>
-
-                </LinearLayout>
-
-                <!-- PieChart (modo padrão) -->
                 <com.github.mikephil.charting.charts.PieChart
-                    android:id="@+id/pie_chart"
+                    android:id="@+id/pie_chart_tipo_categoria"
                     android:layout_width="match_parent"
                     android:layout_height="260dp" />
 
-                <!-- HorizontalBarChart (modo barras) — oculto inicialmente -->
-                <com.github.mikephil.charting.charts.HorizontalBarChart
-                    android:id="@+id/horizontal_bar_chart"
-                    android:layout_width="match_parent"
-                    android:layout_height="260dp"
-                    android:visibility="gone" />
-
                 <LinearLayout
-                    android:id="@+id/layout_pie_legenda"
+                    android:id="@+id/layout_pie_legenda_tipo_categoria"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
@@ -310,7 +271,7 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Card: Evolução dos Últimos 6 Meses (BarChart agrupado) -->
+        <!-- Card: Distribuição entre categorias -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -329,47 +290,22 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Evolução dos Últimos 6 Meses"
+                    android:text="@string/relatorio_distribuicao_categorias"
                     android:textStyle="bold"
                     android:textSize="16sp"
                     android:paddingBottom="8dp" />
 
-                <com.github.mikephil.charting.charts.BarChart
-                    android:id="@+id/bar_chart"
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/pie_chart_categorias"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp" />
+                    android:layout_height="260dp" />
 
                 <LinearLayout
+                    android:id="@+id/layout_pie_legenda_categorias"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
+                    android:orientation="vertical"
                     android:paddingTop="8dp">
-
-                    <View
-                        android:layout_width="12dp"
-                        android:layout_height="12dp"
-                        android:background="@color/verde_success"
-                        android:layout_marginEnd="4dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Receita"
-                        android:textSize="12sp"
-                        android:layout_marginEnd="16dp" />
-
-                    <View
-                        android:layout_width="12dp"
-                        android:layout_height="12dp"
-                        android:background="@color/vermelho_error"
-                        android:layout_marginEnd="4dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Despesa"
-                        android:textSize="12sp" />
 
                 </LinearLayout>
 
@@ -377,7 +313,7 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Card: Evolução do Resultado Mensal (LineChart) -->
+        <!-- Card: Distribuição entre tags -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -396,34 +332,85 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Evolução do Resultado Mensal"
+                    android:text="@string/relatorio_distribuicao_tags"
                     android:textStyle="bold"
                     android:textSize="16sp"
                     android:paddingBottom="8dp" />
 
-                <com.github.mikephil.charting.charts.LineChart
-                    android:id="@+id/line_chart"
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/pie_chart_tags"
                     android:layout_width="match_parent"
-                    android:layout_height="180dp" />
+                    android:layout_height="260dp" />
+
+                <LinearLayout
+                    android:id="@+id/layout_pie_legenda_tags"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="8dp" />
 
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Total por categoria -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/relatorio_por_categoria"
-            android:textStyle="bold"
-            android:paddingBottom="4dp" />
-
-        <LinearLayout
-            android:id="@+id/layout_categorias"
+        <!-- Card: Evolução (com filtros próprios) -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="12dp"
+            app:shapeAppearance="@style/ShapeAppearance.Financeiramente.Card.Medium"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/cinza_divider">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/relatorio_evolucao"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:paddingBottom="8dp" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group_evolucao_series"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    app:singleSelection="false"
+                    app:selectionRequired="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_evolucao_gastos"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/relatorio_gastos"
+                        android:checked="true" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_evolucao_receitas"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/relatorio_receitas"
+                        android:checked="true" />
+
+                </com.google.android.material.chip.ChipGroup>
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/line_chart_evolucao"
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 

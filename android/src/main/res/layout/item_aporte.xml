@@ -40,7 +40,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/deletar_aporte"
             android:padding="8dp"
-            android:src="@android:drawable/ic_menu_delete"
+            android:src="@drawable/ic_delete"
             android:tint="@color/vermelho_error" />
 
     </LinearLayout>

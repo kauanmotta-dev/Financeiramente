@@ -24,7 +24,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_revert"
+                android:src="@drawable/ic_arrow_back"
                 android:tint="?attr/colorOnSurface"
                 android:contentDescription="@string/voltar" />
 
@@ -41,6 +41,22 @@
 
         </LinearLayout>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_ir_compras_cartao"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="8dp"
+            android:insetTop="10dp"
+            android:insetBottom="10dp"
+            android:icon="@drawable/ic_chevron_right"
+            app:iconGravity="textEnd"
+            app:iconPadding="12dp"
+            android:text="@string/faturas_ir_para_compras"
+            android:textAllCaps="false" />
+
         <TextView
             android:id="@+id/tv_faturas_vazio"
             android:layout_width="match_parent"
@@ -51,40 +67,12 @@
             android:visibility="gone"
             android:textColor="?attr/colorOnSurfaceVariant" />
 
-        <TextView
-            android:id="@+id/tv_recorrentes_titulo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:paddingHorizontal="16dp"
-            android:text="@string/recorrencias_cartao_titulo"
-            android:textColor="?attr/colorOnSurface"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/tv_recorrentes_vazio"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="16dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="8dp"
-            android:text="@string/recorrencias_cartao_vazio"
-            android:textColor="?attr/colorOnSurfaceVariant" />
-
-        <LinearLayout
-            android:id="@+id/layout_recorrentes_lista"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingBottom="8dp" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_faturas"
+        <!-- ViewPager2 horizontal para navegar entre faturas -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/vp_faturas"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:paddingTop="8dp"
-            android:clipToPadding="false" />
+            android:orientation="horizontal" />
 
     </LinearLayout>
 

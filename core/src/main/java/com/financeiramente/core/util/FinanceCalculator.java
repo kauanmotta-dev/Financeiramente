@@ -71,7 +71,7 @@ public final class FinanceCalculator {
     public static PagamentoFaturaResult calcularPagamentoFatura(BigDecimal valorFatura, BigDecimal valorPago) {
         StatusFatura status = valorPago.compareTo(valorFatura) >= 0 ? StatusFatura.PAGO : StatusFatura.PAGO_PARCIAL;
         BigDecimal saldoDevedor = valorFatura.subtract(valorPago).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_EVEN);
-        return new PagamentoFaturaResult(status, saldoDevedor);
+        return new PagamentoFaturaResult(status, saldoDevedor, null);
     }
 
     /**

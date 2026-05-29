@@ -27,9 +27,12 @@ import com.financeiramente.android.viewmodel.LancamentoFormViewModel;
 import com.financeiramente.android.viewmodel.LancamentoFormViewModelFactory;
 import com.financeiramente.core.domain.entity.CartaoCredito;
 import com.financeiramente.core.domain.entity.Categoria;
+import com.financeiramente.core.domain.entity.CompraCartao;
 import com.financeiramente.core.domain.entity.Tag;
 import com.financeiramente.core.domain.vo.TipoCategoria;
+import com.financeiramente.core.domain.vo.TipoCompraCartao;
 import com.financeiramente.core.domain.vo.TipoLancamento;
+import com.financeiramente.core.usecase.lancamento.RegistrarCompraCartaoInput;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
@@ -72,6 +75,9 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
     private TextInputEditText etParcelas;
     private TextInputLayout tilValorParcela;
     private TextInputEditText etValorParcela;
+    private TextInputLayout tilDiaRecorrencia;
+    private TextInputEditText etDiaRecorrencia;
+    private CharSequence hintValorOriginal;
     private final List<ChipGroup> chipGroupsCategorias = new ArrayList<>();
 
     private List<Categoria> listaCategorias = new ArrayList<>();
@@ -79,9 +85,9 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
     private boolean valorAutoPreenchido = false;
     private boolean categoriasExpandidas = false;
     private boolean tagsExpandidas = false;
-    private boolean cartoesExpandidos = false;
 
     private String editandoId = null;
+    private String editandoCompraCartaoId = null;
     private List<CartaoCredito> cartoesAtivos = new ArrayList<>();
     private String cartaoIdSelecionado = null;
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -103,7 +109,9 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
                 ctx.getEditarLancamentoUseCase(),
                 ctx.getCoreServices().getCategoriaRepository(),
                 ctx.getCoreServices().getTagRepository(),
-                ctx.getCoreServices().getLancamentoRepository());
+            ctx.getCoreServices().getLancamentoRepository(),
+            ctx.getCoreServices().getCompraCartaoRepository(),
+            ctx.getCoreServices().getEditarCompraCartaoUseCase());
         viewModel = new ViewModelProvider(this, factory).get(LancamentoFormViewModel.class);
 
         toggleTipo = view.findViewById(R.id.toggle_tipo);
@@ -126,6 +134,9 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         etParcelas = view.findViewById(R.id.et_parcelas);
         tilValorParcela = view.findViewById(R.id.til_valor_parcela);
         etValorParcela = view.findViewById(R.id.et_valor_parcela);
+        tilDiaRecorrencia = view.findViewById(R.id.til_dia_recorrencia);
+        etDiaRecorrencia = view.findViewById(R.id.et_dia_recorrencia);
+        hintValorOriginal = tilValor.getHint();
         view.findViewById(R.id.btn_fechar_form).setOnClickListener(v -> dismiss());
 
         // Data padrão = hoje
@@ -156,6 +167,7 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
                     cartaoIdSelecionado = null;
                 }
                 atualizarEstadoSecoesRapidas();
+                atualizarEstadoCartao();
             }
         });
 
@@ -168,8 +180,14 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
             atualizarEstadoSecoesRapidas();
         });
         btnToggleCartoes.setOnClickListener(v -> {
-            cartoesExpandidos = !cartoesExpandidos;
-            atualizarEstadoSecoesRapidas();
+            Bundle args = new Bundle();
+            args.putInt("sourceScreen", R.id.lancamentosListFragment);
+            int sourceTab = getArguments() != null
+                ? getArguments().getInt("sourceTab", R.id.nav_dashboard)
+                : R.id.nav_dashboard;
+            args.putInt("sourceTab", sourceTab == R.id.nav_gastos ? R.id.nav_gastos : R.id.nav_dashboard);
+            androidx.navigation.Navigation.findNavController(v)
+                    .navigate(R.id.nav_cartoes, args);
         });
         atualizarEstadoSecoesRapidas();
 
@@ -177,10 +195,20 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
             toggleParcelamento.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
                 if (isChecked) {
                     boolean parcelado = checkedId == R.id.btn_parcelado;
+                    boolean recorrente = checkedId == R.id.btn_recorrente;
                     tilParcelas.setVisibility(parcelado ? View.VISIBLE : View.GONE);
                     tilValorParcela.setVisibility(parcelado ? View.VISIBLE : View.GONE);
-                    if (!parcelado) etValorParcela.setText("");
-                    else atualizarValorParcela();
+                    tilDiaRecorrencia.setVisibility(recorrente ? View.VISIBLE : View.GONE);
+                    if (parcelado) {
+                        tilValor.setHint(R.string.lancamento_valor_parcela);
+                        atualizarValorParcela();
+                    } else {
+                        if (hintValorOriginal != null) {
+                            tilValor.setHint(hintValorOriginal);
+                        }
+                        etValorParcela.setText("");
+                    }
+                    if (!recorrente) etDiaRecorrencia.setText("");
                 }
             });
             // Check initial state
@@ -203,12 +231,17 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         // Verificar se é edição
         if (getArguments() != null) {
             editandoId = getArguments().getString("lancamentoId");
+            editandoCompraCartaoId = getArguments().getString("compraCartaoId");
             if (editandoId != null) {
                 // Modo edição: exibir título correto e expandir campos completos
                 TextView tvTitulo = view.findViewById(R.id.tv_titulo_form);
                 tvTitulo.setText(R.string.editar_lancamento);
                 layoutDetalhesCompletos.setVisibility(View.VISIBLE);
                 viewModel.carregarLancamento(editandoId);
+            } else if (editandoCompraCartaoId != null) {
+                TextView tvTitulo = view.findViewById(R.id.tv_titulo_form);
+                tvTitulo.setText(R.string.editar_compra_cartao);
+                layoutDetalhesCompletos.setVisibility(View.VISIBLE);
             }
         }
 
@@ -218,6 +251,9 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         viewModel.setCartaoSupport(
             ctx2.getRegistrarCompraCartaoUseCase(),
                 ctx2.getCoreServices().getCartaoRepository());
+        if (editandoCompraCartaoId != null) {
+            viewModel.carregarCompraCartao(editandoCompraCartaoId);
+        }
     }
 
     private void atualizarEstadoSecoesRapidas() {
@@ -225,16 +261,39 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         layoutSecaoCategorias.setVisibility(categoriasExpandidas ? View.VISIBLE : View.GONE);
         layoutSecaoTags.setVisibility(tagsExpandidas ? View.VISIBLE : View.GONE);
         btnToggleCartoes.setVisibility(tipoDespesa ? View.VISIBLE : View.GONE);
-        layoutSecaoCartoes.setVisibility(tipoDespesa && cartoesExpandidos ? View.VISIBLE : View.GONE);
+        layoutSecaoCartoes.setVisibility(tipoDespesa ? View.VISIBLE : View.GONE);
         btnToggleCategorias.setText(getString(categoriasExpandidas
             ? R.string.lancamento_secao_categorias_aberta
             : R.string.lancamento_secao_categorias_fechada));
         btnToggleTags.setText(getString(tagsExpandidas
             ? R.string.lancamento_secao_tags_aberta
             : R.string.lancamento_secao_tags_fechada));
-        btnToggleCartoes.setText(getString(cartoesExpandidos
-                ? R.string.lancamento_secao_cartoes_aberta
-                : R.string.lancamento_secao_cartoes_fechada));
+        btnToggleCartoes.setText(R.string.lancamento_ver_cartoes);
+    }
+
+    private void atualizarEstadoCartao() {
+        boolean tipoDespesa = toggleTipo.getCheckedButtonId() != R.id.btn_receita;
+        if (!tipoDespesa || cartaoIdSelecionado == null) {
+            toggleParcelamento.setVisibility(View.GONE);
+            tilParcelas.setVisibility(View.GONE);
+            tilDiaRecorrencia.setVisibility(View.GONE);
+            if (hintValorOriginal != null) {
+                tilValor.setHint(hintValorOriginal);
+            }
+            return;
+        }
+        toggleParcelamento.setVisibility(View.VISIBLE);
+        if (toggleParcelamento.getCheckedButtonId() == R.id.btn_parcelado) {
+            tilParcelas.setVisibility(View.VISIBLE);
+            tilDiaRecorrencia.setVisibility(View.GONE);
+            tilValor.setHint(R.string.lancamento_valor_parcela);
+        } else if (toggleParcelamento.getCheckedButtonId() == R.id.btn_recorrente) {
+            tilParcelas.setVisibility(View.GONE);
+            tilDiaRecorrencia.setVisibility(View.VISIBLE);
+            if (hintValorOriginal != null) {
+                tilValor.setHint(hintValorOriginal);
+            }
+        }
     }
 
     /** Configura o BottomSheetBehavior: peek = modo rápido, expanded = modo completo. */
@@ -338,6 +397,33 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
 
             categoriaIdSelecionada = lancamento.getCategoriaId();
             viewModel.carregarCategoriasPorTipo(tipo);
+        });
+
+        viewModel.getCompraCartaoCarregada().observe(getViewLifecycleOwner(), compra -> {
+            if (compra == null) return;
+            etValor.setText(String.valueOf(compra.getValorTotal()));
+            etDescricao.setText(compra.getDescricao());
+            etData.setText(compra.getDataCompra());
+            categoriaIdSelecionada = compra.getCategoriaId();
+            cartaoIdSelecionado = compra.getCartaoId();
+
+            if (compra.getTipo() == com.financeiramente.core.domain.vo.TipoCompraCartao.PARCELADO) {
+                toggleParcelamento.check(R.id.btn_parcelado);
+                etParcelas.setText(String.valueOf(compra.getTotalParcelas()));
+                etDiaRecorrencia.setText("");
+            } else if (compra.getTipo() == com.financeiramente.core.domain.vo.TipoCompraCartao.RECORRENTE) {
+                toggleParcelamento.check(R.id.btn_recorrente);
+                etDiaRecorrencia.setText(String.valueOf(compra.getDiaRecorrencia()));
+                etParcelas.setText("");
+            } else {
+                toggleParcelamento.check(R.id.btn_a_vista);
+                etParcelas.setText("");
+                etDiaRecorrencia.setText("");
+            }
+
+            toggleTipo.check(R.id.btn_despesa);
+            atualizarEstadoCartao();
+            viewModel.carregarCategoriasPorTipo(TipoLancamento.DESPESA);
         });
 
         viewModel.getSucesso().observe(getViewLifecycleOwner(), ok -> {
@@ -600,16 +686,46 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         // Parcelamento
         boolean parcelado = toggleParcelamento.getVisibility() == View.VISIBLE
                 && toggleParcelamento.getCheckedButtonId() == R.id.btn_parcelado;
+        boolean recorrente = toggleParcelamento.getVisibility() == View.VISIBLE
+                && toggleParcelamento.getCheckedButtonId() == R.id.btn_recorrente;
         int numeroParcelas = 1;
+        int diaRecorrencia = 1;
+        double valorTotal = valor;
         if (parcelado) {
+            String valorParcelaStr = etValor.getText() != null ? etValor.getText().toString().trim() : "";
             String parcStr = etParcelas.getText() != null ? etParcelas.getText().toString().trim() : "";
+            if (valorParcelaStr.isEmpty()) {
+                tilValor.setError(getString(R.string.erro_valor_obrigatorio));
+                return;
+            }
+            double valorParcela;
+            try {
+                valorParcela = Double.parseDouble(valorParcelaStr.replace(',', '.'));
+            } catch (NumberFormatException e) {
+                tilValor.setError(getString(R.string.erro_valor_invalido));
+                return;
+            }
+            if (valorParcela <= 0) {
+                tilValor.setError(getString(R.string.erro_valor_invalido));
+                return;
+            }
             if (!parcStr.isEmpty()) {
                 try { numeroParcelas = Integer.parseInt(parcStr); } catch (NumberFormatException ignored) { }
             }
             if (numeroParcelas < 1) numeroParcelas = 1;
+            valorTotal = valorParcela * numeroParcelas;
+        } else if (recorrente) {
+            String diaStr = etDiaRecorrencia.getText() != null ? etDiaRecorrencia.getText().toString().trim() : "";
+            if (!diaStr.isEmpty()) {
+                try { diaRecorrencia = Integer.parseInt(diaStr); } catch (NumberFormatException ignored) { }
+            } else {
+                try { diaRecorrencia = LocalDate.parse(data, FORMATTER).getDayOfMonth(); } catch (Exception ignored) { }
+            }
+            if (diaRecorrencia < 1) diaRecorrencia = 1;
+            if (diaRecorrencia > 28) diaRecorrencia = 28;
         }
 
-        mostrarDialogoConfirmacao(valor, tipo, data, descricao, tagIds, parcelado, numeroParcelas);
+        mostrarDialogoConfirmacao(valorTotal, tipo, data, descricao, tagIds, parcelado, recorrente, numeroParcelas, diaRecorrencia);
     }
 
     private void mostrarDialogoConfirmacao(
@@ -619,7 +735,9 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
             String descricao,
             List<String> tagIds,
             boolean parcelado,
-            int numeroParcelas) {
+            boolean recorrente,
+            int numeroParcelas,
+            int diaRecorrencia) {
 
         View confView = LayoutInflater.from(requireContext())
                 .inflate(R.layout.dialog_lancamento_confirmacao, null);
@@ -631,6 +749,7 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         android.widget.TextView tvTags = confView.findViewById(R.id.tv_conf_tags);
         android.widget.TextView tvCartao = confView.findViewById(R.id.tv_conf_cartao);
         android.widget.TextView tvParcelas = confView.findViewById(R.id.tv_conf_parcelas);
+        android.widget.TextView tvRecorrencia = confView.findViewById(R.id.tv_conf_recorrencia);
         android.widget.TextView tvDescricao = confView.findViewById(R.id.tv_conf_descricao);
 
         // Valor
@@ -680,7 +799,13 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
         // Parcelas
         if (parcelado && cartaoIdSelecionado != null && numeroParcelas > 1) {
             confView.findViewById(R.id.row_conf_parcelas).setVisibility(View.VISIBLE);
-            tvParcelas.setText(numeroParcelas + "x de " + String.format("R$ %.2f", valor));
+            tvParcelas.setText(numeroParcelas + "x de " + String.format("R$ %.2f", valor / numeroParcelas));
+        }
+
+        // Recorrência
+        if (recorrente && cartaoIdSelecionado != null) {
+            confView.findViewById(R.id.row_conf_recorrencia).setVisibility(View.VISIBLE);
+            tvRecorrencia.setText(getString(R.string.lancamento_conf_valor_recorrencia, diaRecorrencia));
         }
 
         // Descrição
@@ -694,7 +819,7 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
                 .setTitle(R.string.lancamento_confirmar_titulo)
                 .setView(confView)
                 .setPositiveButton(R.string.confirmar, (dlg, w) ->
-                        executarSalvamento(valor, tipo, data, descricao, tagIds, parcelado, finalNumeroParcelas))
+                        executarSalvamento(valor, tipo, data, descricao, tagIds, parcelado, recorrente, finalNumeroParcelas, diaRecorrencia))
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
@@ -706,15 +831,38 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
             String descricao,
             List<String> tagIds,
             boolean parcelado,
-            int numeroParcelas) {
+            boolean recorrente,
+            int numeroParcelas,
+            int diaRecorrencia) {
 
         if (editandoId != null) {
             viewModel.editar(editandoId, valor, tipo, data, descricao, categoriaIdSelecionada, tagIds);
+        } else if (editandoCompraCartaoId != null) {
+            TipoCompraCartao tipoCompra = toggleParcelamento.getCheckedButtonId() == R.id.btn_parcelado
+                ? TipoCompraCartao.PARCELADO
+                : toggleParcelamento.getCheckedButtonId() == R.id.btn_recorrente
+                ? TipoCompraCartao.RECORRENTE
+                : TipoCompraCartao.CREDITO;
+            RegistrarCompraCartaoInput input = new RegistrarCompraCartaoInput(
+                cartaoIdSelecionado,
+                tipoCompra,
+                java.math.BigDecimal.valueOf(valor),
+                data,
+                descricao,
+                categoriaIdSelecionada,
+                tagIds,
+                Math.max(numeroParcelas, 1),
+                tipoCompra == TipoCompraCartao.RECORRENTE ? diaRecorrencia : null);
+            viewModel.editarCompraCartao(editandoCompraCartaoId, input);
         } else if (tipo == TipoLancamento.DESPESA && cartaoIdSelecionado != null) {
+            if (recorrente) {
+                viewModel.salvarRecorrenteComCartao(valor, tipo, data, descricao,
+                        categoriaIdSelecionada, tagIds, cartaoIdSelecionado, diaRecorrencia);
+            }
             if (parcelado && numeroParcelas > 1) {
                 viewModel.salvarParceladoComCartao(valor, tipo, data, descricao,
                         categoriaIdSelecionada, tagIds, cartaoIdSelecionado, numeroParcelas);
-            } else {
+            } else if (!recorrente) {
                 viewModel.salvarComCartao(valor, tipo, data, descricao,
                         categoriaIdSelecionada, tagIds, cartaoIdSelecionado);
             }
@@ -729,10 +877,13 @@ public class LancamentoFormFragment extends BottomSheetDialogFragment {
             String valorStr = etValor.getText() != null ? etValor.getText().toString().trim() : "";
             String parcStr = etParcelas.getText() != null ? etParcelas.getText().toString().trim() : "";
             if (!valorStr.isEmpty() && !parcStr.isEmpty()) {
-                double valor = Double.parseDouble(valorStr);
+                double valorParcela = Double.parseDouble(valorStr.replace(',', '.'));
                 int n = Integer.parseInt(parcStr);
-                if (n > 0 && valor > 0) {
-                    etValorParcela.setText(String.format(java.util.Locale.getDefault(), "R$ %.2f", valor / n));
+                if (n > 0 && valorParcela > 0) {
+                    etValorParcela.setText(String.format(
+                            java.util.Locale.getDefault(),
+                            "R$ %.2f",
+                            valorParcela * n));
                     return;
                 }
             }

@@ -40,13 +40,19 @@ public class FaturaDao implements FaturaRepository {
     @Override
     public void atualizar(Fatura fatura) {
         db.execute(
-            "UPDATE fatura SET valor_pago=?, status=?, descricao=?, atualizado_em=? WHERE id=?",
+            "UPDATE fatura SET valor_pago=?, status=?, descricao=?, lancamento_pagamento_id=?, atualizado_em=? WHERE id=?",
             MonetaryValues.toDouble(fatura.getValorPago()),
             fatura.getStatus().name().toLowerCase(),
             fatura.getDescricao(),
+            fatura.getLancamentoPagamentoId(),
             fatura.getAtualizadoEm(),
             fatura.getId()
         );
+    }
+
+    @Override
+    public void deletar(String id) {
+        db.execute("DELETE FROM fatura WHERE id=?", id);
     }
 
     @Override
@@ -123,7 +129,16 @@ public class FaturaDao implements FaturaRepository {
         MonetaryValues.fromDouble(row.getDouble("valor_pago")),
         StatusFatura.fromString(row.getString("status")),
         row.isNull("descricao") ? null : row.getString("descricao"),
+        row.isNull("lancamento_pagamento_id") ? null : row.getString("lancamento_pagamento_id"),
         row.getLong("criado_em"),
         row.getLong("atualizado_em")
     );
+
+    @Override
+    public Optional<Fatura> buscarFaturaAbertaPorCartao(String cartaoId) {
+        return db.queryOne(
+            "SELECT * FROM fatura WHERE cartao_id=? AND status='aberto' ORDER BY mes ASC LIMIT 1",
+            MAPPER, cartaoId
+        );
+    }
 }

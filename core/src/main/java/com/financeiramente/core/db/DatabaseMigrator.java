@@ -165,6 +165,13 @@ public class DatabaseMigrator {
             currentVersion = 2;
         }
 
+        if (currentVersion < 3) {
+            logger.info("Aplicando migracao de schema versao 3.");
+            applyMigration3();
+            driver.setSchemaVersion(3);
+            currentVersion = 3;
+        }
+
         logger.info("Migracao do schema concluida na versao " + currentVersion + ".");
     }
 
@@ -190,6 +197,26 @@ public class DatabaseMigrator {
         driver.execute(CREATE_IDX_LANCAMENTO_COMPRA_CARTAO);
         driver.execute(CREATE_IDX_COMPRA_CARTAO_CARTAO);
         driver.execute(CREATE_IDX_COMPRA_CARTAO_TIPO_ATIVO);
+    }
+
+    private void applyMigration3() {
+        long now = System.currentTimeMillis();
+
+        String semCategoriaRaizId = buscarOuCriarSemCategoriaRaiz(now);
+        String semCategoriaIdParaLancamento = buscarOuCriarSemCategoriaFilha(semCategoriaRaizId, now);
+
+        // Preencher categoria_id nulo em lançamentos existentes com Sem Categoria.
+        driver.execute(
+                "UPDATE lancamento SET categoria_id = ? WHERE categoria_id IS NULL",
+                semCategoriaIdParaLancamento);
+
+        // Adicionar coluna lancamento_pagamento_id à tabela fatura
+        try {
+            driver.execute(
+                "ALTER TABLE fatura ADD COLUMN lancamento_pagamento_id TEXT REFERENCES lancamento(id)");
+        } catch (Exception ignored) {
+            // Coluna já existe (segurança em caso de re-execução)
+        }
     }
 
     private void insertOnboardingData() {
@@ -307,11 +334,11 @@ public class DatabaseMigrator {
         insertCategoria(UUID.randomUUID().toString(), "Outros", rendaExtraId, "receita", 1, now, rendaExtraIcone, rendaExtraCor);
 
         // ─── Sem Categoria ───────────────────────────────────────────────────────
-        String semCategoriaId = UUID.randomUUID().toString();
         String semCategoriaIcone = "❓";
         String semCategoriaCor = "#9CA3AF";
-        insertCategoria(semCategoriaId, "Sem Categoria", null, "sem_tipo", 12, now, semCategoriaIcone, semCategoriaCor);
-        insertCategoria(UUID.randomUUID().toString(), "Sem Categoria", semCategoriaId, "sem_tipo", 0, now, semCategoriaIcone, semCategoriaCor);
+        String semCategoriaRaizId = UUID.randomUUID().toString();
+        insertCategoria(semCategoriaRaizId, "Sem Categoria", null, "sem_tipo", 12, now, semCategoriaIcone, semCategoriaCor);
+        insertCategoria(UUID.randomUUID().toString(), "Sem Categoria", semCategoriaRaizId, "sem_tipo", 0, now, semCategoriaIcone, semCategoriaCor);
 
 
         // Meta padrão inicial
@@ -331,5 +358,34 @@ public class DatabaseMigrator {
                 "INSERT OR IGNORE INTO meta(id, nome, valor_objetivo, valor_atual, data_alvo, descricao, criado_em) VALUES (?,?,?,?,NULL,NULL,?)",
                 id, nome, valorObjetivo, 0.0, now
         );
+    }
+
+    private String buscarOuCriarSemCategoriaRaiz(long now) {
+        return driver.queryOne(
+                "SELECT id FROM categoria WHERE nome = 'Sem Categoria' AND tipo = 'sem_tipo' AND pai_id IS NULL ORDER BY ordem LIMIT 1",
+                row -> row.getString("id")
+        ).orElseGet(() -> {
+            String id = UUID.randomUUID().toString();
+            driver.execute(
+                    "INSERT INTO categoria(id, nome, pai_id, tipo, limite_mensal, ordem, criado_em, icone, cor) VALUES (?, 'Sem Categoria', NULL, 'sem_tipo', NULL, 99, ?, '\u2753', '#9CA3AF')",
+                    id, now
+            );
+            return id;
+        });
+    }
+
+    private String buscarOuCriarSemCategoriaFilha(String semCategoriaRaizId, long now) {
+        return driver.queryOne(
+                "SELECT id FROM categoria WHERE nome = 'Sem Categoria' AND tipo = 'sem_tipo' AND pai_id = ? ORDER BY ordem LIMIT 1",
+                row -> row.getString("id"),
+                semCategoriaRaizId
+        ).orElseGet(() -> {
+            String id = UUID.randomUUID().toString();
+            driver.execute(
+                    "INSERT INTO categoria(id, nome, pai_id, tipo, limite_mensal, ordem, criado_em, icone, cor) VALUES (?, 'Sem Categoria', ?, 'sem_tipo', NULL, 0, ?, '\u2753', '#9CA3AF')",
+                    id, semCategoriaRaizId, now
+            );
+            return id;
+        });
     }
 }

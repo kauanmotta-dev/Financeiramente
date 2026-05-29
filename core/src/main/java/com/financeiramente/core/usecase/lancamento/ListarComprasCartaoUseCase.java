@@ -27,6 +27,11 @@ public class ListarComprasCartaoUseCase {
         List<CompraCartaoResumo> resumo = new ArrayList<>(compras.size());
 
         for (CompraCartao compra : compras) {
+            // Compras recorrentes podem ser desativadas; compras a vista/parceladas devem continuar visiveis.
+            if (compra.getTipo() == TipoCompraCartao.RECORRENTE && !compra.isAtivo()) {
+                continue;
+            }
+
             List<Lancamento> lancamentos = lancamentoRepository.listarPorCompraCartao(compra.getId());
 
             double valorJaDebitado = 0.0;

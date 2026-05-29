@@ -168,7 +168,15 @@ public class CartaoFormFragment extends BottomSheetDialogFragment {
         });
 
         viewModel.getSucesso().observe(getViewLifecycleOwner(), ok -> {
-            if (Boolean.TRUE.equals(ok)) dismiss();
+            if (Boolean.TRUE.equals(ok)) {
+                Bundle result = new Bundle();
+                result.putBoolean("saved", true);
+                if (editandoId != null) {
+                    result.putString("cartaoId", editandoId);
+                }
+                getParentFragmentManager().setFragmentResult("cartao_form_saved", result);
+                dismiss();
+            }
         });
 
         viewModel.getErro().observe(getViewLifecycleOwner(), msg -> {

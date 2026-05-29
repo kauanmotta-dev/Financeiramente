@@ -19,6 +19,8 @@ import com.financeiramente.core.repository.FaturaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
 import com.financeiramente.core.repository.MetaRepository;
 import com.financeiramente.core.repository.TagRepository;
+import com.financeiramente.core.usecase.fatura.AlterarStatusFaturaUseCase;
+import com.financeiramente.core.usecase.fatura.AnteciparLancamentosFaturaUseCase;
 import com.financeiramente.core.usecase.fatura.AtualizarStatusFaturasUseCase;
 import com.financeiramente.core.usecase.fatura.PagarFaturaUseCase;
 import com.financeiramente.core.usecase.fatura.ResolverFaturaParaLancamentoUseCase;
@@ -31,6 +33,7 @@ import com.financeiramente.core.usecase.cartao.DesativarCartaoCreditoUseCase;
 import com.financeiramente.core.usecase.cartao.EditarCartaoCreditoUseCase;
 import com.financeiramente.core.usecase.lancamento.DeletarLancamentoUseCase;
 import com.financeiramente.core.usecase.lancamento.DeletarCompraCartaoUseCase;
+import com.financeiramente.core.usecase.lancamento.EditarCompraCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.EditarLancamentoUseCase;
 import com.financeiramente.core.usecase.lancamento.GerarCobrancasRecorrentesCartaoUseCase;
 import com.financeiramente.core.usecase.lancamento.ListarLancamentosUseCase;
@@ -81,11 +84,13 @@ public final class CoreBootstrap {
         RegistrarLancamentoUseCase registrarLancamentoUseCase = new RegistrarLancamentoUseCase(
                 lancamentoRepository,
                 tagRepository,
-                categoriaRepository);
+                categoriaRepository,
+                faturaRepository);
         EditarLancamentoUseCase editarLancamentoUseCase = new EditarLancamentoUseCase(
                 lancamentoRepository,
                 tagRepository,
-                categoriaRepository);
+                categoriaRepository,
+                faturaRepository);
         DeletarLancamentoUseCase deletarLancamentoUseCase = new DeletarLancamentoUseCase(lancamentoRepository);
         ListarLancamentosUseCase listarLancamentosUseCase = new ListarLancamentosUseCase(lancamentoRepository);
         CalcularTotalAportesMesUseCase calcularTotalAportesMesUseCase = new CalcularTotalAportesMesUseCase(
@@ -118,8 +123,9 @@ public final class CoreBootstrap {
                 registrarLancamentoUseCase,
                 databaseDriver,
                 safeLogger);
+        EditarCompraCartaoUseCase editarCompraCartaoUseCase = new EditarCompraCartaoUseCase(compraCartaoRepository);
         DeletarCompraCartaoUseCase deletarCompraCartaoUseCase =
-                new DeletarCompraCartaoUseCase(compraCartaoRepository);
+                new DeletarCompraCartaoUseCase(compraCartaoRepository, lancamentoRepository);
         GerarCobrancasRecorrentesCartaoUseCase gerarCobrancasRecorrentesCartaoUseCase =
                 new GerarCobrancasRecorrentesCartaoUseCase(
                         compraCartaoRepository,
@@ -142,6 +148,14 @@ public final class CoreBootstrap {
                 registrarLancamentoUseCase,
                 resolverFaturaParaLancamentoUseCase,
                 databaseDriver);
+        AlterarStatusFaturaUseCase alterarStatusFaturaUseCase = new AlterarStatusFaturaUseCase(
+                faturaRepository,
+                lancamentoRepository,
+                pagarFaturaUseCase,
+                databaseDriver);
+        AnteciparLancamentosFaturaUseCase anteciparLancamentosUseCase = new AnteciparLancamentosFaturaUseCase(
+                faturaRepository,
+                lancamentoRepository);
         CalcularSaldoDashboardUseCase calcularSaldoDashboardUseCase = new CalcularSaldoDashboardUseCase(
                 lancamentoRepository,
                 categoriaRepository,
@@ -179,12 +193,15 @@ public final class CoreBootstrap {
                 desativarCartaoCreditoUseCase,
                 resolverFaturaParaLancamentoUseCase,
                 registrarCompraCartaoUseCase,
+                editarCompraCartaoUseCase,
                 deletarCompraCartaoUseCase,
                 gerarCobrancasRecorrentesCartaoUseCase,
                 cancelarRecorrenciaCartaoUseCase,
                 listarComprasCartaoUseCase,
                 registrarLancamentoCartaoUseCase,
                 atualizarStatusFaturasUseCase,
-                pagarFaturaUseCase);
+                pagarFaturaUseCase,
+                alterarStatusFaturaUseCase,
+                anteciparLancamentosUseCase);
     }
 }

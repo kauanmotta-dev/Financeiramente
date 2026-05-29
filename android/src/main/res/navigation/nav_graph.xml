@@ -24,7 +24,11 @@
         android:label="@string/nav_metas">
         <action
             android:id="@+id/action_metasFragment_to_metaDetalheFragment"
-            app:destination="@id/metaDetalheFragment" />
+            app:destination="@id/metaDetalheFragment"
+            app:enterAnim="@anim/slide_in_from_right"
+            app:exitAnim="@anim/slide_out_to_left"
+            app:popEnterAnim="@anim/slide_in_from_left"
+            app:popExitAnim="@anim/slide_out_to_right" />
     </fragment>
 
     <fragment
@@ -60,7 +64,12 @@
             app:destination="@id/tagsFragment" />
         <action
             android:id="@+id/action_configuracoesFragment_to_nav_cartoes"
-            app:destination="@id/nav_cartoes" />
+            app:destination="@id/nav_cartoes">
+            <argument
+                android:name="sourceScreen"
+                app:argType="reference"
+                android:defaultValue="@id/nav_configuracoes" />
+        </action>
     </fragment>
 
     <fragment
@@ -83,7 +92,11 @@
             app:destination="@id/lancamentoFormFragment" />
         <action
             android:id="@+id/action_lancamentosListFragment_to_faturaListFragment"
-            app:destination="@id/faturaListFragment" />
+            app:destination="@id/faturaListFragment"
+            app:enterAnim="@anim/slide_in_from_right"
+            app:exitAnim="@anim/slide_out_to_left"
+            app:popEnterAnim="@anim/slide_in_from_left"
+            app:popExitAnim="@anim/slide_out_to_right" />
     </fragment>
 
     <!-- BottomSheetDialogFragment — deve ser declarado como <dialog> no Navigation Component -->
@@ -108,9 +121,17 @@
         android:id="@+id/nav_cartoes"
         android:name="com.financeiramente.android.ui.cartao.CartaoListFragment"
         android:label="@string/nav_cartoes">
+        <argument
+            android:name="sourceScreen"
+            app:argType="reference"
+            android:defaultValue="@id/nav_dashboard" />
         <action
             android:id="@+id/action_cartaoListFragment_to_faturaListFragment"
-            app:destination="@id/faturaListFragment" />
+            app:destination="@id/faturaListFragment"
+            app:enterAnim="@anim/slide_in_from_right"
+            app:exitAnim="@anim/slide_out_to_left"
+            app:popEnterAnim="@anim/slide_in_from_left"
+            app:popExitAnim="@anim/slide_out_to_right" />
         <action
             android:id="@+id/action_cartaoListFragment_to_cartaoFormFragment"
             app:destination="@id/cartaoFormFragment" />
@@ -136,7 +157,23 @@
             app:argType="string" />
         <action
             android:id="@+id/action_faturaListFragment_to_faturaDetalheFragment"
-            app:destination="@id/faturaDetalheFragment" />
+            app:destination="@id/faturaDetalheFragment"
+            app:enterAnim="@anim/slide_in_from_right"
+            app:exitAnim="@anim/slide_out_to_left"
+            app:popEnterAnim="@anim/slide_in_from_left"
+            app:popExitAnim="@anim/slide_out_to_right" />
+        <action
+            android:id="@+id/action_faturaListFragment_to_compraCartaoListFragment"
+            app:destination="@id/compraCartaoListFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/compraCartaoListFragment"
+        android:name="com.financeiramente.android.ui.cartao.CompraCartaoListFragment"
+        android:label="@string/compras_cartao_titulo">
+        <argument
+            android:name="cartaoId"
+            app:argType="string" />
     </fragment>
 
     <fragment

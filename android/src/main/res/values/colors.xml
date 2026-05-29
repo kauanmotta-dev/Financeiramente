@@ -17,6 +17,12 @@
     <color name="amarelo_warning">#F59E0B</color>
     <color name="amarelo_warning_container">#FEF3C7</color>
     <color name="laranja_warning">#F97316</color>
+    <color name="investimento_destaque">#FB923C</color>
+    <color name="investimento_container">#FFF7ED</color>
+
+    <!-- Relatórios -->
+    <color name="relatorio_credito">#0284C7</color>
+    <color name="relatorio_debito">#F43F5E</color>
 
     <!-- Cinzas neutros -->
     <color name="cinza_background">#F1F5F9</color>
@@ -83,4 +89,6 @@
     <!-- Fallbacks obrigatórios — usados apenas no dark theme (values-night sobrescreve) -->
     <color name="dark_secondary_container">#064E3B</color>
     <color name="dark_error_container">#7F1D1D</color>
+    <color name="dark_gradient_start">#1E3A8A</color>
+    <color name="dark_gradient_end">#1D4ED8</color>
 </resources>

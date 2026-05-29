@@ -48,6 +48,7 @@ public class LancamentosListFragment extends Fragment {
     private View emptyState;
     private ShimmerFrameLayout shimmerLancamentos;
     private TipoLancamento filtroTipoAtual = null;
+    private final List<CartaoCredito> cartoesAtivos = new ArrayList<>();
     private int sourceTab = 0;
     private boolean carregamentoInicialFinalizado = false;
 
@@ -78,7 +79,8 @@ public class LancamentosListFragment extends Fragment {
                 ctx.getListarLancamentosUseCase(),
                 ctx.getDeletarLancamentoUseCase(),
                 ctx.getCoreServices().getCategoriaRepository(),
-                ctx.getCoreServices().getTagRepository());
+                ctx.getCoreServices().getTagRepository(),
+                ctx.getAlterarStatusFaturaUseCase());
         viewModel = new ViewModelProvider(this, factory).get(LancamentosListViewModel.class);
 
         // ── Empty state — Épico 8 ─────────────────────────────────────────
@@ -174,6 +176,11 @@ public class LancamentosListFragment extends Fragment {
         chipGroupTipo.setOnCheckedStateChangeListener((group, checkedIds) -> {
             if (checkedIds.isEmpty()) return;
             int id = checkedIds.get(0);
+            if (id == R.id.chip_lancamentos_cartoes) {
+                abrirFiltroCartoes(view, chipGroupTipo);
+                return;
+            }
+
             if (id == R.id.chip_lancamentos_receitas) {
                 filtroTipoAtual = TipoLancamento.RECEITA;
             } else if (id == R.id.chip_lancamentos_despesas) {
@@ -187,10 +194,8 @@ public class LancamentosListFragment extends Fragment {
         // ── Observe ──────────────────────────────────────────────────────────
         viewModel.getLancamentos().observe(getViewLifecycleOwner(), lancamentos -> {
             renderLista();
-            if (!carregamentoInicialFinalizado) {
-                carregamentoInicialFinalizado = true;
-                mostrarLoadingInicial(false);
-            }
+            carregamentoInicialFinalizado = true;
+            mostrarLoadingInicial(false);
         });
 
         viewModel.getCategorias().observe(getViewLifecycleOwner(), cats ->
@@ -201,6 +206,16 @@ public class LancamentosListFragment extends Fragment {
 
         viewModel.getErro().observe(getViewLifecycleOwner(), msg -> {
             if (msg != null) Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
+        });
+
+        viewModel.getLancamentoPagamentoFaturaId().observe(getViewLifecycleOwner(), faturaId -> {
+            if (faturaId == null) return;
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.fatura_pagamento_excluido_aviso_titulo)
+                    .setMessage(R.string.fatura_pagamento_excluido_aviso_msg)
+                    .setPositiveButton(R.string.confirmar, (d, w) -> viewModel.confirmarDeletarPagamento())
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
         });
 
         // Seção de cartões
@@ -253,33 +268,35 @@ public class LancamentosListFragment extends Fragment {
             java.util.List<CartaoCredito> cartoes = ctx.getCoreServices().getCartaoRepository().listarAtivos();
             if (getActivity() == null) return;
             getActivity().runOnUiThread(() -> {
-                if (cartoes == null || cartoes.isEmpty()) return;
-
-                View tvTitulo = rootView.findViewById(R.id.tv_cartoes_titulo);
-                View hsv = rootView.findViewById(R.id.hsv_cartoes);
-                ChipGroup cg = rootView.findViewById(R.id.cg_lancamentos_cartoes);
-
-                tvTitulo.setVisibility(View.VISIBLE);
-                hsv.setVisibility(View.VISIBLE);
-
-                for (CartaoCredito cartao : cartoes) {
-                    Chip chip = new Chip(requireContext());
-                    String icone = cartao.getIcone() == null || cartao.getIcone().trim().isEmpty() ? "💳" : cartao.getIcone();
-                    chip.setText(icone + " " + cartao.getNome());
-                    chip.setCheckable(true);
-                    chip.setOnCheckedChangeListener((cb, checked) -> {
-                        if (checked) {
-                            android.os.Bundle args = new android.os.Bundle();
-                            args.putString("cartaoId", cartao.getId());
-                            Navigation.findNavController(rootView)
-                                    .navigate(R.id.action_lancamentosListFragment_to_faturaListFragment, args);
-                            cb.setChecked(false);
-                        }
-                    });
-                    cg.addView(chip);
+                cartoesAtivos.clear();
+                if (cartoes != null) {
+                    cartoesAtivos.addAll(cartoes);
                 }
             });
         }).start();
+    }
+
+    private void abrirFiltroCartoes(View rootView, ChipGroup chipGroupTipo) {
+        if (cartoesAtivos.isEmpty()) {
+            Toast.makeText(requireContext(), R.string.cartoes_vazio, Toast.LENGTH_SHORT).show();
+            chipGroupTipo.check(R.id.chip_lancamentos_todos);
+            filtroTipoAtual = null;
+            renderLista();
+            return;
+        }
+
+        navegarParaCartoes(rootView);
+        chipGroupTipo.check(R.id.chip_lancamentos_todos);
+        filtroTipoAtual = null;
+        renderLista();
+    }
+
+    private void navegarParaCartoes(View rootView) {
+        android.os.Bundle args = new android.os.Bundle();
+        args.putInt("sourceScreen", R.id.lancamentosListFragment);
+        args.putInt("sourceTab", sourceTab == R.id.nav_gastos ? R.id.nav_gastos : R.id.nav_dashboard);
+        Navigation.findNavController(rootView)
+                .navigate(R.id.nav_cartoes, args);
     }
 
     private void renderLista() {

@@ -7,18 +7,23 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.financeiramente.core.domain.entity.AporteMeta;
 import com.financeiramente.core.domain.entity.Categoria;
+import com.financeiramente.core.domain.entity.Meta;
 import com.financeiramente.core.domain.entity.Tag;
 import com.financeiramente.core.domain.vo.TipoLancamento;
+import com.financeiramente.core.repository.AporteMetaRepository;
 import com.financeiramente.core.repository.CategoriaRepository;
 import com.financeiramente.core.repository.LancamentoRepository;
+import com.financeiramente.core.repository.MetaRepository;
 import com.financeiramente.core.repository.TagRepository;
 import com.financeiramente.core.usecase.relatorio.FiltroRelatorio;
 import com.financeiramente.core.usecase.relatorio.GerarRelatorioUseCase;
 import com.financeiramente.core.usecase.relatorio.RelatorioResult;
 
-import java.util.LinkedHashMap;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -30,6 +35,8 @@ public class RelatoriosViewModel extends ViewModel {
     private final CategoriaRepository categoriaRepository;
     private final TagRepository tagRepository;
     private final LancamentoRepository lancamentoRepository;
+    private final MetaRepository metaRepository;
+    private final AporteMetaRepository aporteMetaRepository;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -39,6 +46,7 @@ public class RelatoriosViewModel extends ViewModel {
     private final MutableLiveData<List<Tag>> tags = new MutableLiveData<>();
     private final MutableLiveData<Map<String, Categoria>> categoriasMap = new MutableLiveData<>(new LinkedHashMap<>());
     private final MutableLiveData<Map<String, List<Tag>>> tagsPorLancamento = new MutableLiveData<>(new LinkedHashMap<>());
+    private final MutableLiveData<BigDecimal> totalInvestidoPeriodo = new MutableLiveData<>(BigDecimal.ZERO);
     private final MutableLiveData<String> erro = new MutableLiveData<>();
 
     // Dados históricos dos últimos 6 meses para os gráficos de barras e linha
@@ -49,11 +57,15 @@ public class RelatoriosViewModel extends ViewModel {
     public RelatoriosViewModel(GerarRelatorioUseCase gerarRelatorio,
                                CategoriaRepository categoriaRepository,
                                TagRepository tagRepository,
-                               LancamentoRepository lancamentoRepository) {
+                               LancamentoRepository lancamentoRepository,
+                               MetaRepository metaRepository,
+                               AporteMetaRepository aporteMetaRepository) {
         this.gerarRelatorio       = gerarRelatorio;
         this.categoriaRepository  = categoriaRepository;
         this.tagRepository        = tagRepository;
         this.lancamentoRepository = lancamentoRepository;
+        this.metaRepository = metaRepository;
+        this.aporteMetaRepository = aporteMetaRepository;
         carregarFiltros();
         filtrarMesAtual();
         carregarDadosMensais();
@@ -143,10 +155,14 @@ public class RelatoriosViewModel extends ViewModel {
                 for (com.financeiramente.core.domain.entity.Lancamento lancamento : res.getLancamentos()) {
                     mapTags.put(lancamento.getId(), tagRepository.listarPorLancamento(lancamento.getId()));
                 }
+                BigDecimal totalInvestido = calcularTotalInvestidoNoPeriodo(
+                        filtro.getDataInicio(),
+                        filtro.getDataFim());
 
                 mainHandler.post(() -> {
                     categoriasMap.setValue(mapCategorias);
                     tagsPorLancamento.setValue(mapTags);
+                    totalInvestidoPeriodo.setValue(totalInvestido);
                     resultado.setValue(res);
                 });
             } catch (Exception e) {
@@ -160,6 +176,7 @@ public class RelatoriosViewModel extends ViewModel {
     public LiveData<List<Tag>> getTags()              { return tags; }
     public LiveData<Map<String, Categoria>> getCategoriasMap() { return categoriasMap; }
     public LiveData<Map<String, List<Tag>>> getTagsPorLancamento() { return tagsPorLancamento; }
+    public LiveData<BigDecimal> getTotalInvestidoPeriodo() { return totalInvestidoPeriodo; }
     public LiveData<String> getErro()                 { return erro; }
     public LiveData<float[]> getReceitasMensais()     { return receitasMensais; }
     public LiveData<float[]> getDespesasMensais()     { return despesasMensais; }
@@ -169,5 +186,34 @@ public class RelatoriosViewModel extends ViewModel {
     protected void onCleared() {
         executor.shutdown();
         super.onCleared();
+    }
+
+    private BigDecimal calcularTotalInvestidoNoPeriodo(String dataInicio, String dataFim) {
+        LocalDate inicio = LocalDate.parse(dataInicio);
+        LocalDate fim = LocalDate.parse(dataFim);
+        BigDecimal total = BigDecimal.ZERO;
+        List<Meta> metasAtivas = metaRepository.listarAtivas();
+        if (metasAtivas == null || metasAtivas.isEmpty()) {
+            return total;
+        }
+
+        for (Meta meta : metasAtivas) {
+            List<AporteMeta> aportes = aporteMetaRepository.listarPorMeta(meta.getId());
+            if (aportes == null || aportes.isEmpty()) {
+                continue;
+            }
+            for (AporteMeta aporte : aportes) {
+                String dataAporte = aporte.getData();
+                if (dataAporte == null || dataAporte.trim().isEmpty()) {
+                    continue;
+                }
+                LocalDate data = LocalDate.parse(dataAporte.trim());
+                if ((data.isEqual(inicio) || data.isAfter(inicio))
+                        && (data.isEqual(fim) || data.isBefore(fim))) {
+                    total = total.add(aporte.getValor());
+                }
+            }
+        }
+        return total;
     }
 }
