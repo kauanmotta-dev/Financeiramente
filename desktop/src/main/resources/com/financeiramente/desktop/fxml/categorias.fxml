@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<SplitPane xmlns="http://javafx.com/javafx/17"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.financeiramente.desktop.ui.CategoriasController"
+           dividerPositions="0.45"
+           prefHeight="600.0"
+           prefWidth="900.0">
+
+    <!-- ── Painel esquerdo: árvore de categorias ── -->
+    <VBox spacing="8.0" style="-fx-padding: 12;">
+        <Label text="Categorias" styleClass="page-title" />
+
+        <HBox spacing="8.0">
+            <Button fx:id="btnNovaRaiz" text="Nova Categoria" onAction="#onNovaRaiz" />
+            <Button fx:id="btnNovaFilha" text="Nova Subcategoria" onAction="#onNovaFilha" />
+        </HBox>
+
+        <TreeView fx:id="treeCategories" VBox.vgrow="ALWAYS" />
+    </VBox>
+
+    <!-- ── Painel direito: formulário ── -->
+    <VBox spacing="12.0" style="-fx-padding: 16;">
+        <Label fx:id="lblFormTitle" text="Nova Categoria" styleClass="section-title" />
+
+        <Label text="Nome *" />
+        <TextField fx:id="tfNome" promptText="Nome da categoria" />
+
+        <Label text="Tipo *" />
+        <ComboBox fx:id="cbTipo" maxWidth="Infinity" />
+
+        <Label text="Limite Mensal (R$) — opcional" />
+        <TextField fx:id="tfLimite" promptText="Ex: 500.00" />
+
+        <ButtonBar>
+            <buttons>
+                <Button fx:id="btnSalvar" text="Salvar" onAction="#onSalvar" styleClass="btn-primary" />
+                <Button fx:id="btnCancelar" text="Cancelar" onAction="#onCancelar" styleClass="btn-ghost" />
+                <Button fx:id="btnDeletar" text="Excluir" onAction="#onDeletar" styleClass="btn-danger"
+                        disable="true" />
+            </buttons>
+        </ButtonBar>
+    </VBox>
+
+</SplitPane>

@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_dashboard">
+
+    <!-- ── Top-level destinations (bottom nav) ── -->
+
+    <fragment
+        android:id="@+id/nav_dashboard"
+        android:name="com.financeiramente.android.ui.dashboard.DashboardFragment"
+        android:label="@string/nav_dashboard">
+        <action
+            android:id="@+id/action_dashboardFragment_to_lancamentoFormFragment"
+            app:destination="@id/lancamentoFormFragment" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_lancamentosListFragment"
+            app:destination="@id/lancamentosListFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_metas"
+        android:name="com.financeiramente.android.ui.metas.MetasFragment"
+        android:label="@string/nav_metas">
+        <action
+            android:id="@+id/action_metasFragment_to_metaDetalheFragment"
+            app:destination="@id/metaDetalheFragment"
+            app:enterAnim="@anim/slide_in_from_right"
+            app:exitAnim="@anim/slide_out_to_left"
+            app:popEnterAnim="@anim/slide_in_from_left"
+            app:popExitAnim="@anim/slide_out_to_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/metaDetalheFragment"
+        android:name="com.financeiramente.android.ui.metas.MetaDetalheFragment"
+        android:label="@string/meta_detalhe">
+        <argument
+            android:name="metaId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_relatorios"
+        android:name="com.financeiramente.android.ui.relatorios.RelatoriosFragment"
+        android:label="@string/nav_relatorios" />
+
+    <fragment
+        android:id="@+id/nav_gastos"
+        android:name="com.financeiramente.android.ui.gastos.GastosCategoriaFragment"
+        android:label="@string/nav_gastos" />
+
+    <fragment
+        android:id="@+id/nav_configuracoes"
+        android:name="com.financeiramente.android.ui.configuracoes.ConfiguracoesFragment"
+        android:label="@string/nav_configuracoes">
+        <action
+            android:id="@+id/action_configuracoesFragment_to_categoriasFragment"
+            app:destination="@id/categoriasFragment" />
+        <action
+            android:id="@+id/action_configuracoesFragment_to_tagsFragment"
+            app:destination="@id/tagsFragment" />
+        <action
+            android:id="@+id/action_configuracoesFragment_to_nav_cartoes"
+            app:destination="@id/nav_cartoes">
+            <argument
+                android:name="sourceScreen"
+                app:argType="reference"
+                android:defaultValue="@id/nav_configuracoes" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/tagsFragment"
+        android:name="com.financeiramente.android.ui.configuracoes.TagsFragment"
+        android:label="@string/nav_tags" />
+
+    <!-- ── Lançamentos ── -->
+
+    <fragment
+        android:id="@+id/lancamentosListFragment"
+        android:name="com.financeiramente.android.ui.lancamentos.LancamentosListFragment"
+        android:label="@string/nav_lancamentos">
+        <argument
+            android:name="sourceTab"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <action
+            android:id="@+id/action_lancamentosListFragment_to_lancamentoFormFragment"
+            app:destination="@id/lancamentoFormFragment" />
+        <action
+            android:id="@+id/action_lancamentosListFragment_to_faturaListFragment"
+            app:destination="@id/faturaListFragment"
+            app:enterAnim="@anim/slide_in_from_right"
+            app:exitAnim="@anim/slide_out_to_left"
+            app:popEnterAnim="@anim/slide_in_from_left"
+            app:popExitAnim="@anim/slide_out_to_right" />
+    </fragment>
+
+    <!-- BottomSheetDialogFragment — deve ser declarado como <dialog> no Navigation Component -->
+    <dialog
+        android:id="@+id/lancamentoFormFragment"
+        android:name="com.financeiramente.android.ui.lancamentos.LancamentoFormFragment"
+        android:label="@string/form_lancamento">
+        <argument
+            android:name="sourceTab"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <argument
+            android:name="lancamentoId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </dialog>
+
+    <!-- ── Categorias ── -->
+
+    <fragment
+        android:id="@+id/nav_cartoes"
+        android:name="com.financeiramente.android.ui.cartao.CartaoListFragment"
+        android:label="@string/nav_cartoes">
+        <argument
+            android:name="sourceScreen"
+            app:argType="reference"
+            android:defaultValue="@id/nav_dashboard" />
+        <action
+            android:id="@+id/action_cartaoListFragment_to_faturaListFragment"
+            app:destination="@id/faturaListFragment"
+            app:enterAnim="@anim/slide_in_from_right"
+            app:exitAnim="@anim/slide_out_to_left"
+            app:popEnterAnim="@anim/slide_in_from_left"
+            app:popExitAnim="@anim/slide_out_to_right" />
+        <action
+            android:id="@+id/action_cartaoListFragment_to_cartaoFormFragment"
+            app:destination="@id/cartaoFormFragment" />
+    </fragment>
+
+    <dialog
+        android:id="@+id/cartaoFormFragment"
+        android:name="com.financeiramente.android.ui.cartao.CartaoFormFragment"
+        android:label="@string/form_cartao">
+        <argument
+            android:name="cartaoId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </dialog>
+
+    <fragment
+        android:id="@+id/faturaListFragment"
+        android:name="com.financeiramente.android.ui.cartao.FaturaListFragment"
+        android:label="@string/faturas_titulo">
+        <argument
+            android:name="cartaoId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_faturaListFragment_to_faturaDetalheFragment"
+            app:destination="@id/faturaDetalheFragment"
+            app:enterAnim="@anim/slide_in_from_right"
+            app:exitAnim="@anim/slide_out_to_left"
+            app:popEnterAnim="@anim/slide_in_from_left"
+            app:popExitAnim="@anim/slide_out_to_right" />
+        <action
+            android:id="@+id/action_faturaListFragment_to_compraCartaoListFragment"
+            app:destination="@id/compraCartaoListFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/compraCartaoListFragment"
+        android:name="com.financeiramente.android.ui.cartao.CompraCartaoListFragment"
+        android:label="@string/compras_cartao_titulo">
+        <argument
+            android:name="cartaoId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/faturaDetalheFragment"
+        android:name="com.financeiramente.android.ui.cartao.FaturaDetalheFragment"
+        android:label="@string/fatura_detalhe">
+        <argument
+            android:name="faturaId"
+            app:argType="string" />
+    </fragment>
+
+    <!-- ── Categorias ── -->
+
+    <fragment
+        android:id="@+id/categoriasFragment"
+        android:name="com.financeiramente.android.ui.categorias.CategoriasFragment"
+        android:label="@string/nav_categorias">
+        <action
+            android:id="@+id/action_categoriasFragment_to_categoriaFormFragment"
+            app:destination="@id/categoriaFormFragment" />
+    </fragment>
+
+
+    <fragment
+        android:id="@+id/categoriaFormFragment"
+        android:name="com.financeiramente.android.ui.categorias.CategoriaFormFragment"
+        android:label="@string/form_categoria">
+        <argument
+            android:name="categoriaId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="paiId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+
+</navigation>

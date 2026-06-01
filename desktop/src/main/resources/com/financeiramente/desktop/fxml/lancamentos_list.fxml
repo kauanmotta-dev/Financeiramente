@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.financeiramente.desktop.ui.LancamentosListController">
+
+    <top>
+        <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 10;">
+            <Label text="Lançamentos" styleClass="page-title" />
+            <HBox style="-fx-hgrow: ALWAYS;" HBox.hgrow="ALWAYS" />
+            <Button text="◀" onAction="#mesAnterior" styleClass="btn-ghost" />
+            <Label fx:id="lblMes" text="Mai / 2026"
+                   style="-fx-min-width: 100; -fx-alignment: center;" />
+            <Button text="▶" onAction="#mesSeguinte" styleClass="btn-ghost" />
+            <Button text="+ Novo" onAction="#novoLancamento" styleClass="btn-primary" />
+        </HBox>
+    </top>
+
+    <center>
+        <TableView fx:id="tabelaLancamentos" styleClass="table-view">
+            <columns>
+                <TableColumn fx:id="colData" text="Data" prefWidth="100" />
+                <TableColumn fx:id="colDescricao" text="Descrição" prefWidth="280" />
+                <TableColumn fx:id="colTipo" text="Tipo" prefWidth="80" />
+                <TableColumn fx:id="colValor" text="Valor (R$)" prefWidth="100" />
+            </columns>
+            <placeholder>
+                <Label text="Nenhum lançamento no mês." />
+            </placeholder>
+        </TableView>
+    </center>
+
+    <bottom>
+        <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 10;">
+            <Button text="Editar" onAction="#editarSelecionado" styleClass="btn-ghost" />
+            <Button text="Excluir" onAction="#excluirSelecionado" styleClass="btn-danger" />
+        </HBox>
+    </bottom>
+
+</BorderPane>

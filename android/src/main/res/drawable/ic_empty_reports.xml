@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Circle background -->
+    <path
+        android:fillColor="#F1F5F9"
+        android:pathData="M60,10 a50,50 0 1,0 0.001,0 Z" />
+
+    <!-- Y axis -->
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M32,28 L34,28 L34,83 L32,83 Z" />
+
+    <!-- X axis -->
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M32,81 L88,81 L88,83 L32,83 Z" />
+
+    <!-- Bar 1 (left, short) — empty/muted -->
+    <path
+        android:fillColor="#E2E8F0"
+        android:pathData="M38,64 L50,64 L50,81 L38,81 Z" />
+    <!-- Stripe on bar 1 -->
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M38,68 L50,68 L50,70 L38,70 Z" />
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M38,74 L50,74 L50,76 L38,76 Z" />
+
+    <!-- Bar 2 (center, tall) — empty/muted -->
+    <path
+        android:fillColor="#E2E8F0"
+        android:pathData="M54,44 L66,44 L66,81 L54,81 Z" />
+    <!-- Stripe on bar 2 -->
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M54,48 L66,48 L66,50 L54,50 Z" />
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M54,54 L66,54 L66,56 L54,56 Z" />
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M54,60 L66,60 L66,62 L54,62 Z" />
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M54,66 L66,66 L66,68 L54,68 Z" />
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M54,72 L66,72 L66,74 L54,74 Z" />
+
+    <!-- Bar 3 (right, medium) — empty/muted -->
+    <path
+        android:fillColor="#E2E8F0"
+        android:pathData="M70,55 L82,55 L82,81 L70,81 Z" />
+    <!-- Stripe on bar 3 -->
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M70,59 L82,59 L82,61 L70,61 Z" />
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M70,65 L82,65 L82,67 L70,67 Z" />
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M70,71 L82,71 L82,73 L70,73 Z" />
+
+    <!-- Magnifying glass overlay (no-data indicator) -->
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M56,32 a9,9 0 1,0 0.001,0 Z"
+        android:strokeColor="#94A3B8"
+        android:strokeWidth="3"
+        android:fillAlpha="0" />
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M62.5,39 L68,44.5 L66.5,46 L61,40.5 Z" />
+
+    <!-- X mark inside the circle -->
+    <path
+        android:fillColor="#B0BAC8"
+        android:pathData="M53,34 L54.5,32.5 L56,34 L57.5,32.5 L59,34 L57.5,35.5 L59,37 L57.5,38.5 L56,37 L54.5,38.5 L53,37 L54.5,35.5 Z" />
+
+</vector>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Azul primário -->
+    <color name="azul_primary">#2563EB</color>
+    <color name="azul_primary_dark">#1D4ED8</color>
+    <color name="azul_primary_container">#DBEAFE</color>
+
+    <!-- Verde (receitas, sucesso) -->
+    <color name="verde_success">#10B981</color>
+    <color name="verde_success_container">#D1FAE5</color>
+
+    <!-- Vermelho (despesas, erro) -->
+    <color name="vermelho_error">#EF4444</color>
+    <color name="vermelho_error_container">#FEE2E2</color>
+
+    <!-- Amarelo (aviso) -->
+    <color name="amarelo_warning">#F59E0B</color>
+    <color name="amarelo_warning_container">#FEF3C7</color>
+    <color name="laranja_warning">#F97316</color>
+    <color name="investimento_destaque">#FB923C</color>
+    <color name="investimento_container">#FFF7ED</color>
+
+    <!-- Relatórios -->
+    <color name="relatorio_credito">#0284C7</color>
+    <color name="relatorio_debito">#F43F5E</color>
+
+    <!-- Cinzas neutros -->
+    <color name="cinza_background">#F1F5F9</color>
+    <color name="cinza_surface">#FFFFFF</color>
+    <color name="cinza_on_surface">#1E293B</color>
+    <color name="cinza_secondary">#475569</color>
+    <color name="cinza_divider">#E2E8F0</color>
+
+    <!-- Utilitários -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+    <color name="transparent">#00000000</color>
+
+    <!-- Cores Categóricas — usadas em ícones, chips e gráficos -->
+    <color name="cat_moradia">#6366F1</color>
+    <color name="cat_transporte">#0EA5E9</color>
+    <color name="cat_alimentacao">#F97316</color>
+    <color name="cat_saude">#10B981</color>
+    <color name="cat_estudos">#8B5CF6</color>
+    <color name="cat_lazer">#EC4899</color>
+    <color name="cat_presentes">#F59E0B</color>
+    <color name="cat_compras">#EF4444</color>
+    <color name="cat_imprevistos">#64748B</color>
+    <color name="cat_provisoes">#14B8A6</color>
+
+    <!-- Containers das cores categóricas (fundo claro) -->
+    <color name="cat_moradia_container">#EEF2FF</color>
+    <color name="cat_transporte_container">#E0F2FE</color>
+    <color name="cat_alimentacao_container">#FFF7ED</color>
+    <color name="cat_saude_container">#ECFDF5</color>
+    <color name="cat_estudos_container">#F5F3FF</color>
+    <color name="cat_lazer_container">#FDF2F8</color>
+    <color name="cat_presentes_container">#FFFBEB</color>
+    <color name="cat_compras_container">#FEF2F2</color>
+
+    <!-- Gradiente do Hero Card -->
+    <color name="gradient_start">#1E40AF</color>
+    <color name="gradient_end">#2563EB</color>
+
+    <!-- Status semânticos (aliases explícitos para uso em code) -->
+    <color name="status_ok">#10B981</color>
+    <color name="status_warning">#F59E0B</color>
+    <color name="status_danger">#EF4444</color>
+    <color name="status_ok_container">#D1FAE5</color>
+    <color name="status_warning_container">#FEF3C7</color>
+    <color name="status_danger_container">#FEE2E2</color>
+    <color name="dashboard_alerta_neutral_bg">#E2E8F0</color>
+    <color name="dashboard_alerta_black_bg">#111827</color>
+    <color name="dashboard_aviso_card_bg">@color/cinza_surface</color>
+    <color name="dashboard_aviso_card_stroke">@color/cinza_divider</color>
+    <color name="dashboard_aviso_text">@color/cinza_secondary</color>
+    <color name="dashboard_aviso_dot_preto">@color/dashboard_alerta_black_bg</color>
+    <color name="dashboard_aviso_dot_cinza">@color/cinza_secondary</color>
+
+    <!-- Dark mode surfaces -->
+    <color name="dark_background">#0F172A</color>
+    <color name="dark_surface">#1E293B</color>
+    <color name="dark_surface_variant">#334155</color>
+    <color name="dark_on_surface">#F1F5F9</color>
+    <color name="dark_on_surface_variant">#94A3B8</color>
+    <color name="dark_primary">#60A5FA</color>
+    <color name="dark_primary_container">#1E3A8A</color>
+    <color name="dark_divider">#334155</color>
+    <!-- Fallbacks obrigatórios — usados apenas no dark theme (values-night sobrescreve) -->
+    <color name="dark_secondary_container">#064E3B</color>
+    <color name="dark_error_container">#7F1D1D</color>
+    <color name="dark_gradient_start">#1E3A8A</color>
+    <color name="dark_gradient_end">#1D4ED8</color>
+</resources>

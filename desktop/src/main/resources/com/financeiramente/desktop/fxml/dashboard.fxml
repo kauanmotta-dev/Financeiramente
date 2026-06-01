@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.financeiramente.desktop.ui.DashboardController">
+
+    <top>
+        <VBox spacing="16">
+            <Label text="Dashboard" styleClass="page-title" />
+
+            <!-- Hero card -->
+            <VBox styleClass="card" spacing="10">
+                <Label text="Saldo Disponível" styleClass="text-secondary" />
+                <Label fx:id="lblSaldoDisponivel" text="R$ --" styleClass="saldo-hero" />
+                <Label text="Progresso global (gasto / receita):" styleClass="text-secondary" />
+                <ProgressBar fx:id="pbGlobal" progress="0" maxWidth="Infinity" styleClass="progress-bar" />
+                <GridPane hgap="32" vgap="6">
+                    <Label text="Receita realizada:"
+                           GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="text-secondary" />
+                    <Label fx:id="lblReceita" text="R$ 0,00"
+                           GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="valor-receita" />
+                    <Label text="Total gasto:"
+                           GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="text-secondary" />
+                    <Label fx:id="lblGasto" text="R$ 0,00"
+                           GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="valor-despesa" />
+                </GridPane>
+                <Label fx:id="lblAlerta" text="" wrapText="true"
+                       styleClass="text-warning" managed="false" visible="false" />
+            </VBox>
+
+            <Label text="Saldo por Categoria" styleClass="section-title" />
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="tblCategorias" styleClass="table-view">
+            <columns>
+                <TableColumn fx:id="colStatus"    text="Status"      prefWidth="80">
+                    <cellValueFactory><PropertyValueFactory property="statusIcon" /></cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="colNome"      text="Categoria"   prefWidth="200">
+                    <cellValueFactory><PropertyValueFactory property="categoriaNome" /></cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="colLimite"    text="Limite (R$)" prefWidth="130">
+                    <cellValueFactory><PropertyValueFactory property="limiteStr" /></cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="colGasto"     text="Gasto (R$)"  prefWidth="130">
+                    <cellValueFactory><PropertyValueFactory property="gastoStr" /></cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="colSaldo"     text="Saldo (R$)"  prefWidth="130">
+                    <cellValueFactory><PropertyValueFactory property="saldoStr" /></cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="colProgresso" text="Progresso"   prefWidth="120">
+                    <cellValueFactory><PropertyValueFactory property="progressoStr" /></cellValueFactory>
+                </TableColumn>
+            </columns>
+            <placeholder>
+                <Label text="Nenhuma categoria com limite mensal. Configure em Categorias." />
+            </placeholder>
+        </TableView>
+    </center>
+
+</BorderPane>
+

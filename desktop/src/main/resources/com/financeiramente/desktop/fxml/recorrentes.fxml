@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.financeiramente.desktop.ui.RecorrentesController">
+
+    <top>
+        <VBox style="-fx-padding: 12; -fx-spacing: 8; -fx-background-color: #fafafa;">
+            <Label text="Lançamentos Recorrentes" styleClass="page-title" />
+        </VBox>
+    </top>
+
+    <center>
+        <HBox spacing="12" style="-fx-padding: 12;">
+
+            <!-- Lista -->
+            <VBox spacing="8" HBox.hgrow="ALWAYS" prefWidth="380">
+                <Label text="Recorrentes Ativos" style="-fx-font-weight: bold;" />
+                <ListView fx:id="lvRecorrentes" VBox.vgrow="ALWAYS" prefHeight="500" />
+                <HBox spacing="8">
+                    <Button text="Novo" onAction="#novoRecorrente" styleClass="btn-primary" />
+                    <Button fx:id="btnEditar" text="Editar" onAction="#editarSelecionado"
+                            styleClass="btn-ghost" disable="true" />
+                    <Button fx:id="btnDesativar" text="Desativar" onAction="#desativarSelecionado"
+                            styleClass="btn-danger"
+                            disable="true" />
+                </HBox>
+            </VBox>
+
+            <Separator orientation="VERTICAL" />
+
+            <!-- Formulário -->
+            <VBox fx:id="vboxForm" spacing="10" prefWidth="340">
+                <Label fx:id="lblTituloForm" text="Novo Recorrente" styleClass="section-title" />
+
+                <Label text="Descrição" />
+                <TextField fx:id="tfDescricao" promptText="Ex: Salário CLT" />
+
+                <Label text="Valor (R$)" />
+                <TextField fx:id="tfValor" promptText="0.00" />
+
+                <Label text="Tipo" />
+                <HBox spacing="16">
+                    <RadioButton fx:id="rbDespesa" text="Despesa" selected="true">
+                        <toggleGroup><ToggleGroup fx:id="tgTipo" /></toggleGroup>
+                    </RadioButton>
+                    <RadioButton fx:id="rbReceita" text="Receita" toggleGroup="$tgTipo" />
+                </HBox>
+
+                <Label text="Categoria" />
+                <Spinner fx:id="spCategoria" editable="false" prefWidth="300" />
+
+                <Label text="Recorrência" />
+                <Spinner fx:id="spRecorrencia" editable="false" prefWidth="300" />
+
+                <Label text="Dia do mês (opcional)" />
+                <TextField fx:id="tfDia" promptText="Ex: 5" />
+
+                <Label fx:id="lblErro" style="-fx-text-fill: red;" visible="false" />
+
+                <HBox spacing="8">
+                    <Button text="Salvar" onAction="#salvar" styleClass="btn-primary" />
+                    <Button text="Cancelar" onAction="#cancelar" styleClass="btn-ghost" />
+                </HBox>
+            </VBox>
+
+        </HBox>
+    </center>
+
+    <bottom>
+        <Label fx:id="lblStatus" styleClass="status-bar" />
+    </bottom>
+
+</BorderPane>

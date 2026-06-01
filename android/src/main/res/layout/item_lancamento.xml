@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="4dp"
+    app:shapeAppearance="@style/ShapeAppearance.Financeiramente.Card.Small"
+    app:cardElevation="0dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/cinza_divider"
+    app:cardBackgroundColor="?attr/colorSurface">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp">
+
+        <!-- Ícone circular 44dp com cor da categoria -->
+        <TextView
+            android:id="@+id/tv_icone_categoria"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:gravity="center"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <!-- Descrição do lançamento -->
+        <TextView
+            android:id="@+id/tv_descricao"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="?attr/colorOnSurface"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintStart_toEndOf="@id/tv_icone_categoria"
+            app:layout_constraintEnd_toStartOf="@id/tv_valor"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Categoria • data -->
+        <TextView
+            android:id="@+id/tv_categoria_data"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="2dp"
+            android:textSize="12sp"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:layout_constraintStart_toEndOf="@id/tv_icone_categoria"
+            app:layout_constraintEnd_toStartOf="@id/tv_valor"
+            app:layout_constraintTop_toBottomOf="@id/tv_descricao" />
+
+        <!-- Chips de tags -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/cgp_tags"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="4dp"
+            app:chipSpacingVertical="2dp"
+            app:chipSpacingHorizontal="4dp"
+            app:singleLine="true"
+            android:visibility="gone"
+            app:layout_constraintStart_toEndOf="@id/tv_icone_categoria"
+            app:layout_constraintEnd_toStartOf="@id/tv_valor"
+            app:layout_constraintTop_toBottomOf="@id/tv_categoria_data"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <!-- Valor em verde (receita) ou vermelho (despesa) -->
+        <TextView
+            android:id="@+id/tv_valor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxEms="12"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>
